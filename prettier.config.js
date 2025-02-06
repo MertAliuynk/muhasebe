@@ -1,5 +1,5 @@
 /** @type {import('prettier').Config} */
-export default {
+const config = {
   endOfLine: "lf",
   semi: false,
   singleQuote: false,
@@ -30,4 +30,6 @@ export default {
   importOrderMergeDuplicateImports: true,
   importOrderCombineTypeAndValueImports: true,
   plugins: ["@ianvs/prettier-plugin-sort-imports"],
-};
+}
+
+export default config
