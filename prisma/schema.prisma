@@ -1,0 +1,246 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+enum UserRole {
+    ADMIN
+    MANAGER
+    DOCTOR
+}
+
+enum PaymentType {
+    BANK_TRANSFER
+    CREDIT_CARD
+    CASH
+}
+
+enum AuditAction {
+    CREATE
+    UPDATE
+    DELETE
+    RESTORE
+}
+
+model AuditLog {
+    id         String      @id @default(cuid())
+    action     AuditAction
+    entityType String
+    entityId   String
+    userId     String
+    createdAt  DateTime    @default(now())
+
+    // Relations
+    user User @relation(fields: [userId], references: [id])
+
+    // Indexes
+    @@index([entityType, entityId])
+    @@index([userId])
+    @@index([createdAt])
+}
+
+model User {
+    id        String    @id @default(cuid())
+    userName  String    @unique
+    password  String
+    name      String
+    role      UserRole
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Relations
+    doctor        Doctor?
+    branchManager Branch[]
+    company       Company?
+    auditLogs     AuditLog[]
+
+    // Indexes
+    @@index([role])
+    @@index([isDeleted])
+}
+
+model Company {
+    id        String    @id @default(cuid())
+    name      String
+    address   String?
+    phone     String?
+    taxNumber String?
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Relations
+    adminId  String   @unique
+    admin    User     @relation(fields: [adminId], references: [id])
+    branches Branch[]
+
+    // Indexes
+    @@index([adminId])
+    @@index([isDeleted])
+    @@index([name])
+}
+
+model Branch {
+    id        String    @id @default(cuid())
+    name      String
+    address   String?
+    phone     String?
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Relations
+    companyId String
+    company   Company   @relation(fields: [companyId], references: [id])
+    managerId String
+    manager   User      @relation(fields: [managerId], references: [id])
+    doctors   Doctor[]
+    expenses  Expense[]
+
+    // Indexes
+    @@index([companyId])
+    @@index([managerId])
+    @@index([isDeleted])
+    @@index([name])
+}
+
+model Doctor {
+    id        String    @id @default(cuid())
+    specialty String?
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Relations
+    userId   String    @unique
+    user     User      @relation(fields: [userId], references: [id])
+    branchId String
+    branch   Branch    @relation(fields: [branchId], references: [id])
+    patients Patient[]
+    expenses Expense[]
+
+    // Indexes
+    @@index([userId])
+    @@index([branchId])
+    @@index([isDeleted])
+    @@index([specialty])
+}
+
+model Patient {
+    id        String    @id @default(cuid())
+    name      String
+    phone     String?
+    email     String?
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Relations
+    doctorId   String
+    doctor     Doctor      @relation(fields: [doctorId], references: [id])
+    treatments Treatment[]
+
+    // Indexes
+    @@index([doctorId])
+    @@index([isDeleted])
+    @@index([name])
+    @@index([phone])
+    @@index([email])
+}
+
+model Treatment {
+    id           String    @id @default(cuid())
+    name         String
+    totalAmount  Decimal
+    installments Int
+    startDate    DateTime  @default(now())
+    endDate      DateTime?
+    isDeleted    Boolean   @default(false)
+    deletedAt    DateTime?
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+
+    // Relations
+    patientId String
+    patient   Patient   @relation(fields: [patientId], references: [id])
+    payments  Payment[]
+
+    // Indexes
+    @@index([patientId])
+    @@index([isDeleted])
+    @@index([startDate, endDate])
+}
+
+model Payment {
+    id          String      @id @default(cuid())
+    amount      Decimal
+    paymentType PaymentType
+    paymentDate DateTime    @default(now())
+    isDeleted   Boolean     @default(false)
+    deletedAt   DateTime?
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    // Relations
+    treatmentId String
+    treatment   Treatment @relation(fields: [treatmentId], references: [id])
+
+    // Indexes
+    @@index([treatmentId])
+    @@index([paymentType])
+    @@index([paymentDate])
+    @@index([isDeleted])
+}
+
+model ExpenseType {
+    id          String    @id @default(cuid())
+    name        String
+    description String?
+    isDeleted   Boolean   @default(false)
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    // Relations
+    expenses Expense[]
+
+    // Indexes
+    @@index([isDeleted])
+    @@index([name])
+}
+
+model Expense {
+    id          String    @id @default(cuid())
+    amount      Decimal
+    date        DateTime
+    description String?
+    isDeleted   Boolean   @default(false)
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    // Relations
+    expenseTypeId String
+    expenseType   ExpenseType @relation(fields: [expenseTypeId], references: [id])
+    branchId      String?
+    branch        Branch?     @relation(fields: [branchId], references: [id])
+    doctorId      String?
+    doctor        Doctor?     @relation(fields: [doctorId], references: [id])
+
+    // Indexes
+    @@index([expenseTypeId])
+    @@index([branchId])
+    @@index([doctorId])
+    @@index([date])
+    @@index([isDeleted])
+}
