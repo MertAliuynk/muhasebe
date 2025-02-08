@@ -5,6 +5,13 @@ export default {
   darkMode: ["class"],
   content: ["./src/**/*.tsx"],
   theme: {
+    container: {
+      center: true,
+      padding: "1rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
         sans: ["var(--font-geist-sans)", ...fontFamily.sans],
@@ -58,5 +65,5 @@ export default {
       },
     },
   },
-  plugins: [(await import("tailwindcss-animate")).default],
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config
