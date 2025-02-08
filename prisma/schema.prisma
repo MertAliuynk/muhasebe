@@ -66,23 +66,21 @@ model User {
 }
 
 model Company {
-    id        String    @id @default(cuid())
+    id        String    @id @default("single_company")
     name      String
-    address   String?
-    phone     String?
+    address   String
+    phone     String
     taxNumber String?
     isDeleted Boolean   @default(false)
     deletedAt DateTime?
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    // Relations
-    adminId  String   @unique
-    admin    User     @relation(fields: [adminId], references: [id])
     branches Branch[]
+    ceoId    String   @unique
+    ceo      User     @relation(fields: [ceoId], references: [id])
 
     // Indexes
-    @@index([adminId])
     @@index([isDeleted])
     @@index([name])
 }

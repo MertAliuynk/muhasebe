@@ -3,6 +3,7 @@ import "@/styles/globals.css"
 import { type Metadata } from "next"
 import { TRPCReactProvider } from "@/trpc/react"
 import { GeistSans } from "geist/font/sans"
+import { SessionProvider } from "next-auth/react"
 import { Toaster } from "sonner"
 
 import { TailwindIndicator } from "@/components/tailwind-indicator"
@@ -24,23 +25,25 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-svh bg-background font-sans antialiased">
-        <TRPCReactProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-            enableColorScheme
-          >
-            <div vaul-drawer-wrapper="">
-              <div className="relative flex min-h-svh flex-col bg-background">
-                {children}
+        <SessionProvider>
+          <TRPCReactProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+              enableColorScheme
+            >
+              <div vaul-drawer-wrapper="">
+                <div className="relative flex min-h-svh flex-col bg-background">
+                  {children}
+                </div>
               </div>
-            </div>
-            <TailwindIndicator />
-            <Toaster />
-          </ThemeProvider>
-        </TRPCReactProvider>
+              <TailwindIndicator />
+              <Toaster />
+            </ThemeProvider>
+          </TRPCReactProvider>
+        </SessionProvider>
       </body>
     </html>
   )

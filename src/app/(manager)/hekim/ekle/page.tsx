@@ -38,7 +38,7 @@ const formSchema = z.object({
   }),
 })
 
-export default function HekimEklePage() {
+export default function AddDoctorPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
