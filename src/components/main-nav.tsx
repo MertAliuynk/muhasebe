@@ -2,11 +2,13 @@
 
 import * as React from "react"
 import Link from "next/link"
+import type { NavigationItem } from "@/types"
 import {
   BriefcaseMedical,
+  Building,
+  CircleUserRound,
   File,
   Home,
-  Hospital,
   UserPlus,
   Users,
   UserSearch,
@@ -14,7 +16,6 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 import {
   NavigationMenu,
@@ -26,84 +27,39 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 
-interface NavigationItem {
-  title: string
-  href?: string
-  icon?: LucideIcon
-  description?: string
-  isDropdown?: boolean
-  children?: NavigationItem[]
+import Logo from "./logo"
+
+type Props = {
+  navigationItems: NavigationItem[]
 }
 
-const navigationItems: NavigationItem[] = [
-  {
-    title: "Ana Sayfa",
-    href: "/",
-    icon: Home,
-  },
-  {
-    title: "Günlük Kasa",
-    href: "/gunluk-kasa",
-    icon: Vault,
-  },
-  {
-    title: "Hekimler",
-    icon: BriefcaseMedical,
-    isDropdown: true,
-    children: [
-      {
-        title: "Hekimleri Listele",
-        href: "/hekim",
-        icon: UserSearch,
-        description: "Hekimleri listeleyebilirsiniz.",
-      },
-      {
-        title: "Hekim Ekle",
-        icon: UserPlus,
-        href: "/hekim/ekle",
-        description: "Yeni bir hekim kaydı eklemek için bu alanı kullanın.",
-      },
-    ],
-  },
-  {
-    title: "Hastalar",
-    icon: Users,
-    isDropdown: true,
-    children: [
-      {
-        title: "Hastaları Listele",
-        href: "/hasta",
-        icon: UserSearch,
-        description: "Hastahaneye ait tüm hastaları listeleyebilirsiniz.",
-      },
-      {
-        title: "Hasta Ekle",
-        href: "/hasta/ekle",
-        icon: UserPlus,
-        description: "Yeni bir hasta kaydı eklemek için bu alanı kullanın.",
-      },
-    ],
-  },
-  {
-    title: "Raporlar",
-    icon: File,
-    href: "/rapor",
-  },
-]
+const iconMap = {
+  Home: Home,
+  Vault: Vault,
+  BriefcaseMedical: BriefcaseMedical,
+  UserSearch: UserSearch,
+  UserPlus: UserPlus,
+  Users: Users,
+  File: File,
+  Building: Building,
+  CircleUserRound: CircleUserRound,
+}
 
-export function MainNav() {
+export function MainNav({ navigationItems }: Props) {
+  const itemsWithIcons = navigationItems.map((item) => ({
+    ...item,
+    icon: iconMap[item.icon as keyof typeof iconMap] as LucideIcon,
+  }))
+
   return (
     <div className="mr-4 hidden md:flex">
       <Link href="/" className="mr-4 flex items-center gap-2 lg:mr-6">
-        <Hospital className="h-6 w-6" />
-        <span className="hidden font-bold lg:inline-block text-sm">
-          {siteConfig.name}
-        </span>
+        <Logo textClassName="text-sm font-medium" className="items-end" />
       </Link>
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem></NavigationMenuItem>
-          {navigationItems.map((item) => (
+          {itemsWithIcons.map((item) => (
             <NavigationMenuItem key={item.title}>
               {item.isDropdown ? (
                 <>
@@ -128,9 +84,10 @@ export function MainNav() {
                                 {child.description}
                               </p>
                             </div>
-                            {child.icon && (
-                              <child.icon className="size-4 text-muted-foreground" />
-                            )}
+                            {child.icon &&
+                              React.createElement(child.icon, {
+                                className: "size-4 text-muted-foreground",
+                              })}
                           </div>
                         </ListItem>
                       ))}

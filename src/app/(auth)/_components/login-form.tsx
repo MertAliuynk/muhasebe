@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 
 const formSchema = z.object({
-  userName: z.string().min(1, {
+  username: z.string().min(1, {
     message: "Kullanıcı adı giriniz.",
   }),
   password: z.string().min(5, {
@@ -37,7 +38,7 @@ export default function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userName: "",
+      username: "",
       password: "",
     },
   })
@@ -46,7 +47,7 @@ export default function LoginForm() {
     setIsError(false)
     setIsLoading(true)
     const result = await signIn("credentials", {
-      userName: values.userName,
+      username: values.username,
       password: values.password,
       redirect: false,
     })
@@ -54,6 +55,8 @@ export default function LoginForm() {
     setIsLoading(false)
 
     if (result?.error) {
+      console.log(result)
+
       setIsError(true)
       return
     } else if (result?.ok) {
@@ -69,15 +72,18 @@ export default function LoginForm() {
           <AlertDescription>Kullanıcı adı veya şifre hatalı.</AlertDescription>
         </Alert>
       )}
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
         <FormField
           control={form.control}
-          name="userName"
+          name="username"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Kullanıcı Adı</FormLabel>
+              <FormDescription>
+                Lütfen sisteme kayıtlı olan kullanıcı adınızı giriniz.
+              </FormDescription>
               <FormControl>
-                <Input placeholder="ornek@email.com" {...field} />
+                <Input placeholder="" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,6 +95,7 @@ export default function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Şifre</FormLabel>
+              <FormDescription>Lütfen şifrenizi giriniz.</FormDescription>
               <FormControl>
                 <Input {...field} type="password" />
               </FormControl>

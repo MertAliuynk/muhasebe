@@ -16,6 +16,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 
+import { getCommonPinningStyles } from "@/lib/data-table"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import {
@@ -97,9 +98,9 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div className={cn("bg-transparent", className)}>
+    <div className={cn("w-full space-y-2.5", className)}>
       {(searchKey ?? viewOption) && (
-        <div className="flex items-center justify-between pb-5">
+        <div className="flex items-center justify-between">
           <div className="flex items-end gap-2">
             {searchKey && (
               <Input
@@ -143,59 +144,74 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       )}
-      <Table className="text-sm">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                )
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => {
-              const isPassive = isPassiveRow
-                ? isPassiveRow(row.original)
-                : false
-              const rowStyle = isPassive ? "text-gray-400 bg-gray-200/40" : ""
+      <div className="overflow-hidden rounded-md border">
+        <Table className="text-sm">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead
+                      key={header.id}
+                      style={{
+                        ...getCommonPinningStyles({ column: header.column }),
+                      }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => {
+                const isPassive = isPassiveRow
+                  ? isPassiveRow(row.original)
+                  : false
+                const rowStyle = isPassive ? "text-gray-400 bg-gray-200/40" : ""
 
-              return (
-                <TableRow
-                  key={row.id}
-                  className={rowStyle}
-                  data-state={row.getIsSelected() && "selected"}
+                return (
+                  <TableRow
+                    key={row.id}
+                    className={rowStyle}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        style={{
+                          ...getCommonPinningStyles({ column: cell.column }),
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              )
-            })
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                Veri Bulunamadı
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                  Veri Bulunamadı
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
       {pagination && (
         <DataTablePagination
           table={table}

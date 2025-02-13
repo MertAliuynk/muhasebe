@@ -9,15 +9,17 @@ declare module "next-auth" {
     user: {
       id: string
       role: UserRole
-      userName: string
+      username: string
       companyId: string | null
+      branchId: string | null
     } & DefaultSession["user"]
   }
 
   interface User {
     role: UserRole
-    userName: string
+    username: string
     companyId: string | null
+    branchId: string | null
   }
 }
 
@@ -25,14 +27,19 @@ export const authConfig = {
   providers: [
     CredentialsProvider({
       credentials: {
-        userName: { label: "Kullanıcı Adı", type: "text" },
+        username: { label: "Kullanıcı Adı", type: "text" },
         password: { label: "Şifre", type: "password" },
       },
       async authorize(credentials) {
         const user = await db.user.findUnique({
-          where: { userName: credentials.userName as string },
+          where: { username: credentials.username as string },
           include: {
             company: {
+              select: {
+                id: true,
+              },
+            },
+            branchManager: {
               select: {
                 id: true,
               },
@@ -40,15 +47,19 @@ export const authConfig = {
           },
         })
 
-        if (!user) throw new Error("Kullanıcı adı veya şifre hatalı")
+        if (!user) return null
 
         if (
           user.password &&
           !(await compare(credentials.password as string, user.password))
         )
-          throw new Error("Kullanıcı adı veya şifre hatalı")
+          return null
 
-        return { ...user, companyId: user.company?.id ?? null }
+        return {
+          ...user,
+          companyId: user.company?.id ?? null,
+          branchId: user.branchManager?.id ?? null,
+        }
       },
     }),
   ],
@@ -57,7 +68,8 @@ export const authConfig = {
       if (user) {
         token.id = user.id
         token.role = user.role
-        token.userName = user.userName
+        token.username = user.username
+        token.branchId = user.branchId
         if (user.role === UserRole.ADMIN && user.companyId) {
           token.companyId = user.companyId
         }
@@ -70,8 +82,9 @@ export const authConfig = {
         ...session.user,
         id: token.id as string,
         role: token.role as UserRole,
-        userName: token.userName as string,
+        username: token.username as string,
         companyId: token.companyId as string | null,
+        branchId: token.branchId as string | null,
       },
     }),
   },

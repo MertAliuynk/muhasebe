@@ -1,18 +1,82 @@
+import type { NavigationItem } from "@/types"
+
 export const siteConfig = {
-  name: "KDP",
-  url: "https://ui.shadcn.com",
-  ogImage: "https://ui.shadcn.com/og.jpg",
-  description:
-    "Beautifully designed components that you can copy and paste into your apps. Accessible. Customizable. Open Source.",
-  links: {
-    twitter: "https://twitter.com/shadcn",
-    github: "https://github.com/shadcn-ui/ui",
-  },
+  name: "Karadeniz Ağız ve Diş Sağlığı Polikliniği",
+  description: "Karadeniz Ağız ve Diş Sağlığı Polikliniği",
 }
 
 export type SiteConfig = typeof siteConfig
 
-export const META_THEME_COLORS = {
-  light: "#ffffff",
-  dark: "#09090b",
-}
+export const managerNavigationItems: NavigationItem[] = [
+  {
+    title: "Ana Sayfa",
+    href: "/",
+    icon: "Home",
+  },
+  {
+    title: "Günlük Kasa",
+    href: "/gunluk-kasa",
+    icon: "Vault",
+  },
+  {
+    title: "Hekimler",
+    icon: "BriefcaseMedical",
+    isDropdown: true,
+    children: [
+      {
+        title: "Hekimleri Listele",
+        href: "/hekim",
+        icon: "UserSearch",
+        description: "Hekimleri listeleyebilirsiniz.",
+      },
+      {
+        title: "Hekim Ekle",
+        icon: "UserPlus",
+        href: "/hekim/ekle",
+        description: "Yeni bir hekim kaydı eklemek için bu alanı kullanın.",
+      },
+    ],
+  },
+  {
+    title: "Hastalar",
+    icon: "Users",
+    isDropdown: true,
+    children: [
+      {
+        title: "Hastaları Listele",
+        href: "/hasta",
+        icon: "UserSearch",
+        description: "Hastahaneye ait tüm hastaları listeleyebilirsiniz.",
+      },
+      {
+        title: "Hasta Ekle",
+        href: "/hasta/ekle",
+        icon: "UserPlus",
+        description: "Yeni bir hasta kaydı eklemek için bu alanı kullanın.",
+      },
+    ],
+  },
+  {
+    title: "Raporlar",
+    icon: "File",
+    href: "/rapor",
+  },
+]
+
+export const ceoNavigationItems: NavigationItem[] = [
+  {
+    title: "Ana Sayfa",
+    href: "/ceo",
+    icon: "Home",
+  },
+  {
+    title: "Yöneticiler",
+    href: "/ceo/yonetici",
+    icon: "CircleUserRound",
+  },
+  {
+    title: "Şubeler",
+    href: "/ceo/sube",
+    icon: "Building",
+  },
+]

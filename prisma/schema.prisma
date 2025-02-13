@@ -45,10 +45,11 @@ model AuditLog {
 
 model User {
     id        String    @id @default(cuid())
-    userName  String    @unique
+    username  String    @unique
     password  String
     name      String
     role      UserRole
+    imagePath String?
     isDeleted Boolean   @default(false)
     deletedAt DateTime?
     createdAt DateTime  @default(now())
@@ -56,7 +57,7 @@ model User {
 
     // Relations
     doctor        Doctor?
-    branchManager Branch[]
+    branchManager Branch?
     company       Company?
     auditLogs     AuditLog[]
 
@@ -98,10 +99,11 @@ model Branch {
     // Relations
     companyId String
     company   Company   @relation(fields: [companyId], references: [id])
-    managerId String
+    managerId String    @unique
     manager   User      @relation(fields: [managerId], references: [id])
     doctors   Doctor[]
     expenses  Expense[]
+    patients  Patient[]
 
     // Indexes
     @@index([companyId])
@@ -111,18 +113,21 @@ model Branch {
 }
 
 model Doctor {
-    id        String    @id @default(cuid())
-    specialty String?
-    isDeleted Boolean   @default(false)
-    deletedAt DateTime?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    id          String    @id @default(cuid())
+    specialty   String?
+    tcNo        String?
+    phoneNumber String?
+    birthDate   DateTime?
+    isDeleted   Boolean   @default(false)
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
     // Relations
     userId   String    @unique
-    user     User      @relation(fields: [userId], references: [id])
+    user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
     branchId String
-    branch   Branch    @relation(fields: [branchId], references: [id])
+    branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
     patients Patient[]
     expenses Expense[]
 
@@ -137,7 +142,10 @@ model Patient {
     id        String    @id @default(cuid())
     name      String
     phone     String?
-    email     String?
+    tcNo      String?
+    birthDate DateTime?
+    address   String?
+    notes     String[]
     isDeleted Boolean   @default(false)
     deletedAt DateTime?
     createdAt DateTime  @default(now())
@@ -146,14 +154,15 @@ model Patient {
     // Relations
     doctorId   String
     doctor     Doctor      @relation(fields: [doctorId], references: [id])
+    branchId   String
+    branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
     treatments Treatment[]
 
     // Indexes
     @@index([doctorId])
+    @@index([branchId])
     @@index([isDeleted])
     @@index([name])
-    @@index([phone])
-    @@index([email])
 }
 
 model Treatment {

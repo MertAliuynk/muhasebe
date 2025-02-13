@@ -10,6 +10,8 @@ import SuperJSON from "superjson"
 
 import { createQueryClient } from "./query-client"
 
+import "@/config/date"
+
 let clientQueryClientSingleton: QueryClient | undefined = undefined
 const getQueryClient = () => {
   if (typeof window === "undefined") {

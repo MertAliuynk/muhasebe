@@ -26,8 +26,8 @@ export default auth(async (req) => {
 
   if (isAdmin && isAuthenticated) {
     if (!hasCompany) {
-      if (nextUrl.pathname !== "/ceo/ayarlar/sirket") {
-        return Response.redirect(new URL("/ceo/ayarlar/sirket", nextUrl.origin))
+      if (nextUrl.pathname !== "/ayarlar/sirket") {
+        return Response.redirect(new URL("/ayarlar/sirket", nextUrl.origin))
       }
       return undefined
     }

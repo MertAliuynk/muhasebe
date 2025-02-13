@@ -14,3 +14,33 @@ export function toSentenceCase(str: string) {
     .replace(/\s+/g, " ")
     .trim()
 }
+
+export function turkishToEnglish(text: string): string {
+  const charMap: Record<string, string> = {
+    ı: "i",
+    ğ: "g",
+    ü: "u",
+    ş: "s",
+    ö: "o",
+    ç: "c",
+    İ: "I",
+    Ğ: "G",
+    Ü: "U",
+    Ş: "S",
+    Ö: "O",
+    Ç: "C",
+  }
+
+  return text.replace(/[ıİğĞüÜşŞöÖçÇ]/g, (char) => charMap[char] ?? char)
+}
+
+export function slugify(text: string): string {
+  const slug = turkishToEnglish(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+
+  if (slug.length === 0) return crypto.randomUUID()
+
+  return slug
+}

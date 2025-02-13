@@ -40,7 +40,7 @@ export default function RootLayout({
                 </div>
               </div>
               <TailwindIndicator />
-              <Toaster />
+              <Toaster position="top-center" />
             </ThemeProvider>
           </TRPCReactProvider>
         </SessionProvider>
