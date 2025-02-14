@@ -124,12 +124,13 @@ model Doctor {
     updatedAt   DateTime  @updatedAt
 
     // Relations
-    userId   String    @unique
-    user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    branchId String
-    branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-    patients Patient[]
-    expenses Expense[]
+    userId     String      @unique
+    user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    branchId   String
+    branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    patients   Patient[]
+    expenses   Expense[]
+    treatments Treatment[] // Doktorun yaptığı tedaviler
 
     // Indexes
     @@index([userId])
@@ -166,37 +167,44 @@ model Patient {
 }
 
 model Treatment {
-    id           String    @id @default(cuid())
-    name         String
-    totalAmount  Decimal
-    installments Int
-    startDate    DateTime  @default(now())
-    endDate      DateTime?
-    isDeleted    Boolean   @default(false)
-    deletedAt    DateTime?
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @updatedAt
+    id             String    @id @default(cuid())
+    name           String
+    originalAmount Decimal // İlk fiyat (50.000 TL)
+    totalAmount    Decimal // Faizli toplam tutar (60.000 TL)
+    installments   Int // Taksit sayısı
+    interestRate   Decimal // Faiz oranı
+    doctorRate     Decimal // Doktor yüzdesi (örn: 30.00)
+    startDate      DateTime  @default(now())
+    endDate        DateTime?
+    isDeleted      Boolean   @default(false)
+    deletedAt      DateTime?
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
 
     // Relations
     patientId String
     patient   Patient   @relation(fields: [patientId], references: [id])
+    doctorId  String
+    doctor    Doctor    @relation(fields: [doctorId], references: [id])
     payments  Payment[]
 
     // Indexes
     @@index([patientId])
+    @@index([doctorId])
     @@index([isDeleted])
     @@index([startDate, endDate])
 }
 
 model Payment {
-    id          String      @id @default(cuid())
-    amount      Decimal
-    paymentType PaymentType
-    paymentDate DateTime    @default(now())
-    isDeleted   Boolean     @default(false)
-    deletedAt   DateTime?
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @updatedAt
+    id                String      @id @default(cuid())
+    amount            Decimal
+    paymentType       PaymentType
+    paymentDate       DateTime    @default(now())
+    installmentNumber Int // Hangi takside yapıldığı (1-6 arası)
+    isDeleted         Boolean     @default(false)
+    deletedAt         DateTime?
+    createdAt         DateTime    @default(now())
+    updatedAt         DateTime    @updatedAt
 
     // Relations
     treatmentId String
@@ -207,6 +215,7 @@ model Payment {
     @@index([paymentType])
     @@index([paymentDate])
     @@index([isDeleted])
+    @@index([installmentNumber])
 }
 
 model ExpenseType {

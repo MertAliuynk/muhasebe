@@ -44,3 +44,31 @@ export function slugify(text: string): string {
 
   return slug
 }
+
+export function calculateAge(birthDate: Date | null) {
+  if (!birthDate) return null
+  const today = new Date()
+  const age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    return age - 1
+  }
+  return age
+}
+
+export function formatCurrency(
+  amount: number | string | null | undefined
+): string {
+  if (amount === null || amount === undefined) return "₺0,00"
+
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(amount))
+}

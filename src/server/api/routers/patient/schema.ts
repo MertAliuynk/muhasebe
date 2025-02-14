@@ -13,3 +13,7 @@ export const savePatientSchema = z.object({
     .string()
     .min(1, "Lütfen hasta işlemlerini gerçekletirecek doktoru seçiniz."),
 })
+
+export const searchPatientSchema = z.object({
+  query: z.string(),
+})

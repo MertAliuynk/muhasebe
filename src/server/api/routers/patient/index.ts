@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import { TRPCError } from "@trpc/server"
 
-import { savePatientSchema } from "./schema"
+import { savePatientSchema, searchPatientSchema } from "./schema"
 
 export const patientRouter = createTRPCRouter({
   getPatientsByBranch: protectedProcedure.query(async ({ ctx }) => {
@@ -52,5 +52,24 @@ export const patientRouter = createTRPCRouter({
       })
 
       return patient
+    }),
+  searchPatient: protectedProcedure
+    .input(searchPatientSchema)
+    .query(async ({ ctx, input }) => {
+      const patients = await ctx.db.patient.findMany({
+        where: {
+          OR: [
+            { phone: { contains: input.query, mode: "insensitive" } },
+            { name: { contains: input.query, mode: "insensitive" } },
+            { tcNo: { contains: input.query, mode: "insensitive" } },
+          ],
+        },
+        take: 10,
+        orderBy: {
+          createdAt: "desc",
+        },
+      })
+
+      return patients
     }),
 })

@@ -29,7 +29,7 @@ export default [
 
       return (
         <Link
-          href={`/hekim/${row.original.id}`}
+          href={`/hekim/${row.original.doctor?.id}`}
           className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition-all duration-300"
         >
           <Avatar className="rounded-xl">

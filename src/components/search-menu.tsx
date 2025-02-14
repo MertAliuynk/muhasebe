@@ -1,22 +1,26 @@
 "use client"
 
 import * as React from "react"
+import { api } from "@/trpc/react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command"
+
+import Spinner from "./spinner"
 
 export function SearchMenu({ ...props }: DialogProps) {
   const [open, setOpen] = React.useState(false)
+  const [query, setQuery] = React.useState("")
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -39,6 +43,10 @@ export function SearchMenu({ ...props }: DialogProps) {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
+  const { data, isLoading } = api.patient.searchPatient.useQuery({
+    query,
+  })
+
   return (
     <>
       <Button
@@ -56,19 +64,29 @@ export function SearchMenu({ ...props }: DialogProps) {
         </kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Hasta Ara..." />
-        <CommandList>
-          <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
-          <CommandGroup heading="Hastalar">
-            <CommandItem>Sedat</CommandItem>
-            <CommandItem>Ahmet</CommandItem>
-            <CommandItem>Mehmet</CommandItem>
-          </CommandGroup>
-          <CommandGroup heading="Hekimler">
-            <CommandItem>Deniz</CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-        </CommandList>
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Hasta adı soyadı, tc no ve ya telefon numarasını giriniz..."
+            value={query}
+            onValueChange={setQuery}
+          />
+          <CommandList className="h-[40vh] overflow-y-auto">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full mt-10">
+                <Spinner className="w-6 h-6" />
+              </div>
+            ) : (
+              <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
+            )}
+            {data && data.length > 0 && (
+              <CommandGroup heading="Hastalar">
+                {data?.map((patient) => (
+                  <CommandItem key={patient.id}>{patient.name}</CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
       </CommandDialog>
     </>
   )
