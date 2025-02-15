@@ -1,9 +1,37 @@
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
+import {
+  adminProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "@/server/api/trpc"
 import { TRPCError } from "@trpc/server"
 
 import { savePatientSchema, searchPatientSchema } from "./schema"
 
 export const patientRouter = createTRPCRouter({
+  getPatientsAdmin: adminProcedure.query(async ({ ctx }) => {
+    const patients = await ctx.db.patient.findMany({
+      include: {
+        doctor: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                imagePath: true,
+              },
+            },
+          },
+        },
+        branch: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    })
+
+    return patients
+  }),
   getPatientsByBranch: protectedProcedure.query(async ({ ctx }) => {
     const branchId = ctx.session.user.branchId
 

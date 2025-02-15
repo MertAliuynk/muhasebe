@@ -14,9 +14,12 @@ import {
 import { NavUser } from "@/components/sidebar/nav-user"
 
 import { NavGroup } from "./nav-group"
-import { sidebarData } from "./sidebar-data"
+import type { SidebarData } from "./types"
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  sidebarData,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { sidebarData: SidebarData }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

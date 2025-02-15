@@ -59,6 +59,7 @@ export const saveDoctorSchema = z
         required_error: "Doğum tarihi seçiniz.",
       })
       .optional(),
+    branchId: z.string().min(1, "Şube seçiniz."),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     path: ["passwordConfirm"],

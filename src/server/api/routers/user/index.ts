@@ -50,21 +50,9 @@ export const userRouter = createTRPCRouter({
       })
       return user
     }),
-  saveDoctor: protectedProcedure
+  saveDoctor: adminProcedure
     .input(saveDoctorSchema)
     .mutation(async ({ ctx, input }) => {
-      const branch = await ctx.db.branch.findUnique({
-        where: {
-          managerId: ctx.session.user.id,
-        },
-      })
-
-      if (!branch)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Şube bulunamadı.",
-        })
-
       const existingUser = await ctx.db.user.findUnique({
         where: {
           username: input.username,
@@ -92,7 +80,7 @@ export const userRouter = createTRPCRouter({
       await ctx.db.doctor.create({
         data: {
           userId: user.id,
-          branchId: branch.id,
+          branchId: input.branchId,
           tcNo: input.tcNo,
           phoneNumber: input.phoneNumber,
           specialty: input.specialty,

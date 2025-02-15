@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { DatePicker } from "@/components/form/date-picker"
+import { SelectBranch } from "@/components/form/select-branch"
 import UploadImage from "@/components/form/upload-image"
 import { PhoneInput } from "@/components/phone-input"
 
@@ -32,11 +33,12 @@ export default function SaveDoctorForm() {
   const form = useForm<z.infer<typeof saveDoctorSchema>>({
     resolver: zodResolver(saveDoctorSchema),
     defaultValues: {
+      branchId: "",
       name: "",
       username: "",
       phoneNumber: "",
       tcNo: "",
-      birthDate: new Date(),
+      birthDate: undefined,
       imagePath: undefined,
       password: "",
       passwordConfirm: "",
@@ -116,6 +118,18 @@ export default function SaveDoctorForm() {
             </h2>
             <FormField
               control={form.control}
+              name="branchId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Şube</FormLabel>
+                  <FormControl>
+                    <SelectBranch {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
@@ -180,6 +194,7 @@ export default function SaveDoctorForm() {
               <h2 className="text-lg font-medium text-muted-foreground">
                 Hekim Giriş Bilgileri
               </h2>
+
               <FormField
                 control={form.control}
                 name="username"
@@ -201,7 +216,11 @@ export default function SaveDoctorForm() {
                     <FormItem>
                       <FormLabel>Şifre</FormLabel>
                       <FormControl>
-                        <Input placeholder="Şifre giriniz" {...field} />
+                        <Input
+                          placeholder="Şifre giriniz"
+                          type="password"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -214,7 +233,11 @@ export default function SaveDoctorForm() {
                     <FormItem>
                       <FormLabel>Şifre Tekrar</FormLabel>
                       <FormControl>
-                        <Input placeholder="Şifre tekrar giriniz" {...field} />
+                        <Input
+                          placeholder="Şifre tekrar giriniz"
+                          type="password"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

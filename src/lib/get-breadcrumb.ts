@@ -4,6 +4,8 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   hekim: "Hekimler",
   ekle: "Yeni Ekle",
   hasta: "Hastalar",
+  "gunluk-kasa": "Günlük Kasa",
+  rapor: "Raporlar",
 }
 
 interface BreadcrumbItem {

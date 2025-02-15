@@ -1,17 +1,40 @@
-import { ceoNavigationItems } from "@/config/site"
-import { SiteHeader } from "@/components/site-header"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+import { ModeSwitcher } from "@/components/mode-switcher"
+import { SearchMenu } from "@/components/search-menu"
+import { Shell } from "@/components/shell"
+import { AppSidebar } from "@/components/sidebar/app-sidebar"
+import SidebarBreadcrumbs from "@/components/sidebar/sidebar-breadcrumbs"
+import { sidebarDataCeo } from "@/components/sidebar/sidebar-data"
 
-interface AppLayoutProps {
+export default function AdminLayout({
+  children,
+}: {
   children: React.ReactNode
-}
-
-export default function AppLayout({ children }: AppLayoutProps) {
+}) {
   return (
-    <div data-wrapper="" className="border-grid flex flex-1 flex-col">
-      <SiteHeader navigationItems={ceoNavigationItems} />
-      <div className="container-wrapper py-10 max-w-6xl">
-        <main className="container flex flex-1 flex-col">{children}</main>
-      </div>
-    </div>
+    <SidebarProvider>
+      <AppSidebar sidebarData={sidebarDataCeo} />
+      <SidebarInset>
+        <header className="flex justify-between h-16 px-4 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 ">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <SidebarBreadcrumbs />
+          </div>
+          <div className="flex items-center gap-2">
+            <SearchMenu />
+            <ModeSwitcher />
+          </div>
+        </header>
+        <div className="flex-1 px-4">
+          <Shell className="md:py-4">{children}</Shell>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
