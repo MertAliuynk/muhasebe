@@ -144,15 +144,16 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       )}
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden">
         <Table className="text-sm">
-          <TableHeader>
+          <TableHeader className="bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
+                      className="first:rounded-l-md last:rounded-r-md text-primary/70"
                       style={{
                         ...getCommonPinningStyles({ column: header.column }),
                       }}

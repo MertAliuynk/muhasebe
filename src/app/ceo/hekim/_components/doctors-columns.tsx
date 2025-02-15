@@ -25,7 +25,7 @@ export default [
       return (
         <Link
           href={`/ceo/hekim/${row.original.id}`}
-          className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition-all duration-300"
+          className="flex items-center gap-2 hover:bg-muted/30 p-2 rounded-md transition-all duration-300"
         >
           <Avatar className="rounded-xl">
             <AvatarImage src={`${env.NEXT_PUBLIC_MINIO_URL}${image}`} />
@@ -37,12 +37,13 @@ export default [
             </AvatarFallback>
           </Avatar>
           <div>
-            <p>{name}</p>
+            <p className="font-medium">{name}</p>
             <p className="text-muted-foreground text-xs">{specialty}</p>
           </div>
         </Link>
       )
     },
+    size: 600,
   },
   {
     accessorKey: "branch",
@@ -58,6 +59,7 @@ export default [
       const phone = row.original.phoneNumber
       return phone ? formatPhoneNumberIntl(phone) : "Yok"
     },
+    size: 200,
   },
   {
     accessorKey: "birthDate",

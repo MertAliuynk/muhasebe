@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import type { Table } from "@tanstack/react-table"
-import { Check, ChevronsUpDown, Settings2 } from "lucide-react"
+import { Check, Settings2 } from "lucide-react"
 
 import { cn, toSentenceCase } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -38,11 +38,10 @@ export function DataTableViewOptions<TData>({
           variant="outline"
           role="combobox"
           size="sm"
-          className="ml-auto hidden h-8 gap-2 focus:outline-none focus:ring-1 focus:ring-ring focus-visible:ring-0 lg:flex"
+          className="ml-auto hidden h-8 gap-2 focus:outline-none focus:ring-1 focus:ring-ring focus-visible:ring-0 lg:flex text-xs"
         >
-          <Settings2 className="size-4" />
-          Göster
-          <ChevronsUpDown className="ml-auto size-4 shrink-0 opacity-50" />
+          <Settings2 className="size-3" />
+          Göster / Gizle
         </Button>
       </PopoverTrigger>
       <PopoverContent
