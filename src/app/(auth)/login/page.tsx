@@ -9,12 +9,13 @@ export default function LoginPage() {
     <div className="grid min-h-svh lg:grid-cols-[3fr_2fr]">
       <div className="relative hidden bg-muted lg:block overflow-hidden">
         <Image
-          src="/images/dentist-treating-patient.jpg"
+          src="/images/login.jpg"
           alt="Image"
-          className="object-cover"
+          className="object-cover object-left"
           priority
           fill
         />
+        <div className="absolute inset-0 flex items-end bg-gradient-to-l from-background from-10% to-80%" />
       </div>
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
