@@ -5,7 +5,7 @@ import {
 } from "@/server/api/trpc"
 import { TRPCError } from "@trpc/server"
 
-import { getDoctorByIdSchema } from "./schema"
+import { getDoctorByIdSchema, getDoctorByUsernameSchema } from "./schema"
 
 export const doctorRouter = createTRPCRouter({
   getDoctorsAdmin: adminProcedure.query(async ({ ctx }) => {
@@ -34,6 +34,30 @@ export const doctorRouter = createTRPCRouter({
 
     return doctors
   }),
+  getDoctorByUsername: protectedProcedure
+    .input(getDoctorByUsernameSchema)
+    .query(async ({ ctx, input }) => {
+      const { username } = input
+
+      const doctor = await ctx.db.doctor.findFirst({
+        where: {
+          user: {
+            username,
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              imagePath: true,
+            },
+          },
+        },
+      })
+
+      return doctor
+    }),
   getDoctorById: protectedProcedure
     .input(getDoctorByIdSchema)
     .query(async ({ ctx, input }) => {

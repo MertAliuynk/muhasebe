@@ -33,7 +33,7 @@ import {
 
 interface Props {
   name: string
-  label: string
+  label?: string | React.ReactNode
 }
 
 export function DatePicker({ name, label }: Props) {

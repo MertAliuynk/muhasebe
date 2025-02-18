@@ -6,6 +6,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   hasta: "Hastalar",
   "gunluk-kasa": "Günlük Kasa",
   rapor: "Raporlar",
+  gider: "Gider Kalemleri",
 }
 
 interface BreadcrumbItem {

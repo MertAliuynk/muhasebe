@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
@@ -14,6 +15,17 @@ export default [
   {
     accessorKey: "name",
     header: "Hasta Adı ve Soyadı",
+    cell: ({ row }) => {
+      const patient = row.original
+      return (
+        <Link
+          href={`/hasta/${patient.id}`}
+          className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition-all duration-300"
+        >
+          <div>{patient.name}</div>
+        </Link>
+      )
+    },
   },
   {
     accessorKey: "phone",

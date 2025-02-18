@@ -72,3 +72,14 @@ export function formatCurrency(
     maximumFractionDigits: 2,
   }).format(Number(amount))
 }
+
+export function formatCurrencyWithSymbol(
+  amount: number | string | null | undefined
+): string {
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(amount))
+}

@@ -5,9 +5,26 @@ import {
 } from "@/server/api/trpc"
 import { TRPCError } from "@trpc/server"
 
-import { savePatientSchema, searchPatientSchema } from "./schema"
+import {
+  getPatientByIdSchema,
+  savePatientSchema,
+  savePaymentPlanSchema,
+  searchPatientSchema,
+} from "./schema"
 
 export const patientRouter = createTRPCRouter({
+  getPatientById: protectedProcedure
+    .input(getPatientByIdSchema)
+    .query(async ({ ctx, input }) => {
+      const patient = await ctx.db.patient.findUnique({
+        where: { id: input.id },
+        include: {
+          paymentPlan: true,
+        },
+      })
+
+      return patient
+    }),
   getPatientsAdmin: adminProcedure.query(async ({ ctx }) => {
     const patients = await ctx.db.patient.findMany({
       include: {
@@ -99,5 +116,17 @@ export const patientRouter = createTRPCRouter({
       })
 
       return patients
+    }),
+  savePaymentPlan: protectedProcedure
+    .input(savePaymentPlanSchema)
+    .mutation(async ({ ctx, input }) => {
+      const paymentPlan = await ctx.db.patientPaymentPlan.create({
+        data: {
+          ...input,
+          patientId: input.patientId,
+        },
+      })
+
+      return paymentPlan
     }),
 })

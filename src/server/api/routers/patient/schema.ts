@@ -17,3 +17,25 @@ export const savePatientSchema = z.object({
 export const searchPatientSchema = z.object({
   query: z.string(),
 })
+
+export const getPatientByIdSchema = z.object({
+  id: z.string(),
+})
+
+export const savePaymentPlanSchema = z.object({
+  patientId: z.string(),
+  totalAmount: z.number().min(1, {
+    message: "Toplam tutar 1'den büyük olmalıdır.",
+  }),
+  downPaymentAmount: z.number().min(1, {
+    message: "Peşinat tutarı 1'den büyük olmalıdır.",
+  }),
+  installmentCount: z.number().min(1, {
+    message: "Taksit sayısı 1'den büyük olmalıdır.",
+  }),
+  interestRate: z.number().min(0, {
+    message: "Faiz oranı 0 veya daha büyük olmalıdır.",
+  }),
+  firstInstallmentDate: z.date(),
+  installmentDates: z.array(z.date()),
+})

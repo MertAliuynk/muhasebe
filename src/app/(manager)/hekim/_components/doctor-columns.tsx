@@ -4,7 +4,7 @@ import Link from "next/link"
 import type { Doctor, Patient, User } from "@prisma/client"
 import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
-import { formatPhoneNumberIntl } from "react-phone-number-input"
+import { formatPhoneNumber } from "react-phone-number-input"
 
 import { env } from "@/env"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -29,7 +29,7 @@ export default [
 
       return (
         <Link
-          href={`/hekim/${row.original.doctor?.id}`}
+          href={`/hekim/${row.original.username}`}
           className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition-all duration-300"
         >
           <Avatar className="rounded-xl">
@@ -54,7 +54,7 @@ export default [
     header: "Telefon Numarası",
     cell: ({ row }) => {
       const phone = row.original.doctor?.phoneNumber
-      return phone ? formatPhoneNumberIntl(phone) : "Yok"
+      return phone ? formatPhoneNumber(phone) : "Yok"
     },
   },
   {

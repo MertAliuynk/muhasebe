@@ -63,6 +63,7 @@ model User {
 
     // Indexes
     @@index([role])
+    @@index([username])
     @@index([isDeleted])
 }
 
@@ -153,11 +154,12 @@ model Patient {
     updatedAt DateTime  @updatedAt
 
     // Relations
-    doctorId   String
-    doctor     Doctor      @relation(fields: [doctorId], references: [id])
-    branchId   String
-    branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-    treatments Treatment[]
+    doctorId    String
+    doctor      Doctor               @relation(fields: [doctorId], references: [id])
+    branchId    String
+    branch      Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    treatments  Treatment[]
+    paymentPlan PatientPaymentPlan[]
 
     // Indexes
     @@index([doctorId])
@@ -216,6 +218,29 @@ model Payment {
     @@index([paymentDate])
     @@index([isDeleted])
     @@index([installmentNumber])
+}
+
+model PatientPaymentPlan {
+    id                   String     @id @default(cuid())
+    totalAmount          Int
+    downPaymentAmount    Int
+    installmentCount     Int
+    interestRate         Int        @default(0)
+    firstInstallmentDate DateTime
+    installmentDates     DateTime[]
+    isDeleted            Boolean    @default(false)
+    deletedAt            DateTime?
+    createdAt            DateTime   @default(now())
+    updatedAt            DateTime   @updatedAt
+
+    // Relations
+    patientId String
+    patient   Patient @relation(fields: [patientId], references: [id])
+
+    // Indexes
+    @@index([patientId])
+    @@index([isDeleted])
+    @@index([firstInstallmentDate])
 }
 
 model ExpenseType {

@@ -1,0 +1,321 @@
+"use client"
+
+import React, { useEffect, useState } from "react"
+import { savePaymentPlanSchema } from "@/server/api/routers/patient/schema"
+import { api } from "@/trpc/react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Eraser, SquareChartGantt } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import type { z } from "zod"
+
+import { formatCurrencyWithSymbol } from "@/lib/utils"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { DatePicker } from "@/components/form/date-picker"
+
+export default function CreatePaymentPlan({
+  patientId,
+}: {
+  patientId: string
+}) {
+  const { mutateAsync: savePaymentPlan, isPending } =
+    api.patient.savePaymentPlan.useMutation()
+
+  const [open, setOpen] = useState(false)
+
+  const form = useForm<z.infer<typeof savePaymentPlanSchema>>({
+    resolver: zodResolver(savePaymentPlanSchema),
+    defaultValues: {
+      patientId,
+      totalAmount: 0,
+      downPaymentAmount: 0,
+      installmentCount: 0,
+      interestRate: 0,
+      firstInstallmentDate: new Date(),
+      installmentDates: [],
+    },
+  })
+
+  const installmentCount = form.watch("installmentCount")
+  const firstInstallmentDate = form.watch("firstInstallmentDate")
+
+  useEffect(() => {
+    if (firstInstallmentDate && installmentCount > 0) {
+      const dates = Array.from({ length: installmentCount }, (_, index) => {
+        const date = new Date(firstInstallmentDate)
+        date.setMonth(date.getMonth() + index)
+        return date
+      })
+      form.setValue("installmentDates", dates)
+    }
+  }, [installmentCount, firstInstallmentDate, form])
+
+  const calculateInstallmentAmount = () => {
+    const totalAmount = form.watch("totalAmount")
+    const downPaymentAmount = form.watch("downPaymentAmount")
+    const installmentCount = form.watch("installmentCount")
+    const interestRate = form.watch("interestRate")
+
+    if (
+      !totalAmount ||
+      !downPaymentAmount ||
+      !installmentCount ||
+      interestRate === undefined
+    ) {
+      return 0
+    }
+
+    const remainingAmount = totalAmount - downPaymentAmount
+    const interestAmount = remainingAmount * (interestRate / 100)
+    const totalWithInterest = remainingAmount + interestAmount
+    return totalWithInterest / installmentCount
+  }
+
+  const calculateTotalAmount = () => {
+    const totalAmount = form.watch("totalAmount")
+    const downPaymentAmount = form.watch("downPaymentAmount")
+    const interestRate = form.watch("interestRate")
+
+    if (!totalAmount || !downPaymentAmount || interestRate === undefined) {
+      return 0
+    }
+
+    const remainingAmount = totalAmount - downPaymentAmount
+    const interestAmount = remainingAmount * (interestRate / 100)
+    return remainingAmount + interestAmount
+  }
+
+  const onSubmit = (values: z.infer<typeof savePaymentPlanSchema>) => {
+    toast.promise(
+      savePaymentPlan(values).then(() => {
+        form.reset()
+        setOpen(false)
+      }),
+      {
+        loading: "Ödeme planı oluşturuluyor...",
+        success: "Ödeme planı oluşturuldu",
+        error: "Ödeme planı oluşturulurken bir hata oluştu",
+      }
+    )
+  }
+
+  return (
+    <div>
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="default"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <SquareChartGantt size={16} />
+            Ödeme Planı Oluştur
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent className="max-w-4xl">
+          <AlertDialogHeader>
+            <div className="flex justify-between">
+              <div>
+                <AlertDialogTitle>Ödeme Planı Oluştur</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Lütfen ödeme planı detaylarını giriniz.
+                </AlertDialogDescription>
+              </div>
+              {form.formState.dirtyFields && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    form.reset()
+                  }}
+                >
+                  <Eraser className="mr-2" size={16} />
+                  Formu Temizle
+                </Button>
+              )}
+            </div>
+          </AlertDialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+              <div className="grid grid-cols-4 gap-4">
+                <FormField
+                  control={form.control}
+                  name="totalAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Toplam Tutar</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          {...field}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="downPaymentAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Peşinat Tutarı</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          {...field}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="installmentCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Taksit Sayısı</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value)
+                            field.onChange(value)
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="interestRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Faiz Oranı (%)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {installmentCount > 0 && (
+                <div className="space-y-4">
+                  <div className="">
+                    <DatePicker
+                      name="firstInstallmentDate"
+                      label="Tüm Taksit Tarihleri"
+                    />
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    <h3 className="text-lg font-medium">Taksit Tarihleri</h3>
+                    <ScrollArea className="pr-4 max-h-[50vh] overflow-y-auto">
+                      <div className="grid grid-cols-3 gap-4">
+                        {Array.from({ length: installmentCount }).map(
+                          (_, index) => (
+                            <Card key={index} className="rounded-md p-5">
+                              <DatePicker
+                                key={index}
+                                name={`installmentDates.${index}`}
+                                label={
+                                  <div className="flex justify-between">
+                                    <p>{index + 1}. Taksit</p>
+                                    <p className="text-muted-foreground">
+                                      {formatCurrencyWithSymbol(
+                                        calculateInstallmentAmount()
+                                      )}
+                                    </p>
+                                  </div>
+                                }
+                              />
+                            </Card>
+                          )
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <div>
+                  <p>
+                    <span className="text-muted-foreground text-sm">
+                      Toplam Ödenecek Tutar:{" "}
+                    </span>
+                    <span className="font-bold">
+                      {formatCurrencyWithSymbol(calculateTotalAmount())}
+                    </span>
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setOpen(false)}
+                  >
+                    İptal
+                  </Button>
+                  <Button type="submit" disabled={isPending}>
+                    Plan Oluştur
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </Form>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
