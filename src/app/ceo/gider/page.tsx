@@ -8,7 +8,7 @@ import columns from "./_components/expense-type-columns"
 import SaveExpenseTypeDrawer from "./_components/save-expense-type-drawer"
 
 export default async function page() {
-  const expenseTypes = await api.expense.getAll()
+  const expenseTypes = await api.expense.getAllExpenseTypes()
 
   return (
     <div className="space-y-5">

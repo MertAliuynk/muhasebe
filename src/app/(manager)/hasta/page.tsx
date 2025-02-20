@@ -16,7 +16,12 @@ export default async function page() {
           Hastaları bu ekranda görüntüleyebilir ve yönetebilirsiniz.
         </p>
       </div>
-      <DataTable columns={patientColumns} data={patients} searchKey="name" />
+      <DataTable
+        columns={patientColumns}
+        data={patients}
+        searchKey="name"
+        pagination
+      />
     </div>
   )
 }

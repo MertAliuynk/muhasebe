@@ -4,6 +4,7 @@ import { type Metadata } from "next"
 import { TRPCReactProvider } from "@/trpc/react"
 import { GeistSans } from "geist/font/sans"
 import { SessionProvider } from "next-auth/react"
+import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { Toaster } from "sonner"
 
 import { TailwindIndicator } from "@/components/tailwind-indicator"
@@ -34,11 +35,13 @@ export default function RootLayout({
               disableTransitionOnChange
               enableColorScheme
             >
-              <div vaul-drawer-wrapper="">
-                <div className="relative flex min-h-svh flex-col bg-background">
-                  {children}
+              <NuqsAdapter>
+                <div vaul-drawer-wrapper="">
+                  <div className="relative flex min-h-svh flex-col bg-background">
+                    {children}
+                  </div>
                 </div>
-              </div>
+              </NuqsAdapter>
               <TailwindIndicator />
               <Toaster position="top-center" />
             </ThemeProvider>

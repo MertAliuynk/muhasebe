@@ -1,9 +1,8 @@
-"use client"
-
-import { FileInput } from "lucide-react"
+import { api } from "@/trpc/server"
+import { format } from "date-fns"
+import { Building, Clock, Stethoscope } from "lucide-react"
 
 import { formatCurrency } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -11,123 +10,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import NewExpenseDialog from "@/components/new-expense-dialog"
 
-// Dummy data
-const expenseData: Array<{
-  id: string
-  description: string
-  expenseType: string
-  amount: number
-  date: Date
-}> = [
-  {
-    id: "1",
-    description: "Kırtasiye Malzemeleri",
-    expenseType: "Ofis Giderleri",
-    amount: 500,
-    date: new Date(),
-  },
-  {
-    id: "2",
-    description: "İnternet Faturası",
-    expenseType: "Sabit Giderler",
-    amount: 800,
-    date: new Date(),
-  },
-  {
-    id: "3",
-    description: "Temizlik Malzemeleri",
-    expenseType: "Ofis Giderleri",
-    amount: 300,
-    date: new Date(),
-  },
-  {
-    id: "4",
-    description: "Su Faturası",
-    expenseType: "Sabit Giderler",
-    amount: 200,
-    date: new Date(),
-  },
-  {
-    id: "5",
-    description: "Tıbbi Malzemeler",
-    expenseType: "Medikal Giderler",
-    amount: 1500,
-    date: new Date(),
-  },
-  {
-    id: "6",
-    description: "Elektrik Faturası",
-    expenseType: "Sabit Giderler",
-    amount: 1200,
-    date: new Date(),
-  },
-  {
-    id: "7",
-    description: "Personel Yemek",
-    expenseType: "Personel Giderleri",
-    amount: 2000,
-    date: new Date(),
-  },
-  {
-    id: "8",
-    description: "Yazılım Lisansı",
-    expenseType: "IT Giderleri",
-    amount: 3500,
-    date: new Date(),
-  },
-  {
-    id: "9",
-    description: "Bakım Onarım",
-    expenseType: "Teknik Giderler",
-    amount: 750,
-    date: new Date(),
-  },
-  {
-    id: "10",
-    description: "Sigorta Ödemesi",
-    expenseType: "Sabit Giderler",
-    amount: 2500,
-    date: new Date(),
-  },
-  {
-    id: "11",
-    description: "Reklam Giderleri",
-    expenseType: "Pazarlama",
-    amount: 1800,
-    date: new Date(),
-  },
-  {
-    id: "12",
-    description: "Kargo Giderleri",
-    expenseType: "Operasyonel",
-    amount: 400,
-    date: new Date(),
-  },
-  {
-    id: "13",
-    description: "Eğitim Materyalleri",
-    expenseType: "Personel Giderleri",
-    amount: 600,
-    date: new Date(),
-  },
-  {
-    id: "14",
-    description: "Güvenlik Sistemi",
-    expenseType: "Teknik Giderler",
-    amount: 4000,
-    date: new Date(),
-  },
-  {
-    id: "15",
-    description: "Mobilya Yenileme",
-    expenseType: "Ofis Giderleri",
-    amount: 5000,
-    date: new Date(),
-  },
-]
+type PageProps = {
+  date: string
+}
 
-export default function Expenses() {
+export default async function Expenses({ date }: PageProps) {
+  const expenses = await api.expense.getExpensesByBranchId({ date })
+  const doctors = await api.doctor.getDoctorsByBranch()
+
   return (
     <Card>
       <CardHeader>
@@ -136,25 +29,48 @@ export default function Expenses() {
             <CardTitle>Giderler</CardTitle>
             <CardDescription>Bugün gider akışı listeleniyor.</CardDescription>
           </div>
-          <Button variant="outline">
-            <FileInput size={18} className=" mr-2" />
-            Yeni Gider Ekle
-          </Button>
+          <NewExpenseDialog doctors={doctors} />
         </div>
       </CardHeader>
       <CardContent className="h-[calc(100vh-24rem)] overflow-y-auto no-scrollbar">
         <div className="space-y-8">
           <div className="divide-y">
-            {expenseData.map((item) => (
+            {expenses.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center justify-between py-4"
               >
-                <div>
-                  <p className="font-medium">{item.description}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {item.expenseType}
-                  </p>
+                <div className="space-y-1">
+                  <p className="font-medium">{item.expenseType.name}</p>
+
+                  <div className="flex items-center gap-2 h-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {item.doctor ? (
+                        <>
+                          <Stethoscope size={14} />
+                          {item.doctor.user.name}
+                        </>
+                      ) : (
+                        <>
+                          <Building size={14} />
+                          Klinik Ödemesi
+                        </>
+                      )}
+                    </div>
+                    <Separator
+                      orientation="vertical"
+                      className="rounded-full"
+                    />
+                    <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+                      <Clock size={14} />
+                      {format(item.createdAt, "HH:mm")}
+                    </div>
+                  </div>
+                  {item.description && (
+                    <p className="text-sm text-muted-foreground">
+                      Açıklama: {item.description}
+                    </p>
+                  )}
                 </div>
                 <p className="font-medium text-destructive">
                   {formatCurrency(item.amount)}

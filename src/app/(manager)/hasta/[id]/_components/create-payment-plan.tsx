@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { savePaymentPlanSchema } from "@/server/api/routers/patient/schema"
 import { api } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -32,11 +33,14 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DatePicker } from "@/components/form/date-picker"
 
+import { PrintPaymentPlan } from "./print-payment-plan"
+
 export default function CreatePaymentPlan({
   patientId,
 }: {
   patientId: string
 }) {
+  const router = useRouter()
   const { mutateAsync: savePaymentPlan, isPending } =
     api.patient.savePaymentPlan.useMutation()
 
@@ -47,67 +51,87 @@ export default function CreatePaymentPlan({
     defaultValues: {
       patientId,
       totalAmount: 0,
-      downPaymentAmount: 0,
       installmentCount: 0,
       interestRate: 0,
       firstInstallmentDate: new Date(),
-      installmentDates: [],
+      installments: [],
     },
   })
 
+  const totalAmount = form.watch("totalAmount")
   const installmentCount = form.watch("installmentCount")
   const firstInstallmentDate = form.watch("firstInstallmentDate")
+  const interestRate = form.watch("interestRate")
+  const installments = form.watch("installments")
+
+  const initializeInstallments = () => {
+    if (!totalAmount || !installmentCount || interestRate === undefined) return
+
+    const interestAmount = totalAmount * (interestRate / 100)
+    const totalWithInterest = totalAmount + interestAmount
+    const baseInstallmentAmount = totalWithInterest / installmentCount
+
+    const newInstallments = Array.from(
+      { length: installmentCount },
+      (_, index) => {
+        const date = new Date(firstInstallmentDate)
+        date.setMonth(date.getMonth() + index)
+        return {
+          date,
+          amount: baseInstallmentAmount,
+        }
+      }
+    )
+
+    form.setValue("installments", newInstallments)
+  }
 
   useEffect(() => {
     if (firstInstallmentDate && installmentCount > 0) {
-      const dates = Array.from({ length: installmentCount }, (_, index) => {
-        const date = new Date(firstInstallmentDate)
-        date.setMonth(date.getMonth() + index)
-        return date
-      })
-      form.setValue("installmentDates", dates)
+      initializeInstallments()
     }
-  }, [installmentCount, firstInstallmentDate, form])
-
-  const calculateInstallmentAmount = () => {
-    const totalAmount = form.watch("totalAmount")
-    const downPaymentAmount = form.watch("downPaymentAmount")
-    const installmentCount = form.watch("installmentCount")
-    const interestRate = form.watch("interestRate")
-
-    if (
-      !totalAmount ||
-      !downPaymentAmount ||
-      !installmentCount ||
-      interestRate === undefined
-    ) {
-      return 0
-    }
-
-    const remainingAmount = totalAmount - downPaymentAmount
-    const interestAmount = remainingAmount * (interestRate / 100)
-    const totalWithInterest = remainingAmount + interestAmount
-    return totalWithInterest / installmentCount
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [installmentCount, firstInstallmentDate, interestRate, totalAmount])
 
   const calculateTotalAmount = () => {
-    const totalAmount = form.watch("totalAmount")
-    const downPaymentAmount = form.watch("downPaymentAmount")
-    const interestRate = form.watch("interestRate")
+    return installments.reduce(
+      (sum, installment) => sum + installment.amount,
+      0
+    )
+  }
 
-    if (!totalAmount || !downPaymentAmount || interestRate === undefined) {
-      return 0
+  const handleInstallmentAmountChange = (index: number, newAmount: number) => {
+    const currentInstallments = [...installments]
+    const interestAmount = totalAmount * (interestRate / 100)
+    const totalWithInterest = totalAmount + interestAmount
+
+    currentInstallments[index]!.amount = newAmount
+
+    const previousTotal = currentInstallments
+      .slice(0, index)
+      .reduce((sum, installment) => sum + installment.amount, 0)
+
+    const remainingAmount = totalWithInterest - previousTotal - newAmount
+    const remainingInstallments = installmentCount - (index + 1)
+
+    if (remainingInstallments > 0) {
+      const remainingInstallmentAmount = remainingAmount / remainingInstallments
+
+      for (let i = index + 1; i < installmentCount; i++) {
+        currentInstallments[i]!.amount = remainingInstallmentAmount
+      }
     }
 
-    const remainingAmount = totalAmount - downPaymentAmount
-    const interestAmount = remainingAmount * (interestRate / 100)
-    return remainingAmount + interestAmount
+    form.setValue("installments", currentInstallments)
   }
 
   const onSubmit = (values: z.infer<typeof savePaymentPlanSchema>) => {
     toast.promise(
-      savePaymentPlan(values).then(() => {
+      savePaymentPlan({
+        ...values,
+      }).then(() => {
         form.reset()
+        router.refresh()
         setOpen(false)
       }),
       {
@@ -131,7 +155,7 @@ export default function CreatePaymentPlan({
             Ödeme Planı Oluştur
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent className="max-w-4xl">
+        <AlertDialogContent className="max-w-5xl">
           <AlertDialogHeader>
             <div className="flex justify-between">
               <div>
@@ -141,22 +165,32 @@ export default function CreatePaymentPlan({
                 </AlertDialogDescription>
               </div>
               {form.formState.dirtyFields && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    form.reset()
-                  }}
-                >
-                  <Eraser className="mr-2" size={16} />
-                  Formu Temizle
-                </Button>
+                <div className="flex items-center gap-2">
+                  <PrintPaymentPlan
+                    data={{
+                      totalAmount,
+                      installmentCount,
+                      firstInstallmentDate,
+                      installments,
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      form.reset()
+                    }}
+                  >
+                    <Eraser className="mr-2" size={16} />
+                    Formu Temizle
+                  </Button>
+                </div>
               )}
             </div>
           </AlertDialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 gap-10">
                 <FormField
                   control={form.control}
                   name="totalAmount"
@@ -165,32 +199,7 @@ export default function CreatePaymentPlan({
                       <FormLabel>Toplam Tutar</FormLabel>
                       <FormControl>
                         <Input
-                          type="text"
-                          {...field}
-                          value={
-                            field.value === 0
-                              ? ""
-                              : field.value.toLocaleString("tr-TR")
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, "")
-                            field.onChange(Number(value))
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="downPaymentAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Peşinat Tutarı</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
+                          prefix="₺"
                           {...field}
                           value={
                             field.value === 0
@@ -215,11 +224,15 @@ export default function CreatePaymentPlan({
                       <FormLabel>Taksit Sayısı</FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
                           {...field}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
                           onChange={(e) => {
-                            const value = parseInt(e.target.value)
-                            field.onChange(value)
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
                           }}
                         />
                       </FormControl>
@@ -236,7 +249,11 @@ export default function CreatePaymentPlan({
                       <FormControl>
                         <Input
                           {...field}
-                          value={field.value}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
                           onChange={(e) => {
                             const value = e.target.value.replace(/[^0-9]/g, "")
                             field.onChange(Number(value))
@@ -251,11 +268,13 @@ export default function CreatePaymentPlan({
 
               {installmentCount > 0 && (
                 <div className="space-y-4">
-                  <div className="">
-                    <DatePicker
-                      name="firstInstallmentDate"
-                      label="Tüm Taksit Tarihleri"
-                    />
+                  <div className="grid grid-cols-3 gap-10">
+                    <div className="col-span-2">
+                      <DatePicker
+                        name="firstInstallmentDate"
+                        label="Taksit Başlangıç Tarihi"
+                      />
+                    </div>
                   </div>
 
                   <div className="mt-4 space-y-2">
@@ -265,20 +284,47 @@ export default function CreatePaymentPlan({
                         {Array.from({ length: installmentCount }).map(
                           (_, index) => (
                             <Card key={index} className="rounded-md p-5">
-                              <DatePicker
-                                key={index}
-                                name={`installmentDates.${index}`}
-                                label={
-                                  <div className="flex justify-between">
-                                    <p>{index + 1}. Taksit</p>
-                                    <p className="text-muted-foreground">
-                                      {formatCurrencyWithSymbol(
-                                        calculateInstallmentAmount()
-                                      )}
-                                    </p>
-                                  </div>
-                                }
-                              />
+                              <div className="space-y-4">
+                                <DatePicker
+                                  name={`installments.${index}.date`}
+                                  label={`${index + 1}. Taksit`}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`installments.${index}.amount`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormControl>
+                                        <Input
+                                          prefix="₺"
+                                          {...field}
+                                          onChange={(e) => {
+                                            const value =
+                                              e.target.value.replace(
+                                                /[^0-9]/g,
+                                                ""
+                                              )
+                                            const numValue = Number(value)
+                                            handleInstallmentAmountChange(
+                                              index,
+                                              numValue
+                                            )
+                                          }}
+                                          value={
+                                            field.value === undefined ||
+                                            field.value === 0
+                                              ? ""
+                                              : field.value.toLocaleString(
+                                                  "tr-TR"
+                                                )
+                                          }
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
                             </Card>
                           )
                         )}

@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { CalendarIcon } from "lucide-react"
+import { useQueryState } from "nuqs"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,8 +15,14 @@ import {
 } from "@/components/ui/popover"
 
 export function DatePicker() {
-  const today = new Date()
-  const [date, setDate] = React.useState<Date | undefined>(today)
+  const [date, setDate] = useQueryState("date", {
+    parse: (value) => (value ? parseISO(value) : new Date()),
+    serialize: (date) => format(date, "yyyy-MM-dd"),
+  })
+
+  React.useLayoutEffect(() => {
+    if (!date) void setDate(new Date())
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Popover>
@@ -28,14 +35,18 @@ export function DatePicker() {
           )}
         >
           <CalendarIcon size={16} className="mr-2" />
-          {date ? format(date, "PPP EEEE") : <span>Pick a date</span>}
+          {date ? format(date, "PPP EEEE") : <span>Tarih seçiniz</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={date}
-          onSelect={(day: Date | undefined) => setDate(day)}
+          selected={date ?? undefined}
+          onSelect={(day: Date | undefined) => {
+            if (day) {
+              void setDate(day)
+            }
+          }}
           initialFocus
         />
       </PopoverContent>

@@ -93,7 +93,7 @@ export function DatePicker({ name, label }: Props) {
                     )}
                   >
                     {field.value ? (
-                      format(field.value, "d MMMM yyyy", { locale: tr })
+                      format(field.value, "PPP EEEE", { locale: tr })
                     ) : (
                       <span>Tarih seçiniz</span>
                     )}

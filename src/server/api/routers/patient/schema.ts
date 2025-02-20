@@ -27,9 +27,6 @@ export const savePaymentPlanSchema = z.object({
   totalAmount: z.number().min(1, {
     message: "Toplam tutar 1'den büyük olmalıdır.",
   }),
-  downPaymentAmount: z.number().min(1, {
-    message: "Peşinat tutarı 1'den büyük olmalıdır.",
-  }),
   installmentCount: z.number().min(1, {
     message: "Taksit sayısı 1'den büyük olmalıdır.",
   }),
@@ -37,5 +34,10 @@ export const savePaymentPlanSchema = z.object({
     message: "Faiz oranı 0 veya daha büyük olmalıdır.",
   }),
   firstInstallmentDate: z.date(),
-  installmentDates: z.array(z.date()),
+  installments: z.array(
+    z.object({
+      date: z.date(),
+      amount: z.number(),
+    })
+  ),
 })

@@ -79,15 +79,25 @@ const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
+    variant?: "default" | "destructive"
+    modal?: boolean
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, variant, modal, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
+    data-slot="dropdown-menu-item"
+    data-variant={variant}
     className={cn(
-      "relative flex cursor-default justify-between select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0",
+      "relative flex cursor-default justify-between select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive",
       inset && "pl-8",
       className
     )}
+    {...(modal && {
+      onSelect: (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      },
+    })}
     {...props}
   />
 ))

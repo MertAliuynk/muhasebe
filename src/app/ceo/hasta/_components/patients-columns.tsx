@@ -7,6 +7,7 @@ import { formatPhoneNumberIntl } from "react-phone-number-input"
 
 import { env } from "@/env"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 
 type Item = RouterOutputs["patient"]["getPatientsAdmin"][number]
 
@@ -43,6 +44,10 @@ export default [
     header: "Doktor'u",
     cell: ({ row }) => {
       const doctor = row.original.doctor
+      if (!doctor)
+        return (
+          <Badge variant="destructive">Doktor&apos;u sistemden silinmiş!</Badge>
+        )
       return (
         <div className="flex items-center gap-2">
           <Avatar>

@@ -17,14 +17,6 @@ export default [
     },
   },
   {
-    accessorKey: "downPaymentAmount",
-    header: "Peşinat Tutarı",
-    cell: ({ row }) => {
-      const downPaymentAmount = row.original.downPaymentAmount
-      return formatCurrencyWithSymbol(downPaymentAmount)
-    },
-  },
-  {
     accessorKey: "installmentCount",
     header: "Taksit Sayısı",
     cell: ({ row }) => {
@@ -38,30 +30,6 @@ export default [
     cell: ({ row }) => {
       const interestRate = row.original.interestRate
       return `${interestRate}%`
-    },
-  },
-  {
-    accessorKey: "totalInstallmentAmount",
-    header: "Toplam Ödenecek Tutar",
-    cell: ({ row }) => {
-      const totalInstallmentAmount =
-        row.original.totalAmount - row.original.downPaymentAmount
-      const totalInstallmentAmountWithInterest =
-        totalInstallmentAmount * (1 + row.original.interestRate / 100)
-      return formatCurrencyWithSymbol(totalInstallmentAmountWithInterest)
-    },
-  },
-  {
-    accessorKey: "monthlyInstallmentAmount",
-    header: "Aylık Ödenecek Tutar",
-    cell: ({ row }) => {
-      const totalInstallmentAmount =
-        row.original.totalAmount - row.original.downPaymentAmount
-      const totalInstallmentAmountWithInterest =
-        totalInstallmentAmount * (1 + row.original.interestRate / 100)
-      const monthlyInstallmentAmount =
-        totalInstallmentAmountWithInterest / row.original.installmentCount
-      return formatCurrencyWithSymbol(monthlyInstallmentAmount)
     },
   },
 ] as ColumnDef<Item>[]

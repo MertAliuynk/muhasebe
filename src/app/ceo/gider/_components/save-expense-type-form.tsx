@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { saveExpenseTypeSchema } from "@/server/api/routers/expense/schema"
 import { api } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { ExpenseType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
@@ -25,7 +26,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-export default function SaveExpenseTypeForm() {
+interface SaveExpenseTypeFormProps {
+  expenseType?: ExpenseType
+}
+
+export default function SaveExpenseTypeForm({
+  expenseType,
+}: SaveExpenseTypeFormProps) {
   const router = useRouter()
   const { mutateAsync: saveExpenseType, isPending } =
     api.expense.saveExpenseType.useMutation()
@@ -33,21 +40,21 @@ export default function SaveExpenseTypeForm() {
   const form = useForm<z.infer<typeof saveExpenseTypeSchema>>({
     resolver: zodResolver(saveExpenseTypeSchema),
     defaultValues: {
-      name: "",
-      description: "",
+      name: expenseType?.name ?? "",
+      description: expenseType?.description ?? "",
     },
   })
 
   const onSubmit = async (values: z.infer<typeof saveExpenseTypeSchema>) => {
     toast.promise(
-      saveExpenseType(values).then(() => {
+      saveExpenseType({ ...values, id: expenseType?.id }).then(() => {
         router.refresh()
         form.reset()
       }),
       {
-        loading: "Gider kalemi kaydediliyor...",
-        success: "Gider kalemi başarıyla kaydedildi.",
-        error: "Gider kalemi kaydedilirken bir hata oluştu.",
+        loading: `Gider kalemi ${expenseType ? "düzenleniyor" : "kaydediliyor"}...`,
+        success: `Gider kalemi başarıyla ${expenseType ? "düzenlendi" : "kaydedildi"}.`,
+        error: `Gider kalemi ${expenseType ? "düzenlenirken" : "kaydedilirken"} bir hata oluştu.`,
       }
     )
   }
@@ -55,9 +62,13 @@ export default function SaveExpenseTypeForm() {
   return (
     <Form {...form}>
       <DrawerHeader>
-        <DrawerTitle>Yeni Gider Kalemi Ekle</DrawerTitle>
+        <DrawerTitle>
+          {expenseType ? "Gider Kalemini Düzenle" : "Yeni Gider Kalemi Ekle"}
+        </DrawerTitle>
         <DrawerDescription>
-          Yeni bir gider kalem ekleyin ve yönetin.
+          {expenseType
+            ? "Gider kalemini düzenleyin."
+            : "Yeni bir gider kalemi ekleyin ve yönetin."}
         </DrawerDescription>
       </DrawerHeader>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 p-5">

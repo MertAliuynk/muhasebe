@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { api } from "@/trpc/react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 
@@ -59,7 +60,7 @@ export function SearchMenu({ ...props }: DialogProps) {
       >
         <span className="hidden lg:inline-flex">Hasta Ara...</span>
         <span className="inline-flex lg:hidden">Hasta Ara...</span>
-        <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.45rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+        <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.6rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>
@@ -81,7 +82,13 @@ export function SearchMenu({ ...props }: DialogProps) {
             {data && data.length > 0 && (
               <CommandGroup heading="Hastalar">
                 {data?.map((patient) => (
-                  <CommandItem key={patient.id}>{patient.name}</CommandItem>
+                  <Link
+                    href={`/hasta/${patient.id}`}
+                    key={patient.id}
+                    onClick={() => setOpen(false)}
+                  >
+                    <CommandItem>{patient.name}</CommandItem>
+                  </Link>
                 ))}
               </CommandGroup>
             )}

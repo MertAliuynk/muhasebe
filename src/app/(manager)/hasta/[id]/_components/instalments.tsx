@@ -85,7 +85,7 @@ export default function Instalments() {
           </div>
           <Button variant="outline">
             <HandCoins size={18} className="mr-2" />
-            Yeni Gelir Ekle
+            Yeni Ödeme Ekle
           </Button>
         </div>
       </CardHeader>

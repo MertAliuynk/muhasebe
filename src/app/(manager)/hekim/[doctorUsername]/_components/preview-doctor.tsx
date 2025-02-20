@@ -17,10 +17,7 @@ import { formatPhoneNumber } from "react-phone-number-input"
 import { env } from "@/env"
 import { calculateAge, formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import Expenses from "@/app/(manager)/gunluk-kasa/_components/expenses"
 import Revenues from "@/app/(manager)/gunluk-kasa/_components/revenues"
 
 export default function PreviewDoctor({
@@ -30,11 +27,15 @@ export default function PreviewDoctor({
 }) {
   return (
     <div className="space-y-8">
-      <div className="relative flex items-center">
-        <div className="container relative z-10">
-          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+      <div className="relative">
+        {/* Üst Kısım - Doktor Bilgileri */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/5 via-background to-primary/10 p-8">
+          <div className="absolute inset-0 bg-grid-white/10" />
+
+          <div className="relative z-10 flex flex-col md:flex-row gap-8">
+            {/* Sol Taraf - Profil Resmi */}
             <div className="relative group">
-              <div className="relative rounded-[80px] size-[270px] overflow-hidden ring-4 ring-primary/20 select-none shrink-0 transition-transform duration-300 group-hover:scale-105">
+              <div className="relative rounded-[2rem] size-[270px] overflow-hidden ring-4 ring-primary/20 select-none shrink-0 transition-transform duration-300 group-hover:scale-105">
                 <Image
                   fill
                   priority
@@ -50,87 +51,97 @@ export default function PreviewDoctor({
               </div>
             </div>
 
-            <div className="flex-1 space-y-6 text-center md:text-left">
+            {/* Sağ Taraf - Doktor Detayları */}
+            <div className="flex-1 space-y-6">
               <div className="space-y-2">
-                <h2 className="text-4xl font-light tracking-tight">
-                  {doctor?.user.name}
-                </h2>
-                <Badge>
-                  <Stethoscope className="size-4 mr-2" />
-                  <span className="font-medium">{doctor?.specialty}</span>
-                </Badge>
+                <h2 className="text-3xl font-light">{doctor?.user.name}</h2>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                    <Stethoscope className="size-4 mr-2" />
+                    <span className="font-medium">{doctor?.specialty}</span>
+                  </Badge>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 cursor-default"
-                >
-                  <CalendarDays className="size-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="size-4 text-primary" />
+                  <span>
                     {doctor?.birthDate &&
                       `${format(doctor?.birthDate, "dd.MM.yyyy")} (${calculateAge(
                         doctor.birthDate
                       )} yaşında)`}
                   </span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 cursor-default"
-                >
-                  <Phone className="size-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    {formatPhoneNumber(doctor?.phoneNumber ?? "")}
-                  </span>
-                </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="size-4 text-primary" />
+                  <span>{formatPhoneNumber(doctor?.phoneNumber ?? "")}</span>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-none hover:scale-105 transition-transform duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Users className="size-4 text-primary" />
-                      <span className="text-sm font-medium">Hasta Sayısı</span>
-                    </div>
-                    <p className="text-2xl font-semibold mt-2">156</p>
-                  </CardContent>
-                </Card>
+        {/* Alt Kısım - İstatistik Kartları */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          <div className="group relative overflow-hidden rounded-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 transition-transform duration-300 group-hover:scale-105" />
+            <div className="relative p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Hasta Sayısı</span>
+                <Users className="size-5 text-primary" />
+              </div>
+              <p className="mt-4 text-3xl font-semibold">156</p>
+              <div className="mt-2 h-2 w-full rounded-full bg-primary/10">
+                <div className="h-full w-[80%] rounded-full bg-primary transition-all duration-300" />
+              </div>
+            </div>
+          </div>
 
-                <Card className="bg-gradient-to-br from-green-500/5 to-green-500/10 border-none hover:scale-105 transition-transform duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="size-4 text-green-500" />
-                      <span className="text-sm font-medium">Toplam Gelir</span>
-                    </div>
-                    <p className="text-2xl font-semibold mt-2">
-                      {formatCurrency(132000)}
-                    </p>
-                  </CardContent>
-                </Card>
+          <div className="group relative overflow-hidden rounded-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-500/10 transition-transform duration-300 group-hover:scale-105" />
+            <div className="relative p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Toplam Gelir</span>
+                <TrendingUp className="size-5 text-green-500" />
+              </div>
+              <p className="mt-4 text-3xl font-semibold">
+                {formatCurrency(132000)}
+              </p>
+              <div className="mt-2 h-2 w-full rounded-full bg-green-500/10">
+                <div className="h-full w-[60%] rounded-full bg-green-500 transition-all duration-300" />
+              </div>
+            </div>
+          </div>
 
-                <Card className="bg-gradient-to-br from-destructive/5 to-destructive/10 border-none hover:scale-105 transition-transform duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Wallet className="size-4 text-destructive" />
-                      <span className="text-sm font-medium">Toplam Gider</span>
-                    </div>
-                    <p className="text-2xl font-semibold mt-2">
-                      {formatCurrency(82000)}
-                    </p>
-                  </CardContent>
-                </Card>
+          <div className="group relative overflow-hidden rounded-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-destructive/5 to-destructive/10 transition-transform duration-300 group-hover:scale-105" />
+            <div className="relative p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Toplam Gider</span>
+                <Wallet className="size-5 text-destructive" />
+              </div>
+              <p className="mt-4 text-3xl font-semibold">
+                {formatCurrency(82000)}
+              </p>
+              <div className="mt-2 h-2 w-full rounded-full bg-destructive/10">
+                <div className="h-full w-[40%] rounded-full bg-destructive transition-all duration-300" />
+              </div>
+            </div>
+          </div>
 
-                <Card className="bg-gradient-to-br from-blue-500/5 to-blue-500/10 border-none hover:scale-105 transition-transform duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <BadgeDollarSign className="size-4 text-blue-500" />
-                      <span className="text-sm font-medium">Hakediş</span>
-                    </div>
-                    <p className="text-2xl font-semibold mt-2">
-                      {formatCurrency(50000)}
-                    </p>
-                  </CardContent>
-                </Card>
+          <div className="group relative overflow-hidden rounded-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-500/10 transition-transform duration-300 group-hover:scale-105" />
+            <div className="relative p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Hakediş</span>
+                <BadgeDollarSign className="size-5 text-blue-500" />
+              </div>
+              <p className="mt-4 text-3xl font-semibold">
+                {formatCurrency(50000)}
+              </p>
+              <div className="mt-2 h-2 w-full rounded-full bg-blue-500/10">
+                <div className="h-full w-[70%] rounded-full bg-blue-500 transition-all duration-300" />
               </div>
             </div>
           </div>
@@ -141,7 +152,7 @@ export default function PreviewDoctor({
 
       <div className="grid grid-cols-2 gap-4">
         <Revenues />
-        <Expenses />
+        {/* <Expenses /> */}
       </div>
     </div>
   )

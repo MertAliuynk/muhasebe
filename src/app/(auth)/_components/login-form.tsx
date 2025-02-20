@@ -55,8 +55,6 @@ export default function LoginForm() {
     setIsLoading(false)
 
     if (result?.error) {
-      console.log(result)
-
       setIsError(true)
       return
     } else if (result?.ok) {
