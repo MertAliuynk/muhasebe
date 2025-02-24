@@ -59,6 +59,7 @@ export const saveDoctorSchema = z
         required_error: "Doğum tarihi seçiniz.",
       })
       .optional(),
+    commission: z.number().min(0, "Komisyon en az 0 olmalıdır."),
     branchId: z.string().min(1, "Şube seçiniz."),
   })
   .refine((data) => data.password === data.passwordConfirm, {

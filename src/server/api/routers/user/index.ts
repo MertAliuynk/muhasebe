@@ -67,25 +67,28 @@ export const userRouter = createTRPCRouter({
 
       const hashedPassword = await hash(input.password, 10)
 
-      const user = await ctx.db.user.create({
-        data: {
-          name: input.name,
-          username: input.username,
-          password: hashedPassword,
-          role: input.role,
-          imagePath: input.imagePath,
-        },
-      })
+      await ctx.db.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            name: input.name,
+            username: input.username,
+            password: hashedPassword,
+            role: input.role,
+            imagePath: input.imagePath,
+          },
+        })
 
-      await ctx.db.doctor.create({
-        data: {
-          userId: user.id,
-          branchId: input.branchId,
-          tcNo: input.tcNo,
-          phoneNumber: input.phoneNumber,
-          specialty: input.specialty,
-          birthDate: input.birthDate,
-        },
+        await tx.doctor.create({
+          data: {
+            userId: user.id,
+            branchId: input.branchId,
+            tcNo: input.tcNo,
+            phoneNumber: input.phoneNumber,
+            specialty: input.specialty,
+            birthDate: input.birthDate,
+            commission: input.commission,
+          },
+        })
       })
     }),
 })

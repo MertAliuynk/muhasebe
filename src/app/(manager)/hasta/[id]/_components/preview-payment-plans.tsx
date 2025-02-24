@@ -19,6 +19,8 @@ type PageProps = {
 }
 
 export default function PreviewPaymentPlans({ paymentPlans }: PageProps) {
+  const hasApprovedPaymentPlan = paymentPlans.some((plan) => plan.isApproved)
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -34,7 +36,10 @@ export default function PreviewPaymentPlans({ paymentPlans }: PageProps) {
             Ödeme planlarını aşağıda görüntüleyebilirsiniz.
           </DialogDescription>
         </DialogHeader>
-        <DataTable columns={columns} data={paymentPlans} />
+        <DataTable
+          columns={columns(hasApprovedPaymentPlan)}
+          data={paymentPlans}
+        />
       </DialogContent>
     </Dialog>
   )

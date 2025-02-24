@@ -93,7 +93,7 @@ export function Combobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="justify-between w-full"
+            className="justify-between w-full h-9"
             disabled={isDisabled}
           >
             <span>{getDisplayValue()}</span>

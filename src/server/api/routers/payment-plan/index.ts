@@ -13,7 +13,7 @@ export const paymentPlanRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { patientId } = input
 
-      return ctx.db.patientPaymentPlan.findMany({
+      const paymentPlans = await ctx.db.patientPaymentPlan.findMany({
         where: { patientId },
         include: {
           installments: {
@@ -28,6 +28,8 @@ export const paymentPlanRouter = createTRPCRouter({
           },
         },
       })
+
+      return paymentPlans
     }),
   deleteById: protectedProcedure
     .input(deletePaymentPlanSchema)

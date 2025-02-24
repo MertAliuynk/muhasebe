@@ -81,8 +81,8 @@ export default function NewExpenseDialog({ doctors }: PageProsp) {
 
   formatData.unshift({
     id: "clinic",
-    name: "Klinik Ödemesi",
-    specialty: "Kliniğe Ait Ödemeler",
+    name: "Klinik Gideri",
+    specialty: "Kliniğe Ait Giderler",
     imagePath: "",
     type: "clinic",
   })
@@ -97,7 +97,10 @@ export default function NewExpenseDialog({ doctors }: PageProsp) {
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Yeni Gider Ekle</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="size-4 rounded-full bg-red-500"></div>
+            Yeni Gider Ekle
+          </DialogTitle>
           <DialogDescription className="sr-only">
             Bu işlem geri alınamaz.
           </DialogDescription>
@@ -208,10 +211,11 @@ export default function NewExpenseDialog({ doctors }: PageProsp) {
                   )}
                 />
               </div>
+              <div></div>
+              <Button type="submit" className="w-full" disabled={isPending}>
+                Kaydet
+              </Button>
             </div>
-            <Button type="submit" className="w-full" disabled={isPending}>
-              Kaydet
-            </Button>
           </form>
         </Form>
       </DialogContent>

@@ -18,7 +18,12 @@ export const expenseRouter = createTRPCRouter({
         isDeleted: false,
       },
       include: {
-        expenses: {
+        branchExpenses: {
+          select: {
+            amount: true,
+          },
+        },
+        doctorExpenses: {
           select: {
             amount: true,
           },
@@ -33,29 +38,48 @@ export const expenseRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { branchId } = ctx.session.user
 
-      const expenses = await ctx.db.expense.findMany({
-        where: {
-          branchId: branchId!,
-          createdAt: {
-            gte: new Date(input.date),
-            lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
+      const expenses = await ctx.db.$transaction(async (tx) => {
+        const doctorExpenses = tx.doctorExpense.findMany({
+          where: {
+            createdAt: {
+              gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
+              lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
+            },
           },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          expenseType: true,
-          doctor: {
-            select: {
-              user: {
-                select: {
-                  name: true,
+          include: {
+            expenseType: true,
+            doctor: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                  },
                 },
               },
             },
           },
-        },
+        })
+
+        const branchExpenses = tx.branchExpense.findMany({
+          where: {
+            branchId: branchId!,
+            createdAt: {
+              gte: new Date(input.date),
+              lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
+            },
+          },
+          include: {
+            expenseType: true,
+          },
+        })
+
+        const [a, b] = await Promise.all([doctorExpenses, branchExpenses])
+
+        const expenses = [...a, ...b].sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        )
+
+        return expenses
       })
 
       return expenses
@@ -82,10 +106,19 @@ export const expenseRouter = createTRPCRouter({
     .input(saveExpenseSchema)
     .mutation(async ({ ctx, input }) => {
       const { branchId } = ctx.session.user
-
-      await ctx.db.expense.create({
-        data: { ...input, branchId: branchId! },
-      })
+      if (input.doctorId) {
+        await ctx.db.doctorExpense.create({
+          data: {
+            ...input,
+            doctorId: input.doctorId,
+            branchId: branchId!,
+          },
+        })
+      } else {
+        await ctx.db.branchExpense.create({
+          data: { ...input, branchId: branchId! },
+        })
+      }
     }),
   softDeleteExpenseType: adminProcedure
     .input(softDeleteExpenseTypeSchema)

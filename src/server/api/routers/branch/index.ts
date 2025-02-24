@@ -11,7 +11,7 @@ export const branchRouter = createTRPCRouter({
       include: {
         doctors: true,
         manager: true,
-        expenses: true,
+        branchExpenses: true,
       },
     })
 

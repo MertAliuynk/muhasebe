@@ -81,7 +81,7 @@ export function PrintPaymentPlan({ children, data }: PrintPaymentPlanProps) {
                   <p><strong>Hasta Adı Soyadı:</strong> ${data.patientName}</p>
                   <div>
                     <div style="height: 100px; border: 1px solid #000;">
-                    <p style="padding:5px;">İmza</p>
+                    <p style="padding:5px; margin:0px;">İmza</p>
                     </div>
                   </div>
                 </div>
@@ -89,7 +89,7 @@ export function PrintPaymentPlan({ children, data }: PrintPaymentPlanProps) {
                   <p><strong>Karadeniz Özel Ağız ve Diş Polikliniği</strong></p>
                   <div>
                     <div style="height: 100px; border: 1px solid #000;">
-                    <p style="padding:5px;">İmza</p>
+                    <p style="padding:5px; text-align: left; margin:0px;">İmza</p>
                     </div>
                   </div>
                 </div>

@@ -44,6 +44,7 @@ export default function SaveDoctorForm() {
       passwordConfirm: "",
       role: UserRole.DOCTOR,
       specialty: "",
+      commission: 0,
     },
   })
 
@@ -183,6 +184,32 @@ export default function SaveDoctorForm() {
                     <Input placeholder="TC Kimlik No giriniz" {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="commission"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Komisyon</FormLabel>
+                  <FormControl>
+                    <Input
+                      prefix="%"
+                      placeholder="Komisyon giriniz"
+                      {...field}
+                      value={field.value === 0 ? "" : field.value}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value === "" || !isNaN(Number(value))) {
+                          field.onChange(Number(value))
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <FormDescription>Komisyon oranınını giriniz.</FormDescription>
                 </FormItem>
               )}
             />

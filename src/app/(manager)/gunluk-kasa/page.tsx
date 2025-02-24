@@ -1,13 +1,20 @@
 import React, { Suspense } from "react"
+import { format } from "date-fns"
 
 import { formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { DatePicker } from "@/components/ui/date-picker"
 
 import Expenses from "./_components/expenses"
-import Revenues from "./_components/revenues"
+import Revenues from "./_components/incomes"
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ date: string }>
+}) {
+  const { date } = await searchParams
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -17,8 +24,8 @@ export default async function Page() {
         </Suspense>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Revenues />
-        <Expenses date={"2025-02-19"} />
+        <Revenues date={date ?? format(new Date(), "yyyy-MM-dd")} />
+        <Expenses date={date ?? format(new Date(), "yyyy-MM-dd")} />
       </div>
       <div className=" text-sm flex justify-end">
         <div className="w-[270px] grid grid-cols-[1fr_auto] gap-2 justify-between">

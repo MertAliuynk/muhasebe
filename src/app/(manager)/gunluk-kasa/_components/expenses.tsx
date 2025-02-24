@@ -1,4 +1,5 @@
 import { api } from "@/trpc/server"
+import type { Doctor, User } from "@prisma/client"
 import { format } from "date-fns"
 import { Building, Clock, Stethoscope } from "lucide-react"
 
@@ -10,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import NewExpenseDialog from "@/components/new-expense-dialog"
 
 type PageProps = {
@@ -45,10 +45,10 @@ export default async function Expenses({ date }: PageProps) {
 
                   <div className="flex items-center gap-2 h-4">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      {item.doctor ? (
+                      {"doctor" in item ? (
                         <>
                           <Stethoscope size={14} />
-                          {item.doctor.user.name}
+                          {(item.doctor as Doctor & { user: User }).user.name}
                         </>
                       ) : (
                         <>
@@ -57,14 +57,6 @@ export default async function Expenses({ date }: PageProps) {
                         </>
                       )}
                     </div>
-                    <Separator
-                      orientation="vertical"
-                      className="rounded-full"
-                    />
-                    <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-                      <Clock size={14} />
-                      {format(item.createdAt, "HH:mm")}
-                    </div>
                   </div>
                   {item.description && (
                     <p className="text-sm text-muted-foreground">
@@ -72,9 +64,15 @@ export default async function Expenses({ date }: PageProps) {
                     </p>
                   )}
                 </div>
-                <p className="font-medium text-destructive">
-                  {formatCurrency(item.amount)}
-                </p>
+                <div>
+                  <p className="font-medium text-destructive">
+                    {formatCurrency(item.amount)}
+                  </p>
+                  <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+                    <Clock size={14} />
+                    {format(item.createdAt, "HH:mm")}
+                  </div>
+                </div>
               </div>
             ))}
           </div>

@@ -44,6 +44,11 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
       <CardContent>
         <div className="space-y-8">
           <div className="divide-y">
+            <div className="grid grid-cols-3 items-center justify-between gap-4 text-muted-foreground">
+              <p className="font-medium"></p>
+              <p className="font-medium">Ödeme Tarihi</p>
+              <p className="font-medium text-end">Tutar</p>
+            </div>
             {approvedPaymentPlan.installments.map((instalment) => {
               const paidPercentage =
                 (instalment.paidAmount * 100) / instalment.amount

@@ -78,6 +78,7 @@ model Company {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
+    // Relations
     branches Branch[]
     ceoId    String   @unique
     ceo      User     @relation(fields: [ceoId], references: [id])
@@ -99,12 +100,19 @@ model Branch {
 
     // Relations
     companyId String
-    company   Company   @relation(fields: [companyId], references: [id])
-    managerId String    @unique
-    manager   User      @relation(fields: [managerId], references: [id])
-    doctors   Doctor[]
-    expenses  Expense[]
-    patients  Patient[]
+    company   Company @relation(fields: [companyId], references: [id])
+
+    managerId String @unique
+    manager   User   @relation(fields: [managerId], references: [id])
+
+    doctors  Doctor[]
+    patients Patient[]
+
+    branchExpenses BranchExpense[]
+    doctorExpenses DoctorExpense[]
+
+    branchPayments  BranchPayment[]
+    patientPayments PatientPayment[]
 
     // Indexes
     @@index([companyId])
@@ -119,18 +127,20 @@ model Doctor {
     tcNo        String?
     phoneNumber String?
     birthDate   DateTime?
+    commission  Int
     isDeleted   Boolean   @default(false)
     deletedAt   DateTime?
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
     // Relations
-    userId   String    @unique
-    user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId   String          @unique
+    user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
     branchId String
-    branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    branch   Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
     patients Patient[]
-    expenses Expense[]
+    expenses DoctorExpense[]
+    incomes  DoctorIncome[]
 
     // Indexes
     @@index([userId])
@@ -157,7 +167,9 @@ model Patient {
     paymentPlans PatientPaymentPlan[]
     doctors      Doctor[]
     notes        String[]
+    payments     PatientPayment[]
 
+    // Indexes
     @@index([branchId])
     @@index([isDeleted])
     @@index([name])
@@ -165,15 +177,15 @@ model Patient {
 
 model PatientPaymentPlan {
     id               String    @id @default(cuid())
-    totalAmount      Int // Toplam ödenecek tutar
-    originalAmount   Int // Ödeme planı oluşturulurkenki tutar
-    interestRate     Int // Faiz oranı
-    remainingAmount  Int // Kalan ödenecek tutar
-    paidAmount       Int // Toplam ödenmiş tutar
-    installmentCount Int // Taksit sayısı
-    startDate        DateTime // Ödeme planı başlangıç tarihi
-    isApproved       Boolean   @default(false) // Hastanın kabul ettiği plan
-    isCompleted      Boolean   @default(false) // Ödemelerin tamamlanıp tamamlanmadığı
+    totalAmount      Int
+    originalAmount   Int
+    interestRate     Int
+    remainingAmount  Int
+    paidAmount       Int
+    installmentCount Int
+    startDate        DateTime
+    isApproved       Boolean   @default(false)
+    isCompleted      Boolean   @default(false)
     note             String?
     isDeleted        Boolean   @default(false)
     deletedAt        DateTime?
@@ -183,50 +195,85 @@ model PatientPaymentPlan {
     // Relations
     patientId    String
     patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
-    installments Installment[] // Planlanan taksitler
-    payments     Payment[] // Gerçekleşen ödemeler
+    installments Installment[]
 
+    // Indexes
     @@index([patientId])
     @@index([isDeleted])
     @@index([isApproved])
     @@index([isCompleted])
 }
 
-model Payment {
-    id                String      @id @default(cuid())
-    amount            Int // Ödenen tutar
-    paymentType       PaymentType
-    paymentDate       DateTime    @default(now())
-    installmentNumber Int // Hangi taksite yapıldığı
-    note              String?
-    createdAt         DateTime    @default(now())
-    updatedAt         DateTime    @updatedAt
+model PatientPayment {
+    id          String      @id @default(cuid())
+    amount      Int
+    paymentType PaymentType
+    paymentDate DateTime    @default(now())
+    note        String?
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
 
     // Relations
-    paymentPlanId String
-    paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
+    patient   Patient? @relation(fields: [patientId], references: [id])
+    patientId String?
+    branchId  String
+    branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-    @@index([paymentPlanId])
-    @@index([installmentNumber])
+    // Indexes
+    @@index([paymentDate])
+}
+
+model DoctorIncome {
+    id          String      @id @default(cuid())
+    amount      Int
+    paymentType PaymentType
+    paymentDate DateTime    @default(now())
+    note        String?
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    // Relations
+    doctorId String
+    doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([paymentDate])
+}
+
+model BranchPayment {
+    id          String      @id @default(cuid())
+    amount      Int
+    paymentType PaymentType
+    paymentDate DateTime    @default(now())
+    note        String?
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    // Relations
+    branchId String
+    branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+    // Indexes
     @@index([paymentDate])
 }
 
 model Installment {
     id              String   @id @default(cuid())
-    number          Int // Taksit numarası (1,2,3...)
-    amount          Int // Taksit tutarı
-    dueDate         DateTime // Son ödeme tarihi
-    paidAmount      Int      @default(0) // Bu taksite yapılan toplam ödeme
-    remainingAmount Int      @default(0) // Bu taksitten kalan tutar
+    number          Int
+    amount          Int
+    dueDate         DateTime
+    paidAmount      Int      @default(0)
+    remainingAmount Int      @default(0)
     isCompleted     Boolean  @default(false)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    // Relations
+    //Relations
     paymentPlanId String
     paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
 
+    // Indexes
     @@index([paymentPlanId])
     @@index([number])
 }
@@ -241,14 +288,15 @@ model ExpenseType {
     updatedAt   DateTime  @updatedAt
 
     // Relations
-    expenses Expense[]
+    branchExpenses BranchExpense[]
+    doctorExpenses DoctorExpense[]
 
     // Indexes
     @@index([isDeleted])
     @@index([name])
 }
 
-model Expense {
+model BranchExpense {
     id          String    @id @default(cuid())
     amount      Int
     description String?
@@ -262,12 +310,31 @@ model Expense {
     expenseType   ExpenseType @relation(fields: [expenseTypeId], references: [id], onDelete: Cascade)
     branchId      String
     branch        Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-    doctorId      String?
-    doctor        Doctor?     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
     // Indexes
     @@index([expenseTypeId])
     @@index([branchId])
+    @@index([isDeleted])
+}
+
+model DoctorExpense {
+    id          String    @id @default(cuid())
+    amount      Int
+    description String?
+    isDeleted   Boolean   @default(false)
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    // Relations
+    expenseTypeId String
+    expenseType   ExpenseType @relation(fields: [expenseTypeId], references: [id], onDelete: Cascade)
+    doctorId      String
+    doctor        Doctor      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    branch        Branch      @relation(fields: [branchId], references: [id])
+    branchId      String
+
+    // Indexes
     @@index([doctorId])
     @@index([isDeleted])
 }

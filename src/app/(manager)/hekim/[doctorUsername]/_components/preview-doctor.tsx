@@ -18,7 +18,6 @@ import { env } from "@/env"
 import { calculateAge, formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import Revenues from "@/app/(manager)/gunluk-kasa/_components/revenues"
 
 export default function PreviewDoctor({
   doctor,
@@ -150,10 +149,7 @@ export default function PreviewDoctor({
 
       <Separator />
 
-      <div className="grid grid-cols-2 gap-4">
-        <Revenues />
-        {/* <Expenses /> */}
-      </div>
+      <div className="grid grid-cols-2 gap-4"></div>
     </div>
   )
 }

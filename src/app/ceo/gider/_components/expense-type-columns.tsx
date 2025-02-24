@@ -28,10 +28,21 @@ export default [
     header: "Açıklama",
   },
   {
-    accessorKey: "expenses",
-    header: "Toplam Gider",
+    accessorKey: "doctorExpenses",
+    header: "Toplam Doktor Giderleri",
     cell: ({ row }) => {
-      const totalAmount = row.original.expenses.reduce(
+      const totalAmount = row.original.doctorExpenses.reduce(
+        (acc, expense) => acc + expense.amount,
+        0
+      )
+      return formatCurrencyWithSymbol(totalAmount)
+    },
+  },
+  {
+    accessorKey: "branchExpenses",
+    header: "Toplam Şube Giderleri",
+    cell: ({ row }) => {
+      const totalAmount = row.original.branchExpenses.reduce(
         (acc, expense) => acc + expense.amount,
         0
       )

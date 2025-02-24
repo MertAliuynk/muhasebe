@@ -1,3 +1,4 @@
+import { type PaymentType } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -82,4 +83,10 @@ export function formatCurrencyWithSymbol(
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Number(amount))
+}
+
+export const paymentTypeLabels: Record<PaymentType, string> = {
+  CASH: "Nakit",
+  CREDIT_CARD: "Kredi Kartı",
+  BANK_TRANSFER: "Havale/EFT",
 }
