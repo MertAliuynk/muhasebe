@@ -40,7 +40,7 @@ export default function SavePatientForm({ doctors }: Props) {
       birthDate: new Date(),
       address: "",
       notes: [""],
-      doctorId: "",
+      doctors: [],
     },
   })
 
@@ -114,7 +114,7 @@ export default function SavePatientForm({ doctors }: Props) {
           <DatePicker name="birthDate" label="Doğum Tarihi" />
 
           <SelectDoctor
-            name="doctorId"
+            name="doctors"
             label="Doktor Seçiniz"
             doctors={doctors}
           />

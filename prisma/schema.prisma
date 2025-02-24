@@ -125,13 +125,12 @@ model Doctor {
     updatedAt   DateTime  @updatedAt
 
     // Relations
-    userId     String      @unique
-    user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    branchId   String
-    branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-    patients   Patient[]
-    expenses   Expense[]
-    treatments Treatment[] // Doktorun yaptığı tedaviler
+    userId   String    @unique
+    user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    branchId String
+    branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    patients Patient[]
+    expenses Expense[]
 
     // Indexes
     @@index([userId])
@@ -147,99 +146,89 @@ model Patient {
     tcNo      String?
     birthDate DateTime?
     address   String?
-    notes     String[]
     isDeleted Boolean   @default(false)
     deletedAt DateTime?
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
     // Relations
-    doctorId    String?
-    doctor      Doctor?              @relation(fields: [doctorId], references: [id])
-    branchId    String
-    branch      Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
-    treatments  Treatment[]
-    paymentPlan PatientPaymentPlan[]
+    branchId     String
+    branch       Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    paymentPlans PatientPaymentPlan[]
+    doctors      Doctor[]
+    notes        String[]
 
-    // Indexes
-    @@index([doctorId])
     @@index([branchId])
     @@index([isDeleted])
     @@index([name])
 }
 
-model Treatment {
-    id             String    @id @default(cuid())
-    name           String
-    originalAmount Decimal // İlk fiyat (50.000 TL)
-    totalAmount    Decimal // Faizli toplam tutar (60.000 TL)
-    installments   Int // Taksit sayısı
-    interestRate   Decimal // Faiz oranı
-    doctorRate     Decimal // Doktor yüzdesi (örn: 30.00)
-    startDate      DateTime  @default(now())
-    endDate        DateTime?
-    isDeleted      Boolean   @default(false)
-    deletedAt      DateTime?
-    createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
+model PatientPaymentPlan {
+    id               String    @id @default(cuid())
+    totalAmount      Int // Toplam ödenecek tutar
+    originalAmount   Int // Ödeme planı oluşturulurkenki tutar
+    interestRate     Int // Faiz oranı
+    remainingAmount  Int // Kalan ödenecek tutar
+    paidAmount       Int // Toplam ödenmiş tutar
+    installmentCount Int // Taksit sayısı
+    startDate        DateTime // Ödeme planı başlangıç tarihi
+    isApproved       Boolean   @default(false) // Hastanın kabul ettiği plan
+    isCompleted      Boolean   @default(false) // Ödemelerin tamamlanıp tamamlanmadığı
+    note             String?
+    isDeleted        Boolean   @default(false)
+    deletedAt        DateTime?
+    createdAt        DateTime  @default(now())
+    updatedAt        DateTime  @updatedAt
 
     // Relations
-    patientId String
-    patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
-    doctorId  String
-    doctor    Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    payments  Payment[]
+    patientId    String
+    patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+    installments Installment[] // Planlanan taksitler
+    payments     Payment[] // Gerçekleşen ödemeler
 
-    // Indexes
     @@index([patientId])
-    @@index([doctorId])
     @@index([isDeleted])
-    @@index([startDate, endDate])
+    @@index([isApproved])
+    @@index([isCompleted])
 }
 
 model Payment {
     id                String      @id @default(cuid())
-    amount            Decimal
+    amount            Int // Ödenen tutar
     paymentType       PaymentType
     paymentDate       DateTime    @default(now())
-    installmentNumber Int // Hangi takside yapıldığı (1-6 arası)
-    isDeleted         Boolean     @default(false)
-    deletedAt         DateTime?
+    installmentNumber Int // Hangi taksite yapıldığı
+    note              String?
     createdAt         DateTime    @default(now())
     updatedAt         DateTime    @updatedAt
 
     // Relations
-    treatmentId String
-    treatment   Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+    paymentPlanId String
+    paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
 
-    // Indexes
-    @@index([treatmentId])
-    @@index([paymentType])
-    @@index([paymentDate])
-    @@index([isDeleted])
+    @@index([paymentPlanId])
     @@index([installmentNumber])
+    @@index([paymentDate])
 }
 
-model PatientPaymentPlan {
-    id                   String    @id @default(cuid())
-    totalAmount          Int
-    installmentCount     Int
-    interestRate         Int       @default(0)
-    firstInstallmentDate DateTime
-    installments         Json[]
-    isDeleted            Boolean   @default(false)
-    deletedAt            DateTime?
-    createdAt            DateTime  @default(now())
-    updatedAt            DateTime  @updatedAt
+model Installment {
+    id              String   @id @default(cuid())
+    number          Int // Taksit numarası (1,2,3...)
+    amount          Int // Taksit tutarı
+    dueDate         DateTime // Son ödeme tarihi
+    paidAmount      Int      @default(0) // Bu taksite yapılan toplam ödeme
+    remainingAmount Int      @default(0) // Bu taksitten kalan tutar
+    isCompleted     Boolean  @default(false)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     // Relations
-    patientId String
-    patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+    paymentPlanId String
+    paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
 
-    // Indexes
-    @@index([patientId])
-    @@index([isDeleted])
-    @@index([firstInstallmentDate])
+    @@index([paymentPlanId])
+    @@index([number])
 }
 
 model ExpenseType {

@@ -1,23 +1,24 @@
+import React from "react"
 import { format } from "date-fns"
 import { tr } from "date-fns/locale"
-import { Printer } from "lucide-react"
 
 import { formatCurrencyWithSymbol } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 
 interface PrintPaymentPlanProps {
+  children: React.ReactNode
   data: {
     totalAmount: number
     installmentCount: number
-    firstInstallmentDate: Date
+    startDate: Date
     installments: Array<{
       date: Date
       amount: number
     }>
+    patientName: string
   }
 }
 
-export function PrintPaymentPlan({ data }: PrintPaymentPlanProps) {
+export function PrintPaymentPlan({ children, data }: PrintPaymentPlanProps) {
   const handlePrint = () => {
     const printContent = `
       <html>
@@ -75,6 +76,24 @@ export function PrintPaymentPlan({ data }: PrintPaymentPlanProps) {
               <p><strong>Toplam Ödenecek:</strong> ${formatCurrencyWithSymbol(
                 data.installments.reduce((a, b) => a + b.amount, 0)
               )}</p>
+              <div style="display: flex; justify-content: space-between; margin-top: 50px;">
+                <div style="text-align: left;">
+                  <p><strong>Hasta Adı Soyadı:</strong> ${data.patientName}</p>
+                  <div>
+                    <div style="height: 100px; border: 1px solid #000;">
+                    <p style="padding:5px;">İmza</p>
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <p><strong>Karadeniz Özel Ağız ve Diş Polikliniği</strong></p>
+                  <div>
+                    <div style="height: 100px; border: 1px solid #000;">
+                    <p style="padding:5px;">İmza</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </body>
@@ -92,15 +111,11 @@ export function PrintPaymentPlan({ data }: PrintPaymentPlanProps) {
     }
   }
 
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handlePrint}
-      className="flex items-center gap-2"
-    >
-      <Printer className="size-4" />
-      Yazdır
-    </Button>
+  return React.createElement(
+    "div",
+    {
+      onClick: handlePrint,
+    },
+    children
   )
 }

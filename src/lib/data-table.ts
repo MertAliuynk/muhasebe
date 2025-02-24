@@ -1,12 +1,16 @@
-import type { Column } from "@tanstack/react-table"
+import type { Column, ColumnDef } from "@tanstack/react-table"
 
 export function getCommonPinningStyles<TData>({
   column,
   withBorder = false,
 }: {
-  column: Column<TData>
+  column: Column<TData> & {
+    columnDef: ColumnDef<TData> & { side?: "end" | "center" | "start" }
+  }
   withBorder?: boolean
 }): React.CSSProperties {
+  const side = column.columnDef.side ?? "start"
+
   const isPinned = column.getIsPinned()
   const isLastLeftPinnedColumn =
     isPinned === "left" && column.getIsLastColumn("left")
@@ -27,5 +31,6 @@ export function getCommonPinningStyles<TData>({
     position: isPinned ? "sticky" : "relative",
     width: column.getSize(),
     zIndex: isPinned ? 1 : 0,
+    textAlign: side,
   }
 }

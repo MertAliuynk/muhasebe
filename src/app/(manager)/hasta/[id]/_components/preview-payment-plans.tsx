@@ -1,4 +1,3 @@
-import React from "react"
 import type { RouterOutputs } from "@/trpc/react"
 import { CreditCard } from "lucide-react"
 
@@ -13,12 +12,10 @@ import {
 } from "@/components/ui/dialog"
 import { DataTable } from "@/components/data-table"
 
-import columns from "./patient-payment-plans-columuns"
+import columns from "./payment-plans-columuns"
 
 type PageProps = {
-  paymentPlans: NonNullable<
-    RouterOutputs["patient"]["getPatientById"]
-  >["paymentPlan"]
+  paymentPlans: RouterOutputs["paymentPlan"]["getPatientPaymentPlanById"]
 }
 
 export default function PreviewPaymentPlans({ paymentPlans }: PageProps) {
@@ -27,10 +24,10 @@ export default function PreviewPaymentPlans({ paymentPlans }: PageProps) {
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <CreditCard className="size-4 text-muted-foreground" />
-          Ödeme Planları ({paymentPlans?.length ?? 0})
+          Ödeme Planları ({paymentPlans.length ?? 0})
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Ödeme Planları</DialogTitle>
           <DialogDescription>

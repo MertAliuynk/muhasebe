@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { savePaymentPlanSchema } from "@/server/api/routers/patient/schema"
 import { api } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Eraser, SquareChartGantt } from "lucide-react"
+import { Eraser, Printer, SquareChartGantt } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
@@ -37,8 +37,10 @@ import { PrintPaymentPlan } from "./print-payment-plan"
 
 export default function CreatePaymentPlan({
   patientId,
+  patientName,
 }: {
   patientId: string
+  patientName: string
 }) {
   const router = useRouter()
   const { mutateAsync: savePaymentPlan, isPending } =
@@ -51,30 +53,35 @@ export default function CreatePaymentPlan({
     defaultValues: {
       patientId,
       totalAmount: 0,
+      originalAmount: 0,
       installmentCount: 0,
       interestRate: 0,
-      firstInstallmentDate: new Date(),
+      startDate: new Date(),
       installments: [],
+      note: "",
     },
   })
 
   const totalAmount = form.watch("totalAmount")
+  const originalAmount = form.watch("originalAmount")
   const installmentCount = form.watch("installmentCount")
-  const firstInstallmentDate = form.watch("firstInstallmentDate")
+  const startDate = form.watch("startDate")
   const interestRate = form.watch("interestRate")
   const installments = form.watch("installments")
 
   const initializeInstallments = () => {
-    if (!totalAmount || !installmentCount || interestRate === undefined) return
+    if (!originalAmount || !installmentCount || interestRate === undefined)
+      return
 
-    const interestAmount = totalAmount * (interestRate / 100)
-    const totalWithInterest = totalAmount + interestAmount
+    const interestAmount = originalAmount * (interestRate / 100)
+    const totalWithInterest = originalAmount + interestAmount
+    form.setValue("totalAmount", totalWithInterest)
     const baseInstallmentAmount = totalWithInterest / installmentCount
 
     const newInstallments = Array.from(
       { length: installmentCount },
       (_, index) => {
-        const date = new Date(firstInstallmentDate)
+        const date = new Date(startDate)
         date.setMonth(date.getMonth() + index)
         return {
           date,
@@ -87,11 +94,11 @@ export default function CreatePaymentPlan({
   }
 
   useEffect(() => {
-    if (firstInstallmentDate && installmentCount > 0) {
+    if (startDate && installmentCount > 0) {
       initializeInstallments()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [installmentCount, firstInstallmentDate, interestRate, totalAmount])
+  }, [installmentCount, startDate, interestRate, originalAmount])
 
   const calculateTotalAmount = () => {
     return installments.reduce(
@@ -102,8 +109,8 @@ export default function CreatePaymentPlan({
 
   const handleInstallmentAmountChange = (index: number, newAmount: number) => {
     const currentInstallments = [...installments]
-    const interestAmount = totalAmount * (interestRate / 100)
-    const totalWithInterest = totalAmount + interestAmount
+    const interestAmount = originalAmount * (interestRate / 100)
+    const totalWithInterest = originalAmount + interestAmount
 
     currentInstallments[index]!.amount = newAmount
 
@@ -127,9 +134,7 @@ export default function CreatePaymentPlan({
 
   const onSubmit = (values: z.infer<typeof savePaymentPlanSchema>) => {
     toast.promise(
-      savePaymentPlan({
-        ...values,
-      }).then(() => {
+      savePaymentPlan(values).then(() => {
         form.reset()
         router.refresh()
         setOpen(false)
@@ -141,6 +146,8 @@ export default function CreatePaymentPlan({
       }
     )
   }
+
+  console.log(form.formState.errors)
 
   return (
     <div>
@@ -168,12 +175,22 @@ export default function CreatePaymentPlan({
                 <div className="flex items-center gap-2">
                   <PrintPaymentPlan
                     data={{
+                      patientName,
                       totalAmount,
                       installmentCount,
-                      firstInstallmentDate,
+                      startDate,
                       installments,
                     }}
-                  />
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Printer className="size-4" />
+                      Yazdır
+                    </Button>
+                  </PrintPaymentPlan>
                   <Button
                     variant="outline"
                     size="sm"
@@ -190,77 +207,101 @@ export default function CreatePaymentPlan({
           </AlertDialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-              <div className="grid grid-cols-3 gap-10">
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-10">
+                  <FormField
+                    control={form.control}
+                    name="originalAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Toplam Tutar</FormLabel>
+                        <FormControl>
+                          <Input
+                            prefix="₺"
+                            {...field}
+                            value={
+                              field.value === 0
+                                ? ""
+                                : field.value.toLocaleString("tr-TR")
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              )
+                              field.onChange(Number(value))
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="installmentCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Taksit Sayısı</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={
+                              field.value === 0
+                                ? ""
+                                : field.value.toLocaleString("tr-TR")
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              )
+                              field.onChange(Number(value))
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="interestRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Faiz Oranı (%)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={
+                              field.value === 0
+                                ? ""
+                                : field.value.toLocaleString("tr-TR")
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              )
+                              field.onChange(Number(value))
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="totalAmount"
+                  name="note"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Toplam Tutar</FormLabel>
+                      <FormLabel>Not</FormLabel>
                       <FormControl>
-                        <Input
-                          prefix="₺"
-                          {...field}
-                          value={
-                            field.value === 0
-                              ? ""
-                              : field.value.toLocaleString("tr-TR")
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, "")
-                            field.onChange(Number(value))
-                          }}
-                        />
+                        <Input {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="installmentCount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Taksit Sayısı</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={
-                            field.value === 0
-                              ? ""
-                              : field.value.toLocaleString("tr-TR")
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, "")
-                            field.onChange(Number(value))
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="interestRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Faiz Oranı (%)</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={
-                            field.value === 0
-                              ? ""
-                              : field.value.toLocaleString("tr-TR")
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, "")
-                            field.onChange(Number(value))
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -271,7 +312,7 @@ export default function CreatePaymentPlan({
                   <div className="grid grid-cols-3 gap-10">
                     <div className="col-span-2">
                       <DatePicker
-                        name="firstInstallmentDate"
+                        name="startDate"
                         label="Taksit Başlangıç Tarihi"
                       />
                     </div>
@@ -279,7 +320,7 @@ export default function CreatePaymentPlan({
 
                   <div className="mt-4 space-y-2">
                     <h3 className="text-lg font-medium">Taksit Tarihleri</h3>
-                    <ScrollArea className="pr-4 max-h-[50vh] overflow-y-auto">
+                    <ScrollArea className="pr-4 max-h-[40vh] overflow-y-auto">
                       <div className="grid grid-cols-3 gap-4">
                         {Array.from({ length: installmentCount }).map(
                           (_, index) => (

@@ -83,8 +83,8 @@ export function SearchMenu({ ...props }: DialogProps) {
               <CommandGroup heading="Hastalar">
                 {data?.map((patient) => (
                   <Link
-                    href={`/hasta/${patient.id}`}
                     key={patient.id}
+                    href={`/hasta/${patient.id}`}
                     onClick={() => setOpen(false)}
                   >
                     <CommandItem>{patient.name}</CommandItem>

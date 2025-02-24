@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { format } from "date-fns"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
 import { env } from "@/env"
@@ -37,34 +36,36 @@ export default [
     },
   },
   {
-    accessorKey: "birthDate",
-    header: "Doğum Tarihi",
-    cell: ({ row }) => {
-      const birthDate = row.original.birthDate
-      return <div>{birthDate ? format(birthDate, "dd.MM.yyyy") : "Yok"}</div>
-    },
-  },
-  {
     accessorKey: "doctor",
-    header: "Doktor'u",
+    header: "Hekimler",
     cell: ({ row }) => {
-      const doctor = row.original.doctor
-      if (!doctor)
+      const doctors = row.original.doctors
+
+      if (!doctors)
         return (
           <Badge variant="destructive">Doktor&apos;u sistemden silinmiş!</Badge>
         )
+
       return (
-        <div className="flex items-center gap-2">
-          <Avatar>
-            <AvatarImage
-              src={`${env.NEXT_PUBLIC_MINIO_URL}${doctor?.user?.imagePath}`}
-            />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-          <div>
-            <p>{doctor?.user?.name}</p>
-            <p className="text-xs text-muted-foreground">{doctor?.specialty}</p>
-          </div>
+        <div className="flex items-center">
+          {doctors.map((doctor, index) => (
+            <Link
+              href={`/hekim/${doctor.user.username}`}
+              key={doctor.id}
+              className="flex items-center -ml-3 first:ml-0 hover:scale-125 transition-transform cursor-pointer"
+              style={{ zIndex: doctors.length - index }}
+            >
+              <Avatar className="ring-2 ring-border">
+                <AvatarImage
+                  src={`${env.NEXT_PUBLIC_MINIO_URL}${doctor?.user?.imagePath}`}
+                />
+                <AvatarFallback>
+                  {doctor?.user?.name?.split(" ")[0]?.charAt(0)}
+                  {doctor?.user?.name?.split(" ")[1]?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          ))}
         </div>
       )
     },

@@ -19,7 +19,18 @@ export const patientRouter = createTRPCRouter({
       const patient = await ctx.db.patient.findUnique({
         where: { id: input.id },
         include: {
-          paymentPlan: true,
+          doctors: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  imagePath: true,
+                  username: true,
+                },
+              },
+            },
+          },
         },
       })
 
@@ -28,7 +39,7 @@ export const patientRouter = createTRPCRouter({
   getPatientsAdmin: adminProcedure.query(async ({ ctx }) => {
     const patients = await ctx.db.patient.findMany({
       include: {
-        doctor: {
+        doctors: {
           include: {
             user: {
               select: {
@@ -64,7 +75,7 @@ export const patientRouter = createTRPCRouter({
         branchId,
       },
       include: {
-        doctor: {
+        doctors: {
           select: {
             id: true,
             specialty: true,
@@ -72,6 +83,7 @@ export const patientRouter = createTRPCRouter({
               select: {
                 id: true,
                 name: true,
+                username: true,
                 imagePath: true,
               },
             },
@@ -91,7 +103,9 @@ export const patientRouter = createTRPCRouter({
         data: {
           ...input,
           branchId,
-          doctorId: input.doctorId,
+          doctors: {
+            connect: input.doctors.map((doctor) => ({ id: doctor })),
+          },
           notes: input.notes ?? [],
         },
       })
@@ -120,13 +134,52 @@ export const patientRouter = createTRPCRouter({
   savePaymentPlan: protectedProcedure
     .input(savePaymentPlanSchema)
     .mutation(async ({ ctx, input }) => {
-      const paymentPlan = await ctx.db.patientPaymentPlan.create({
-        data: {
-          ...input,
-          patientId: input.patientId,
-        },
-      })
+      const {
+        patientId,
+        originalAmount,
+        totalAmount,
+        installmentCount,
+        interestRate,
+        startDate,
+        installments,
+        note,
+      } = input
 
-      return paymentPlan
+      // Transaction ile işlemleri gerçekleştir
+      return await ctx.db.$transaction(async (tx) => {
+        // Ödeme planı oluştur
+        const paymentPlan = await tx.patientPaymentPlan.create({
+          data: {
+            totalAmount,
+            remainingAmount: totalAmount,
+            paidAmount: 0,
+            installmentCount,
+            startDate: startDate,
+            note,
+            patientId,
+            originalAmount,
+            interestRate,
+            isApproved: false,
+            isCompleted: false,
+          },
+        })
+
+        // Taksitleri oluştur
+        const installmentPromises = installments.map((installment, index) => {
+          return tx.installment.create({
+            data: {
+              number: index + 1,
+              amount: installment.amount,
+              dueDate: installment.date,
+              remainingAmount: installment.amount,
+              paymentPlanId: paymentPlan.id,
+            },
+          })
+        })
+
+        await Promise.all(installmentPromises)
+
+        return paymentPlan
+      })
     }),
 })

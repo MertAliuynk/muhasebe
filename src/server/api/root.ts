@@ -5,6 +5,7 @@ import { branchRouter } from "./routers/branch"
 import { doctorRouter } from "./routers/doctor"
 import { expenseRouter } from "./routers/expense"
 import { patientRouter } from "./routers/patient"
+import { paymentPlanRouter } from "./routers/payment-plan"
 import { userRouter } from "./routers/user"
 
 export const appRouter = createTRPCRouter({
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   doctor: doctorRouter,
   patient: patientRouter,
   expense: expenseRouter,
+  paymentPlan: paymentPlanRouter,
 })
 
 export type AppRouter = typeof appRouter

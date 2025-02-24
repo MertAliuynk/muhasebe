@@ -28,19 +28,14 @@ export const sidebarData: SidebarData = {
       title: "Genel",
       items: [
         {
-          title: "Anasayfa",
+          title: "Raporlar",
           url: "/",
-          icon: LayoutDashboard,
+          icon: FileText,
         },
         {
           title: "Günlük Kasa",
           url: "/gunluk-kasa",
           icon: Vault,
-        },
-        {
-          title: "Raporlar",
-          url: "/rapor",
-          icon: FileText,
         },
       ],
     },

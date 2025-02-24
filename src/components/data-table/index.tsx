@@ -33,7 +33,7 @@ import { DataTablePagination } from "./components/pagination"
 import { DataTableViewOptions } from "./components/view-option"
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
+  columns: (ColumnDef<TData, TValue> & { side?: "end" | "center" | "start" })[]
   data: TData[]
   noResultsMessage?: string
   onAddNewRow?: () => void
