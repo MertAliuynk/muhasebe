@@ -1,45 +1,45 @@
-import React, { Suspense } from "react"
+import React from "react"
+import { redirect } from "next/navigation"
 import { format } from "date-fns"
+import { type SearchParams } from "nuqs/server"
 
-import { formatCurrency } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { DatePicker } from "@/components/ui/date-picker"
 
+import { CaseDetailDialog } from "./_components/case-detail-dialog"
 import Expenses from "./_components/expenses"
-import Revenues from "./_components/incomes"
+import Incomes from "./_components/incomes"
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ date: string }>
-}) {
-  const { date } = await searchParams
+const today = format(new Date(), "yyyy-MM-dd")
+
+type PageProps = {
+  searchParams: Promise<SearchParams>
+}
+
+export default async function Page({ searchParams }: PageProps) {
+  const params = await searchParams
+  if (!params.date) {
+    redirect(`/gunluk-kasa?date=${today}`)
+  }
+
+  const kasaVerileri = {
+    dundenDevir: 10000,
+    nakit: 1000,
+    havaleEft: 1000,
+    krediKarti: 1000,
+  }
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Günlük Kasa Akış</h1>
-        <Suspense>
-          <DatePicker />
-        </Suspense>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Günlük Kasa Akış</h1>
+          <CaseDetailDialog kasaVerileri={kasaVerileri} />
+        </div>
+        <DatePicker />
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Revenues date={date ?? format(new Date(), "yyyy-MM-dd")} />
-        <Expenses date={date ?? format(new Date(), "yyyy-MM-dd")} />
-      </div>
-      <div className=" text-sm flex justify-end">
-        <div className="w-[270px] grid grid-cols-[1fr_auto] gap-2 justify-between">
-          <p className="text-muted-foreground font-medium">
-            Dünden Devirolan Kasa:
-          </p>
-          <Badge variant="outline">{formatCurrency(10000)}</Badge>
-          <p className="text-muted-foreground font-medium">Nakit:</p>
-          <Badge variant="outline">{formatCurrency(1000)}</Badge>
-          <p className="text-muted-foreground font-medium">Havale/EFT:</p>
-          <Badge variant="outline">{formatCurrency(1000)}</Badge>
-          <p className="text-muted-foreground font-medium">Kredi Kartı:</p>
-          <Badge variant="outline">{formatCurrency(1000)}</Badge>
-        </div>
+        <Incomes />
+        <Expenses />
       </div>
     </div>
   )

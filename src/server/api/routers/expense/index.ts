@@ -5,6 +5,7 @@ import {
 } from "@/server/api/trpc"
 
 import {
+  deleteExpenseSchema,
   getExpensesByBranchIdSchema,
   saveExpenseSchema,
   saveExpenseTypeSchema,
@@ -117,6 +118,19 @@ export const expenseRouter = createTRPCRouter({
       } else {
         await ctx.db.branchExpense.create({
           data: { ...input, branchId: branchId! },
+        })
+      }
+    }),
+  deleteExpense: protectedProcedure
+    .input(deleteExpenseSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (input.doctorId) {
+        await ctx.db.doctorExpense.delete({
+          where: { id: input.id },
+        })
+      } else {
+        await ctx.db.branchExpense.delete({
+          where: { id: input.id },
         })
       }
     }),

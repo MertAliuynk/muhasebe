@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { savePatientSchema } from "@/server/api/routers/patient/schema"
 import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -28,6 +29,9 @@ type Props = {
 }
 
 export default function SavePatientForm({ doctors }: Props) {
+  const router = useRouter()
+  const utils = api.useUtils()
+
   const { mutateAsync: savePatient, isPending } =
     api.patient.savePatient.useMutation()
 
@@ -50,14 +54,17 @@ export default function SavePatientForm({ doctors }: Props) {
   }
 
   function onSubmit(values: z.infer<typeof savePatientSchema>) {
-    toast.promise(savePatient(values), {
-      loading: "Hasta kaydediliyor...",
-      success: () => {
-        form.reset()
-        return "Hasta başarıyla kaydedildi."
-      },
-      error: "Hasta kaydedilirken bir hata oluştu.",
-    })
+    toast.promise(
+      savePatient(values).then(async (patient) => {
+        await utils.patient.searchPatient.invalidate()
+        router.push(`/hasta/${patient.id}`)
+      }),
+      {
+        loading: "Hasta kaydediliyor...",
+        success: "Hasta başarıyla kaydedildi.",
+        error: "Hasta kaydedilirken bir hata oluştu.",
+      }
+    )
   }
 
   return (

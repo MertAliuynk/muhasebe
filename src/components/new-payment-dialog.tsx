@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { savePaymentSchema } from "@/server/api/routers/payment/schema"
 import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { PaymentType } from "@prisma/client"
+import { type TRPCError } from "@trpc/server"
 import { HandCoins } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -43,10 +43,11 @@ import {
 
 type PageProps = {
   patients: RouterOutputs["patient"]["getPatientsByBranch"]
+  isLoading: boolean
 }
 
-export default function NewPaymentDialog({ patients }: PageProps) {
-  const router = useRouter()
+export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
+  const utils = api.useUtils()
 
   const { mutateAsync: createPayment, isPending } =
     api.payment.savePayment.useMutation()
@@ -77,15 +78,15 @@ export default function NewPaymentDialog({ patients }: PageProps) {
 
   const onSubmit = (values: z.infer<typeof savePaymentSchema>) => {
     toast.promise(
-      createPayment(values).then(() => {
+      createPayment(values).then(async () => {
         form.reset()
-        router.refresh()
+        await utils.payment.getAllPaymentsByDate.invalidate()
         setIsOpen(false)
       }),
       {
         loading: "Gelir kaydediliyor...",
         success: "Gelir başarıyla kaydedildi.",
-        error: "Gelir kaydedilirken bir hata oluştu.",
+        error: (error: TRPCError) => error.message,
       }
     )
   }
@@ -93,7 +94,7 @@ export default function NewPaymentDialog({ patients }: PageProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" disabled={isLoading}>
           <HandCoins size={18} className="mr-2" />
           Yeni Gelir Ekle
         </Button>

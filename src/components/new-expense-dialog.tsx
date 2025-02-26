@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState } from "react"
-import { useRouter } from "next/navigation"
 import { saveExpenseSchema } from "@/server/api/routers/expense/schema"
 import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -37,9 +36,10 @@ import { SelectExpenseType } from "./form/select-expense-type"
 
 type PageProsp = {
   doctors: RouterOutputs["doctor"]["getDoctorsByBranch"]
+  isLoading: boolean
 }
-export default function NewExpenseDialog({ doctors }: PageProsp) {
-  const router = useRouter()
+export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
+  const utils = api.useUtils()
 
   const { mutateAsync: createExpense, isPending } =
     api.expense.saveExpense.useMutation()
@@ -58,9 +58,9 @@ export default function NewExpenseDialog({ doctors }: PageProsp) {
 
   const onSubmit = (values: z.infer<typeof saveExpenseSchema>) => {
     toast.promise(
-      createExpense(values).then(() => {
+      createExpense(values).then(async () => {
         form.reset()
-        router.refresh()
+        await utils.expense.getExpensesByBranchId.invalidate()
         setIsOpen(false)
       }),
       {
@@ -90,7 +90,7 @@ export default function NewExpenseDialog({ doctors }: PageProsp) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" disabled={isLoading}>
           <FileInput size={18} className=" mr-2" />
           Yeni Gider Ekle
         </Button>

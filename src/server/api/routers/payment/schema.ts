@@ -39,3 +39,9 @@ export const savePaymentSchema = z
 export const getPaymentsSchema = z.object({
   date: z.string().min(1, { message: "Tarih seçilmedi" }),
 })
+
+export const deletePaymentSchema = z.object({
+  id: z.string(),
+  whereToPay: z.enum(["patient", "branch"]),
+  patientId: z.string().optional(),
+})

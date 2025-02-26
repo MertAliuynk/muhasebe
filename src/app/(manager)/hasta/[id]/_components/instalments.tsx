@@ -53,7 +53,7 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
               const paidPercentage =
                 (instalment.paidAmount * 100) / instalment.amount
               const isOverdue = new Date(instalment.dueDate) < new Date()
-              const isPaid = paidPercentage === 100
+              const isCompleted = instalment.isCompleted
 
               return (
                 <div key={instalment.id} className="relative">
@@ -64,18 +64,18 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
                   >
                     <div className="flex items-center gap-2">
                       <p className="font-medium">{instalment.number}.Taksit</p>
-                      {paidPercentage > 0 && !isPaid && (
+                      {paidPercentage > 0 && !isCompleted && (
                         <span className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-700">
                           {formatCurrencyWithSymbol(instalment.paidAmount)}{" "}
                           Ödendi ( %{Math.round(paidPercentage)})
                         </span>
                       )}
-                      {isOverdue && (
+                      {isOverdue && !isCompleted && !instalment.paidAmount && (
                         <span className="text-sm px-2 py-1 rounded-full bg-red-100 text-red-700">
                           Gecikmiş Ödeme
                         </span>
                       )}
-                      {isPaid && (
+                      {isCompleted && (
                         <span className="text-sm px-2 py-1 rounded-full bg-green-100 text-green-700">
                           Tamamlandı
                         </span>

@@ -46,6 +46,7 @@ export const paymentPlanRouter = createTRPCRouter({
 
       const isApprovedPaymentPlan = await ctx.db.patientPaymentPlan.findFirst({
         where: {
+          id,
           isApproved: true,
         },
       })

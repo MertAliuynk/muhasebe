@@ -11,6 +11,7 @@ import { calculateAge } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import CreatePaymentPlan from "./create-payment-plan"
+import PatientNotesDialog from "./patient-notes-dialog"
 import PreviewPaymentPlans from "./preview-payment-plans"
 
 export default function PreviewPatient({
@@ -52,6 +53,7 @@ export default function PreviewPatient({
               <Phone className="size-4 text-primary" />
               <span>{formatPhoneNumberIntl(patient?.phone ?? "")}</span>
             </div>
+            <PatientNotesDialog patient={patient} />
             <PreviewPaymentPlans paymentPlans={paymentPlans} />
           </div>
         </div>

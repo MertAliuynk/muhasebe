@@ -22,3 +22,8 @@ export const softDeleteExpenseTypeSchema = z.object({
 export const getExpensesByBranchIdSchema = z.object({
   date: z.string().min(1, { message: "Tarih seçimi zorunludur" }),
 })
+
+export const deleteExpenseSchema = z.object({
+  id: z.string().min(1, { message: "Gider seçimi zorunludur" }),
+  doctorId: z.string().optional(),
+})
