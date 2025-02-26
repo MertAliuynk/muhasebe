@@ -229,6 +229,7 @@ model DoctorIncome {
     paymentType PaymentType
     paymentDate DateTime    @default(now())
     note        String?
+    commission  Int
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
 

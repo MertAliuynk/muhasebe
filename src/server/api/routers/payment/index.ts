@@ -138,6 +138,18 @@ export const paymentRouter = createTRPCRouter({
             }
           }
 
+          const doctor = await tx.doctor.findUnique({
+            where: { id: input.doctorId! },
+            select: { commission: true },
+          })
+
+          if (!doctor) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Doktor bulunamadı.",
+            })
+          }
+
           await Promise.all([
             tx.patientPaymentPlan.update({
               where: {
@@ -164,6 +176,7 @@ export const paymentRouter = createTRPCRouter({
               paymentDate: input.paymentDate,
               note: input.note,
               doctorId: input.doctorId!,
+              commission: doctor.commission,
             },
           })
         })
@@ -191,7 +204,6 @@ export const paymentRouter = createTRPCRouter({
         }
 
         return await ctx.db.$transaction(async (tx) => {
-          // Ödemeyi bul
           const payment = await tx.patientPayment.findUnique({
             where: { id: input.id },
             include: {
@@ -225,7 +237,6 @@ export const paymentRouter = createTRPCRouter({
             })
           }
 
-          // Ödeme miktarını taksitlerden geri al (sondan başa doğru)
           let remainingAmountToRevert = payment.amount
           const installmentUpdates = []
 
@@ -257,7 +268,6 @@ export const paymentRouter = createTRPCRouter({
             }
           }
 
-          // Ödeme planını güncelle
           await tx.patientPaymentPlan.update({
             where: { id: paymentPlan.id },
             data: {
@@ -271,25 +281,36 @@ export const paymentRouter = createTRPCRouter({
             },
           })
 
-          // Doktor gelirini sil
           await tx.doctorIncome.deleteMany({
             where: {
               paymentDate: payment.paymentDate,
               amount: payment.amount,
               paymentType: payment.paymentType,
+              doctorId: {
+                in: await tx.patient
+                  .findUnique({
+                    where: { id: input.patientId },
+                    select: {
+                      doctors: {
+                        select: { id: true },
+                      },
+                    },
+                  })
+                  .then(
+                    (patient) =>
+                      patient?.doctors.map((doctor) => doctor.id) || []
+                  ),
+              },
             },
           })
 
-          // Ödemeyi sil
           await tx.patientPayment.delete({
             where: { id: input.id },
           })
 
-          // Taksit güncellemelerini yap
           await Promise.all(installmentUpdates)
         })
       } else {
-        // Şube ödemesini sil
         await ctx.db.branchPayment.delete({
           where: { id: input.id },
         })

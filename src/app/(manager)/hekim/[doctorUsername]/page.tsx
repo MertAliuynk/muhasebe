@@ -2,7 +2,10 @@ import React from "react"
 import { notFound } from "next/navigation"
 import { api } from "@/trpc/server"
 
-import PreviewDoctor from "./_components/preview-doctor"
+import { Separator } from "@/components/ui/separator"
+
+import PreviewDoctor from "./_components/doctor-info/preview-doctor"
+import FinancialCards from "./_components/financial/financial-cards"
 
 type PageProps = {
   params: Promise<{ doctorUsername: string }>
@@ -19,8 +22,12 @@ export default async function page({ params }: PageProps) {
   }
 
   return (
-    <div className="">
-      <PreviewDoctor doctor={doctor} />
+    <div className="space-y-8">
+      <div className="relative">
+        <PreviewDoctor doctor={doctor} />
+        <FinancialCards />
+      </div>
+      <Separator />
     </div>
   )
 }

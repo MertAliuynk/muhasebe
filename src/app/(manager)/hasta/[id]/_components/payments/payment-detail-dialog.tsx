@@ -20,8 +20,6 @@ type PageProps = {
 }
 
 export default function PaymentDetailDialog({ payments }: PageProps) {
-  console.log(payments)
-
   return (
     <Dialog>
       <DialogTrigger asChild>
