@@ -30,7 +30,6 @@ export default function DeleteExpenseDialog({ expense }: PageProps) {
     api.expense.deleteExpense.useMutation()
 
   const [isOpen, setIsOpen] = useState(false)
-  console.log(expense)
 
   const handleDelete = async () => {
     toast.promise(

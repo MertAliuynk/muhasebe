@@ -45,3 +45,7 @@ export const deletePaymentSchema = z.object({
   whereToPay: z.enum(["patient", "branch"]),
   patientId: z.string().optional(),
 })
+
+export const getPaymentsByPatientIdSchema = z.object({
+  patientId: z.string(),
+})

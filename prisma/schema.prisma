@@ -258,16 +258,16 @@ model BranchPayment {
 }
 
 model Installment {
-    id              String   @id @default(cuid())
+    id              String    @id @default(cuid())
     number          Int
     amount          Int
     dueDate         DateTime
-    paidAmount      Int      @default(0)
-    remainingAmount Int      @default(0)
-    isCompleted     Boolean  @default(false)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    paidAmount      Int       @default(0)
+    remainingAmount Int       @default(0)
+    isCompleted     Boolean   @default(false)
+    lastPaymentDate DateTime?
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
 
     //Relations
     paymentPlanId String

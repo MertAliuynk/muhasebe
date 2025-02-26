@@ -1,9 +1,7 @@
 import type { RouterOutputs } from "@/trpc/react"
 import { format } from "date-fns"
-import { HandCoins } from "lucide-react"
 
 import { formatCurrency, formatCurrencyWithSymbol } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -35,18 +33,15 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
               Hasta için olan taksitler listeleniyor.
             </CardDescription>
           </div>
-          <Button variant="outline">
-            <HandCoins size={18} className="mr-2" />
-            Yeni Ödeme Ekle
-          </Button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-8">
           <div className="divide-y">
-            <div className="grid grid-cols-3 items-center justify-between gap-4 text-muted-foreground">
-              <p className="font-medium"></p>
+            <div className="grid grid-cols-4 items-center justify-between text-muted-foreground">
               <p className="font-medium">Ödeme Tarihi</p>
+              <p className="font-medium">Taksit Ödeme Tarihi</p>
+              <p className="font-medium">En Son Ödeme Yapılan Tarih</p>
               <p className="font-medium text-end">Tutar</p>
             </div>
             {approvedPaymentPlan.installments.map((instalment) => {
@@ -59,7 +54,7 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
                 <div key={instalment.id} className="relative">
                   <div
                     className={
-                      "grid grid-cols-3 items-center justify-between py-4"
+                      "grid grid-cols-4 items-center justify-between py-4"
                     }
                   >
                     <div className="flex items-center gap-2">
@@ -83,6 +78,15 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
                     </div>
                     <p className="font-medium">
                       {format(instalment.dueDate, "PPP EEEE")}
+                    </p>
+                    <p className="font-medium">
+                      {instalment.lastPaymentDate ? (
+                        format(instalment.lastPaymentDate, "PPP EEEE HH:mm")
+                      ) : (
+                        <span className="text-red-400">
+                          Henüz ödeme yapılmadı
+                        </span>
+                      )}
                     </p>
                     <p className="font-medium text-end">
                       {formatCurrency(instalment.amount)}

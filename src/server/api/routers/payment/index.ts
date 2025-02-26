@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server"
 
 import {
   deletePaymentSchema,
+  getPaymentsByPatientIdSchema,
   getPaymentsSchema,
   savePaymentSchema,
 } from "./schema"
@@ -38,6 +39,15 @@ export const paymentRouter = createTRPCRouter({
         return [...a, ...b].sort(
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
         )
+      })
+
+      return payments
+    }),
+  getAllPaymentsByPatientId: protectedProcedure
+    .input(getPaymentsByPatientIdSchema)
+    .query(async ({ ctx, input }) => {
+      const payments = await ctx.db.patientPayment.findMany({
+        where: { patientId: input.patientId },
       })
 
       return payments
@@ -119,6 +129,7 @@ export const paymentRouter = createTRPCRouter({
                     },
                     isCompleted:
                       installment.remainingAmount <= paymentForThisInstallment,
+                    lastPaymentDate: new Date(),
                   },
                 })
               )

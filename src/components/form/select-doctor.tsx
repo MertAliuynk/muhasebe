@@ -38,8 +38,6 @@ export default function SelectDoctor({ name, label, doctors }: Props) {
   const form = useFormContext()
   const [isOpen, setIsOpen] = useState(false)
 
-  console.log(form.watch(name))
-
   return (
     <FormField
       control={form.control}

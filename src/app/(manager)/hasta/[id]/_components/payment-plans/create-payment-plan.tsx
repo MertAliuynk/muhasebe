@@ -147,8 +147,6 @@ export default function CreatePaymentPlan({
     )
   }
 
-  console.log(form.formState.errors)
-
   return (
     <div>
       <AlertDialog open={open} onOpenChange={setOpen}>

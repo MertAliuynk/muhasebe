@@ -10,9 +10,9 @@ import { env } from "@/env"
 import { calculateAge } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-import CreatePaymentPlan from "./create-payment-plan"
+import CreatePaymentPlan from "../payment-plans/create-payment-plan"
+import PreviewPaymentPlans from "../payment-plans/preview-payment-plans"
 import PatientNotesDialog from "./patient-notes-dialog"
-import PreviewPaymentPlans from "./preview-payment-plans"
 
 export default function PreviewPatient({
   patient,

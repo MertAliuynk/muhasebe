@@ -79,8 +79,8 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
   const onSubmit = (values: z.infer<typeof savePaymentSchema>) => {
     toast.promise(
       createPayment(values).then(async () => {
-        form.reset()
         await utils.payment.getAllPaymentsByDate.invalidate()
+        form.reset()
         setIsOpen(false)
       }),
       {

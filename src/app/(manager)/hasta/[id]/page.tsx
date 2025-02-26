@@ -4,11 +4,13 @@ import { api } from "@/trpc/server"
 
 import { Separator } from "@/components/ui/separator"
 
-import FinancialCards from "./_components/financial-cards"
-import Instalments from "./_components/instalments"
-import PreviewPatient from "./_components/preview-patient"
+import FinancialCards from "./_components/financial/financial-cards"
+import PreviewPatient from "./_components/patient-info/preview-patient"
+import Instalments from "./_components/payments/instalments"
 
 import "@/config/date"
+
+import PaymentDetailDialog from "./_components/payments/payment-detail-dialog"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -19,6 +21,9 @@ export default async function page({ params }: PageProps) {
 
   const patient = await api.patient.getPatientById({ id })
   const paymentPlans = await api.paymentPlan.getPatientPaymentPlanById({
+    patientId: id,
+  })
+  const payments = await api.payment.getAllPaymentsByPatientId({
     patientId: id,
   })
 
@@ -35,6 +40,7 @@ export default async function page({ params }: PageProps) {
         <FinancialCards approvedPaymentPlan={approvedPaymentPlan!} />
       </div>
       <Separator />
+      <PaymentDetailDialog payments={payments} />
       <Instalments approvedPaymentPlan={approvedPaymentPlan!} />
     </div>
   )
