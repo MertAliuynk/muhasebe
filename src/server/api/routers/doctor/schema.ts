@@ -13,3 +13,15 @@ export const getDoctorFinancialDataSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
 })
+
+export const getDoctorIncomesSchema = z.object({
+  id: z.string().min(1, "Hekim ID giriniz."),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+})
+
+export const getDoctorExpensesSchema = z.object({
+  id: z.string().min(1, "Hekim ID giriniz."),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+})

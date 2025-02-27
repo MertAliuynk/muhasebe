@@ -5,7 +5,9 @@ import { api } from "@/trpc/server"
 import { Separator } from "@/components/ui/separator"
 
 import PreviewDoctor from "./_components/doctor-info/preview-doctor"
+import DoctorExpenses from "./_components/expenses"
 import FinancialCards from "./_components/financial/financial-cards"
+import DoctorIncomes from "./_components/incomes"
 
 type PageProps = {
   params: Promise<{ doctorUsername: string }>
@@ -28,6 +30,10 @@ export default async function page({ params }: PageProps) {
         <FinancialCards />
       </div>
       <Separator />
+      <div className="grid grid-cols-2 gap-8">
+        <DoctorIncomes />
+        <DoctorExpenses />
+      </div>
     </div>
   )
 }
