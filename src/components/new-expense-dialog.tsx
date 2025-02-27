@@ -4,13 +4,14 @@ import React, { useState } from "react"
 import { saveExpenseSchema } from "@/server/api/routers/expense/schema"
 import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { PaymentType } from "@prisma/client"
 import { FileInput } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
 
 import { env } from "@/env"
-import { cn } from "@/lib/utils"
+import { cn, paymentTypeLabels } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,6 +34,13 @@ import {
 import { Input } from "@/components/ui/input"
 
 import { SelectExpenseType } from "./form/select-expense-type"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select"
 
 type PageProsp = {
   doctors: RouterOutputs["doctor"]["getDoctorsByBranch"]
@@ -53,6 +61,7 @@ export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
       description: "",
       expenseTypeId: "",
       doctorId: undefined,
+      paymentType: PaymentType.CASH,
     },
   })
 
@@ -163,6 +172,33 @@ export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
                       <FormControl>
                         <SelectExpenseType {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="paymentType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ödeme Tipi</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Ödeme tipini seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.values(PaymentType).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {paymentTypeLabels[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

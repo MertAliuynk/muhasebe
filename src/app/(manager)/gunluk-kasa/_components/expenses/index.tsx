@@ -6,7 +6,7 @@ import type { Doctor, User } from "@prisma/client"
 import { format } from "date-fns"
 import { Building, Clock, Stethoscope } from "lucide-react"
 
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, paymentTypeLabels } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import NewExpenseDialog from "@/components/new-expense-dialog"
 import Spinner from "@/components/spinner"
 
@@ -63,18 +64,25 @@ export default function Expenses() {
                     <p className="font-medium">{item.expenseType.name}</p>
 
                     <div className="flex items-center gap-2 h-4">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {"doctor" in item ? (
-                          <>
-                            <Stethoscope size={14} />
-                            {(item.doctor as Doctor & { user: User }).user.name}
-                          </>
-                        ) : (
-                          <>
-                            <Building size={14} />
-                            Klinik Ödemesi
-                          </>
-                        )}
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground h-full">
+                        {paymentTypeLabels[item.paymentType]}
+                        <Separator orientation="vertical" />
+                        <div className="flex items-center gap-1">
+                          {"doctor" in item ? (
+                            <>
+                              <Stethoscope size={14} />
+                              {
+                                (item.doctor as Doctor & { user: User }).user
+                                  .name
+                              }
+                            </>
+                          ) : (
+                            <>
+                              <Building size={14} />
+                              Klinik Ödemesi
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     {item.description && (

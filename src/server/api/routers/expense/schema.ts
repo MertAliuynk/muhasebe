@@ -1,3 +1,4 @@
+import { PaymentType } from "@prisma/client"
 import { z } from "zod"
 
 export const saveExpenseTypeSchema = z.object({
@@ -13,6 +14,7 @@ export const saveExpenseSchema = z.object({
     .string()
     .min(1, { message: "Gider kalem seçimi zorunludur" }),
   doctorId: z.string().optional(),
+  paymentType: z.nativeEnum(PaymentType),
 })
 
 export const softDeleteExpenseTypeSchema = z.object({
