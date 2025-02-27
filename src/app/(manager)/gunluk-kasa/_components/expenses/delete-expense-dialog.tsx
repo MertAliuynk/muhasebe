@@ -38,8 +38,9 @@ export default function DeleteExpenseDialog({ expense }: PageProps) {
         doctorId:
           "doctor" in expense ? (expense.doctor as Doctor).id : undefined,
       }).then(async () => {
-        await utils.expense.getExpensesByBranchId.invalidate()
         setIsOpen(false)
+        await utils.expense.getExpensesByBranchId.invalidate()
+        await utils.cashReport.getTodayCashReport.invalidate()
       }),
       {
         loading: "Gider siliniyor...",

@@ -56,9 +56,7 @@ export function DateRangePicker({
             if (!isNaN(toDate.getTime())) {
               to = toDate
             }
-          } catch {
-            // Geçersiz tarih formatı, to değişkeni undefined kalacak
-          }
+          } catch {}
         }
 
         return { from, to } as DateRange
@@ -84,12 +82,10 @@ export function DateRangePicker({
     [setDate]
   )
 
-  // Tarih filtresini sıfırla
   const handleClearDate = React.useCallback(() => {
     void setDate(null)
   }, [setDate])
 
-  // İlk yüklemede varsayılan tarihi URL'ye yaz
   React.useEffect(() => {
     if (!window.location.search.includes("date=")) {
       void setDate(defaultDate)

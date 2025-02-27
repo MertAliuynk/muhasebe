@@ -68,9 +68,10 @@ export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
   const onSubmit = (values: z.infer<typeof saveExpenseSchema>) => {
     toast.promise(
       createExpense(values).then(async () => {
+        setIsOpen(false)
         form.reset()
         await utils.expense.getExpensesByBranchId.invalidate()
-        setIsOpen(false)
+        await utils.cashReport.getTodayCashReport.invalidate()
       }),
       {
         loading: "Gider kaydediliyor...",

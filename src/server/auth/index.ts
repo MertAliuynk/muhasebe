@@ -15,7 +15,7 @@ const {
   adapter: PrismaAdapter(db) as Adapter,
   session: {
     strategy: "jwt",
-    maxAge: 4 * 60 * 60, // 4 hours
+    maxAge: 4 * 60 * 60,
   },
   ...authConfig,
 })

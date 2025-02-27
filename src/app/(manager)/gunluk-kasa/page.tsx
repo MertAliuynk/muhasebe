@@ -21,19 +21,12 @@ export default async function Page({ searchParams }: PageProps) {
     redirect(`/gunluk-kasa?date=${today}`)
   }
 
-  const kasaVerileri = {
-    dundenDevir: 10000,
-    nakit: 1000,
-    havaleEft: 1000,
-    krediKarti: 1000,
-  }
-
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">Günlük Kasa Akış</h1>
-          <CaseDetailDialog kasaVerileri={kasaVerileri} />
+          <CaseDetailDialog />
         </div>
         <DatePicker />
       </div>

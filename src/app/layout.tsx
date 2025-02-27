@@ -11,8 +11,8 @@ import { TailwindIndicator } from "@/components/tailwind-indicator"
 import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
-  title: "Karadeniz Özel Ağız ve Diş Sağlığı Polikliniği",
-  description: "Karadeniz Özel Ağız ve Diş Sağlığı Polikliniği",
+  title: "Özel Karadeniz Ağız ve Diş Sağlığı Polikliniği",
+  description: "Özel Karadeniz Ağız ve Diş Sağlığı Polikliniği",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 }
 

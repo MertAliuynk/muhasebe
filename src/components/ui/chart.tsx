@@ -103,7 +103,6 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
-// Payload tipi için genişletilmiş arayüz
 interface PayloadItem<ValueType = number, NameType = string> {
   value?: ValueType
   name?: NameType
@@ -281,7 +280,6 @@ const ChartTooltipContent = React.forwardRef<
 )
 ChartTooltipContent.displayName = "ChartTooltip"
 
-// Legend payload için interface ekleyelim
 interface LegendPayload {
   value: string
   dataKey?: string
@@ -350,7 +348,6 @@ const ChartLegendContent = React.forwardRef<
 )
 ChartLegendContent.displayName = "ChartLegend"
 
-// Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,

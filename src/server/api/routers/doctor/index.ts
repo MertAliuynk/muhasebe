@@ -103,14 +103,12 @@ export const doctorRouter = createTRPCRouter({
         })
       }
 
-      // Tarih aralığı filtresi için koşulları oluştur
       const dateFilter: { gte?: Date; lte?: Date } = {}
 
       if (input.startDate) {
         const startDate = new Date(input.startDate)
         dateFilter.gte = startDate
 
-        // Eğer endDate yoksa ve sadece startDate varsa, o günün sonuna kadar filtrele
         if (!input.endDate) {
           const endOfDay = new Date(startDate)
           endOfDay.setHours(23, 59, 59, 999)
@@ -119,13 +117,11 @@ export const doctorRouter = createTRPCRouter({
       }
 
       if (input.endDate) {
-        // Bitiş tarihini günün sonuna ayarla (23:59:59)
         const endDate = new Date(input.endDate)
         endDate.setHours(23, 59, 59, 999)
         dateFilter.lte = endDate
       }
 
-      // Toplam Gelir: DoctorIncome modelindeki doktora ait tüm gelirler
       const totalIncome = await ctx.db.doctorIncome.aggregate({
         where: {
           doctorId: doctor.id,
@@ -138,7 +134,6 @@ export const doctorRouter = createTRPCRouter({
         },
       })
 
-      // Toplam Gider: DoctorExpense modelindeki doktora ait tüm giderler
       const totalExpense = await ctx.db.doctorExpense.aggregate({
         where: {
           doctorId: doctor.id,
@@ -152,7 +147,6 @@ export const doctorRouter = createTRPCRouter({
         },
       })
 
-      // Hakediş: DoctorIncome modelinde doktorun gelirini komisyon oranına göre hesaplanmış hali
       const doctorIncomes = await ctx.db.doctorIncome.findMany({
         where: {
           doctorId: doctor.id,
@@ -167,12 +161,10 @@ export const doctorRouter = createTRPCRouter({
       })
 
       const totalCommission = doctorIncomes.reduce((acc, income) => {
-        // Her gelir için komisyon oranına göre hesaplama
         const commissionAmount = (income.amount * income.commission) / 100
         return acc + commissionAmount
       }, 0)
 
-      // Bekleyen Ödemeler: Doktorun hastalarının onaylanmış planlarındaki totalAmount'tan hesapla
       const pendingPayments = await ctx.db.patientPaymentPlan.aggregate({
         where: {
           patient: {
@@ -217,14 +209,12 @@ export const doctorRouter = createTRPCRouter({
         })
       }
 
-      // Tarih aralığı filtresi için koşulları oluştur
       const dateFilter: { gte?: Date; lte?: Date } = {}
 
       if (input.startDate) {
         const startDate = new Date(input.startDate)
         dateFilter.gte = startDate
 
-        // Eğer endDate yoksa ve sadece startDate varsa, o günün sonuna kadar filtrele
         if (!input.endDate) {
           const endOfDay = new Date(startDate)
           endOfDay.setHours(23, 59, 59, 999)
@@ -233,13 +223,11 @@ export const doctorRouter = createTRPCRouter({
       }
 
       if (input.endDate) {
-        // Bitiş tarihini günün sonuna ayarla (23:59:59)
         const endDate = new Date(input.endDate)
         endDate.setHours(23, 59, 59, 999)
         dateFilter.lte = endDate
       }
 
-      // Doktorun gelirleri
       const incomes = await ctx.db.doctorIncome.findMany({
         where: {
           doctorId: doctor.id,
@@ -252,7 +240,6 @@ export const doctorRouter = createTRPCRouter({
         },
       })
 
-      // Doktorun gelirlerine karşılık gelen hasta ödemeleri
       const patientPayments = await ctx.db.patientPayment.findMany({
         where: {
           ...(Object.keys(dateFilter).length > 0 && {
@@ -279,16 +266,14 @@ export const doctorRouter = createTRPCRouter({
         },
       })
 
-      // Gelirleri hasta bilgileriyle eşleştir
       const incomesWithPatients = incomes.map((income) => {
-        // Aynı tarih ve tutara sahip hasta ödemesini bul
         const matchingPayment = patientPayments.find(
           (payment) =>
             payment.amount === income.amount &&
             payment.paymentType === income.paymentType &&
             Math.abs(
               payment.paymentDate.getTime() - income.paymentDate.getTime()
-            ) < 60000 // 1 dakika içinde
+            ) < 60000
         )
 
         return {
@@ -320,14 +305,12 @@ export const doctorRouter = createTRPCRouter({
         })
       }
 
-      // Tarih aralığı filtresi için koşulları oluştur
       const dateFilter: { gte?: Date; lte?: Date } = {}
 
       if (input.startDate) {
         const startDate = new Date(input.startDate)
         dateFilter.gte = startDate
 
-        // Eğer endDate yoksa ve sadece startDate varsa, o günün sonuna kadar filtrele
         if (!input.endDate) {
           const endOfDay = new Date(startDate)
           endOfDay.setHours(23, 59, 59, 999)
@@ -336,13 +319,11 @@ export const doctorRouter = createTRPCRouter({
       }
 
       if (input.endDate) {
-        // Bitiş tarihini günün sonuna ayarla (23:59:59)
         const endDate = new Date(input.endDate)
         endDate.setHours(23, 59, 59, 999)
         dateFilter.lte = endDate
       }
 
-      // Doktorun giderleri
       const expenses = await ctx.db.doctorExpense.findMany({
         where: {
           doctorId: doctor.id,
@@ -383,14 +364,12 @@ export const doctorRouter = createTRPCRouter({
         })
       }
 
-      // Tarih aralığı filtresi için koşulları oluştur
       const dateFilter: { gte?: Date; lte?: Date } = {}
 
       if (input.startDate) {
         const startDate = new Date(input.startDate)
         dateFilter.gte = startDate
 
-        // Eğer endDate yoksa ve sadece startDate varsa, o günün sonuna kadar filtrele
         if (!input.endDate) {
           const endOfDay = new Date(startDate)
           endOfDay.setHours(23, 59, 59, 999)
@@ -399,13 +378,11 @@ export const doctorRouter = createTRPCRouter({
       }
 
       if (input.endDate) {
-        // Bitiş tarihini günün sonuna ayarla (23:59:59)
         const endDate = new Date(input.endDate)
         endDate.setHours(23, 59, 59, 999)
         dateFilter.lte = endDate
       }
 
-      // Doktorun hastalarının bekleyen ödemeleri
       const pendingPayments = await ctx.db.patientPaymentPlan.findMany({
         where: {
           patient: {
@@ -446,7 +423,6 @@ export const doctorRouter = createTRPCRouter({
       })
 
       return pendingPayments.map((payment) => {
-        // Bir sonraki ödeme tarihini bul (tamamlanmamış taksitlerden ilki)
         const installments = payment.installments || []
         const nextPaymentDate =
           installments.length > 0 ? installments[0]?.dueDate : null

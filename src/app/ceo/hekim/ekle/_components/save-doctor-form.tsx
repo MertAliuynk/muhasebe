@@ -193,11 +193,11 @@ export default function SaveDoctorForm() {
               name="commission"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Komisyon</FormLabel>
+                  <FormLabel>Hakediş Primi</FormLabel>
                   <FormControl>
                     <Input
                       prefix="%"
-                      placeholder="Komisyon giriniz"
+                      placeholder="Hakediş primi giriniz"
                       {...field}
                       value={field.value === 0 ? "" : field.value}
                       onChange={(e) => {
@@ -209,7 +209,9 @@ export default function SaveDoctorForm() {
                     />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription>Komisyon oranınını giriniz.</FormDescription>
+                  <FormDescription>
+                    Hakediş primi yüzdesi giriniz.
+                  </FormDescription>
                 </FormItem>
               )}
             />

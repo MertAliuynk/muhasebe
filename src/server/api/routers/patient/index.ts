@@ -137,9 +137,7 @@ export const patientRouter = createTRPCRouter({
         note,
       } = input
 
-      // Transaction ile işlemleri gerçekleştir
       return await ctx.db.$transaction(async (tx) => {
-        // Ödeme planı oluştur
         const paymentPlan = await tx.patientPaymentPlan.create({
           data: {
             totalAmount,
@@ -156,7 +154,6 @@ export const patientRouter = createTRPCRouter({
           },
         })
 
-        // Taksitleri oluştur
         const installmentPromises = installments.map((installment, index) => {
           return tx.installment.create({
             data: {

@@ -79,9 +79,10 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
   const onSubmit = (values: z.infer<typeof savePaymentSchema>) => {
     toast.promise(
       createPayment(values).then(async () => {
-        await utils.payment.getAllPaymentsByDate.invalidate()
-        form.reset()
         setIsOpen(false)
+        form.reset()
+        await utils.payment.getAllPaymentsByDate.invalidate()
+        await utils.cashReport.getTodayCashReport.invalidate()
       }),
       {
         loading: "Gelir kaydediliyor...",
