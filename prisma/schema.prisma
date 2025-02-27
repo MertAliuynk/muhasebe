@@ -346,27 +346,22 @@ model DoctorExpense {
 model CashReport {
     id String @id @default(cuid())
 
-    // Nakit bakiye
     cashIncome  Int
     cashExpense Int
     cashBalance Int
 
-    // Kredi kartı bakiye
     cardIncome  Int
     cardExpense Int
     cardBalance Int
 
-    // Havale/EFT bakiye
     transferIncome  Int
     transferExpense Int
     transferBalance Int
 
-    // Toplam bakiye
     totalIncome  Int
     totalExpense Int
     totalBalance Int
 
-    // Branch bilgisi
     branchId String
     branch   Branch @relation(fields: [branchId], references: [id])
 

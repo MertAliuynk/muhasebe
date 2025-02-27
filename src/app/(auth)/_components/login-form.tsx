@@ -21,9 +21,13 @@ import {
 import { Input } from "@/components/ui/input"
 
 const formSchema = z.object({
-  username: z.string().min(1, {
-    message: "Kullanıcı adı giriniz.",
-  }),
+  username: z
+    .string()
+    .min(3, "Kullanıcı adı en az 3 karakter olmalıdır.")
+    .regex(
+      /^[a-zA-Z0-9]+$/,
+      "Kullanıcı adı boşluk ve türkçe karakter içeremez."
+    ),
   password: z.string().min(5, {
     message: "Şifre en az 6 karakter olmalıdır.",
   }),

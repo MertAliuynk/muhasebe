@@ -65,7 +65,7 @@ export const expenseRouter = createTRPCRouter({
           where: {
             branchId: branchId!,
             createdAt: {
-              gte: new Date(input.date),
+              gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
               lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
             },
           },

@@ -29,7 +29,13 @@ export const getUsersSchema = z.object({
 export const saveUserSchema = z
   .object({
     name: z.string().min(3, "İsim soyisim en az 3 karakter olmalıdır."),
-    username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır."),
+    username: z
+      .string()
+      .min(3, "Kullanıcı adı en az 3 karakter olmalıdır.")
+      .regex(
+        /^[a-zA-Z0-9]+$/,
+        "Kullanıcı adı boşluk ve türkçe karakter içeremez."
+      ),
     password: z.string().min(5, "Şifre en az 5 karakter olmalıdır."),
     passwordConfirm: z
       .string()
@@ -44,7 +50,13 @@ export const saveUserSchema = z
 export const saveDoctorSchema = z
   .object({
     name: z.string().min(3, "İsim soyisim en az 3 karakter olmalıdır."),
-    username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır."),
+    username: z
+      .string()
+      .min(3, "Kullanıcı adı en az 3 karakter olmalıdır.")
+      .regex(
+        /^[a-zA-Z0-9]+$/,
+        "Kullanıcı adı boşluk ve türkçe karakter içeremez."
+      ),
     password: z.string().min(5, "Şifre en az 5 karakter olmalıdır."),
     passwordConfirm: z
       .string()
