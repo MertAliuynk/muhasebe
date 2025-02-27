@@ -2,6 +2,7 @@ import { companyRouter } from "@/server/api/routers/company"
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc"
 
 import { branchRouter } from "./routers/branch"
+import { cashReportRouter } from "./routers/cash-report"
 import { doctorRouter } from "./routers/doctor"
 import { expenseRouter } from "./routers/expense"
 import { patientRouter } from "./routers/patient"
@@ -18,6 +19,7 @@ export const appRouter = createTRPCRouter({
   expense: expenseRouter,
   payment: paymentRouter,
   paymentPlan: paymentPlanRouter,
+  cashReport: cashReportRouter,
 })
 
 export type AppRouter = typeof appRouter

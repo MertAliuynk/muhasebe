@@ -13,7 +13,7 @@ import { DateRangePicker } from "@/components/date-range-picker"
 export default function PreviewDoctor({
   doctor,
 }: {
-  doctor: RouterOutputs["doctor"]["getDoctorByUsername"]
+  doctor: RouterOutputs["doctor"]["getDoctorById"]
 }) {
   return (
     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/5 via-background to-primary/10 p-8">

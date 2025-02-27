@@ -113,6 +113,7 @@ model Branch {
 
     branchPayments  BranchPayment[]
     patientPayments PatientPayment[]
+    cashReports     CashReport[]
 
     // Indexes
     @@index([companyId])
@@ -340,4 +341,37 @@ model DoctorExpense {
     // Indexes
     @@index([doctorId])
     @@index([isDeleted])
+}
+
+model CashReport {
+    id String @id @default(cuid())
+
+    // Nakit bakiye
+    cashIncome  Int
+    cashExpense Int
+    cashBalance Int
+
+    // Kredi kartı bakiye
+    cardIncome  Int
+    cardExpense Int
+    cardBalance Int
+
+    // Havale/EFT bakiye
+    transferIncome  Int
+    transferExpense Int
+    transferBalance Int
+
+    // Toplam bakiye
+    totalIncome  Int
+    totalExpense Int
+    totalBalance Int
+
+    // Branch bilgisi
+    branchId String
+    branch   Branch @relation(fields: [branchId], references: [id])
+
+    createdAt DateTime @default(now())
+
+    // Indexes
+    @@index([branchId])
 }
