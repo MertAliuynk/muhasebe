@@ -67,7 +67,7 @@ export default function PreviewPatient({
             {patient?.doctors.map((doctor) => (
               <Link
                 key={doctor.id}
-                href={`/hekim/${doctor.user.username}`}
+                href={`/hekim/${doctor.id}`}
                 className="flex items-center gap-2 hover:bg-muted-foreground/20 rounded-md p-2 px-4 transition-colors duration-300"
               >
                 <Avatar className="ring ring-border">

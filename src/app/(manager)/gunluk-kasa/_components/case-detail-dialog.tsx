@@ -35,19 +35,12 @@ export function CaseDetailDialog({ kasaVerileri }: KasaDetayProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Günlük Kasa Detayları</DialogTitle>
+          <DialogTitle>Kasa Detayı</DialogTitle>
           <DialogDescription>
-            Günlük kasa akışı için detaylı bilgiler
+            Kasa detayı için detaylı bilgiler
           </DialogDescription>
         </DialogHeader>
         <div className="w-full grid grid-cols-[1fr_auto] gap-3 justify-between mt-4">
-          <p className="text-muted-foreground font-medium">
-            Dünden Devirolan Kasa:
-          </p>
-          <Badge variant="outline">
-            {formatCurrency(kasaVerileri.dundenDevir)}
-          </Badge>
-
           <p className="text-muted-foreground font-medium">Nakit:</p>
           <Badge variant="outline">{formatCurrency(kasaVerileri.nakit)}</Badge>
 

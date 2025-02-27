@@ -10,13 +10,13 @@ import FinancialCards from "./_components/financial/financial-cards"
 import DoctorIncomes from "./_components/incomes"
 
 type PageProps = {
-  params: Promise<{ doctorUsername: string }>
+  params: Promise<{ id: string }>
 }
 export default async function page({ params }: PageProps) {
-  const { doctorUsername } = await params
+  const { id } = await params
 
-  const doctor = await api.doctor.getDoctorByUsername({
-    username: doctorUsername,
+  const doctor = await api.doctor.getDoctorById({
+    id,
   })
 
   if (!doctor) {
@@ -27,12 +27,12 @@ export default async function page({ params }: PageProps) {
     <div className="space-y-8">
       <div className="relative">
         <PreviewDoctor doctor={doctor} />
-        <FinancialCards />
+        <FinancialCards doctorId={doctor.id} />
       </div>
       <Separator />
       <div className="grid grid-cols-2 gap-8">
-        <DoctorIncomes />
-        <DoctorExpenses />
+        <DoctorIncomes doctorId={doctor.id} />
+        <DoctorExpenses doctorId={doctor.id} />
       </div>
     </div>
   )

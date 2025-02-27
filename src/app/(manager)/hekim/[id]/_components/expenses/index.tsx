@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { api } from "@/trpc/react"
 import { format } from "date-fns"
 
-import { formatCurrencyWithSymbol, paymentTypeLabels } from "@/lib/utils"
+import { formatCurrencyWithSymbol } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import Spinner from "@/components/spinner"
 
-export default function DoctorIncomes() {
+export default function DoctorExpenses({ doctorId }: { doctorId: string }) {
   const searchParams = useSearchParams()
   const dateParam = searchParams.get("date")
 
@@ -27,8 +27,8 @@ export default function DoctorIncomes() {
     startDate = dates[0] || undefined
     endDate = dates[1] || undefined
   }
-  const { data: incomes, isLoading } = api.doctor.getDoctorIncomes.useQuery({
-    id: "cm7jl2rl2002xd35xxqyw13dw",
+  const { data: expenses, isLoading } = api.doctor.getDoctorExpenses.useQuery({
+    id: doctorId,
     startDate,
     endDate,
   })
@@ -36,38 +36,33 @@ export default function DoctorIncomes() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Hekim Gelirleri</CardTitle>
+        <CardTitle>Hekim Giderleri</CardTitle>
         <CardDescription>
-          Bu bölümde hekimin gelirlerini görebilirsiniz.
+          Bu bölümde hekimin giderlerini görebilirsiniz.
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[calc(100vh-20rem)] overflow-y-auto no-scrollbar">
-        <div className="grid grid-cols-[2fr_3fr_1fr] gap-4 text-sm text-muted-foreground">
-          <p>Hasta</p>
+        <div className="grid grid-cols-[1fr_3fr_1fr] gap-4 text-sm text-muted-foreground">
+          <p>Türü</p>
           <p>Tarih</p>
           <p>Tutar</p>
         </div>
         <div className="divide-y">
           {isLoading ? (
             <Spinner className="mx-auto mt-20" />
-          ) : incomes?.length === 0 ? (
+          ) : expenses?.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground mt-20 underline">
-              Herhangi bir gelir yok.
+              Herhangi bir gider yok.
             </p>
           ) : (
-            incomes?.map((income) => (
+            expenses?.map((expense) => (
               <div
-                key={income.id}
-                className="grid grid-cols-[2fr_3fr_1fr] items-center gap-4 first:pt-2 py-4"
+                key={expense.id}
+                className="grid grid-cols-[1fr_3fr_1fr] gap-4 first:pt-2 py-4"
               >
-                <div className=" items-center gap-2">
-                  <p>{income.patientName}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {paymentTypeLabels[income.paymentType]}
-                  </p>
-                </div>
-                <p>{format(income.paymentDate, "PPP EEEE HH:mm")}</p>
-                <p>{formatCurrencyWithSymbol(income.amount)}</p>
+                <p>{expense.expenseType}</p>
+                <p>{format(expense.date, "PPP EEEE HH:mm")}</p>
+                <p>{formatCurrencyWithSymbol(expense.amount)}</p>
               </div>
             ))
           )}

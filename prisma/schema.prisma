@@ -113,6 +113,7 @@ model Branch {
 
     branchPayments  BranchPayment[]
     patientPayments PatientPayment[]
+    caseDetail      CaseDetail[]
 
     // Indexes
     @@index([companyId])
@@ -338,4 +339,45 @@ model DoctorExpense {
     // Indexes
     @@index([doctorId])
     @@index([isDeleted])
+}
+
+model CaseDetail {
+    id                 String   @id @default(cuid())
+    totalAmount        Int
+    cashAmount         Int
+    bankTransferAmount Int
+    creditCardAmount   Int
+    expenseAmount      Int
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime @updatedAt
+
+    // Relations
+    branchId           String
+    branch             Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    cashDetailTransfer CashDetailTransfer[]
+
+    // Indexes
+    @@index([branchId])
+}
+
+model CashDetailTransfer {
+    id                 String   @id @default(cuid())
+    totalAmount        Int
+    cashAmount         Int
+    bankTransferAmount Int
+    creditCardAmount   Int
+    expenseAmount      Int
+    fromDate           DateTime
+    toDate             DateTime
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime @updatedAt
+
+    // Relations
+    cashDetailId String
+    cashDetail   CaseDetail @relation(fields: [cashDetailId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([fromDate])
+    @@index([toDate])
+    @@index([cashDetailId])
 }

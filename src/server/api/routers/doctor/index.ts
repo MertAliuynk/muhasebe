@@ -7,10 +7,10 @@ import { TRPCError } from "@trpc/server"
 
 import {
   getDoctorByIdSchema,
-  getDoctorByUsernameSchema,
   getDoctorExpensesSchema,
   getDoctorFinancialDataSchema,
   getDoctorIncomesSchema,
+  getDoctorPendingPaymentsSchema,
 } from "./schema"
 
 export const doctorRouter = createTRPCRouter({
@@ -40,30 +40,6 @@ export const doctorRouter = createTRPCRouter({
 
     return doctors
   }),
-  getDoctorByUsername: protectedProcedure
-    .input(getDoctorByUsernameSchema)
-    .query(async ({ ctx, input }) => {
-      const { username } = input
-
-      const doctor = await ctx.db.doctor.findFirst({
-        where: {
-          user: {
-            username,
-          },
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              imagePath: true,
-            },
-          },
-        },
-      })
-
-      return doctor
-    }),
   getDoctorById: protectedProcedure
     .input(getDoctorByIdSchema)
     .query(async ({ ctx, input }) => {
@@ -390,5 +366,104 @@ export const doctorRouter = createTRPCRouter({
         date: expense.createdAt,
         description: expense.description,
       }))
+    }),
+  getDoctorPendingPayments: protectedProcedure
+    .input(getDoctorPendingPaymentsSchema)
+    .query(async ({ ctx, input }) => {
+      const doctor = await ctx.db.doctor.findUnique({
+        where: {
+          id: input.id,
+        },
+      })
+
+      if (!doctor) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Hekim bulunamadı",
+        })
+      }
+
+      // Tarih aralığı filtresi için koşulları oluştur
+      const dateFilter: { gte?: Date; lte?: Date } = {}
+
+      if (input.startDate) {
+        const startDate = new Date(input.startDate)
+        dateFilter.gte = startDate
+
+        // Eğer endDate yoksa ve sadece startDate varsa, o günün sonuna kadar filtrele
+        if (!input.endDate) {
+          const endOfDay = new Date(startDate)
+          endOfDay.setHours(23, 59, 59, 999)
+          dateFilter.lte = endOfDay
+        }
+      }
+
+      if (input.endDate) {
+        // Bitiş tarihini günün sonuna ayarla (23:59:59)
+        const endDate = new Date(input.endDate)
+        endDate.setHours(23, 59, 59, 999)
+        dateFilter.lte = endDate
+      }
+
+      // Doktorun hastalarının bekleyen ödemeleri
+      const pendingPayments = await ctx.db.patientPaymentPlan.findMany({
+        where: {
+          patient: {
+            doctors: {
+              some: {
+                id: doctor.id,
+              },
+            },
+          },
+          isApproved: true,
+          isCompleted: false,
+          isDeleted: false,
+          ...(Object.keys(dateFilter).length > 0 && {
+            createdAt: dateFilter,
+          }),
+        },
+        include: {
+          patient: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+            },
+          },
+          installments: {
+            orderBy: {
+              dueDate: "asc",
+            },
+            where: {
+              isCompleted: false,
+            },
+            take: 1,
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      })
+
+      return pendingPayments.map((payment) => {
+        // Bir sonraki ödeme tarihini bul (tamamlanmamış taksitlerden ilki)
+        const installments = payment.installments || []
+        const nextPaymentDate =
+          installments.length > 0 ? installments[0]?.dueDate : null
+
+        return {
+          id: payment.id,
+          patientId: payment.patientId,
+          patientName: payment.patient?.name ?? "Bilinmeyen Hasta",
+          patientPhone: payment.patient?.phone ?? "",
+          totalAmount: payment.totalAmount,
+          paidAmount: payment.paidAmount,
+          remainingAmount: payment.remainingAmount,
+          installmentCount: payment.installmentCount,
+          createdAt: payment.createdAt,
+          startDate: payment.startDate,
+          nextPaymentDate,
+        }
+      })
     }),
 })

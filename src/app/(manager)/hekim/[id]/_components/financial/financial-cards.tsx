@@ -8,7 +8,9 @@ import { AlertCircle, Banknote, CreditCard, Wallet } from "lucide-react"
 import { formatCurrencyWithSymbol } from "@/lib/utils"
 import Spinner from "@/components/spinner"
 
-export default function FinancialCards() {
+import PendingPaymentsDialog from "./pending-payments-dialog"
+
+export default function FinancialCards({ doctorId }: { doctorId: string }) {
   const searchParams = useSearchParams()
   const dateParam = searchParams.get("date")
 
@@ -24,7 +26,7 @@ export default function FinancialCards() {
   const { data: financialData, isFetching } =
     api.doctor.getDoctorFinancialData.useQuery(
       {
-        id: "cm7jl2rl2002xd35xxqyw13dw",
+        id: doctorId,
         startDate,
         endDate,
       },
@@ -85,22 +87,24 @@ export default function FinancialCards() {
           </p>
         </div>
       </div>
-      <div className="group relative overflow-hidden rounded-xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-500/10 transition-transform duration-300 group-hover:scale-105" />
-        <div className="relative p-6">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Bekleyen Ödemeler</span>
-            <AlertCircle className="size-5 text-orange-500" />
+      <PendingPaymentsDialog doctorId={doctorId}>
+        <div className="group relative overflow-hidden rounded-xl cursor-pointer hover:scale-95 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-500/10 transition-transform duration-300 group-hover:scale-105" />
+          <div className="relative p-6">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Bekleyen Ödemeler</span>
+              <AlertCircle className="size-5 text-orange-500" />
+            </div>
+            <p className="mt-4 text-3xl font-semibold">
+              {isFetching ? (
+                <Spinner className="mx-auto mt-8" />
+              ) : (
+                formatCurrencyWithSymbol(financialData?.pendingPayments || 0)
+              )}
+            </p>
           </div>
-          <p className="mt-4 text-3xl font-semibold">
-            {isFetching ? (
-              <Spinner className="mx-auto mt-8" />
-            ) : (
-              formatCurrencyWithSymbol(financialData?.pendingPayments || 0)
-            )}
-          </p>
         </div>
-      </div>
+      </PendingPaymentsDialog>
     </div>
   )
 }

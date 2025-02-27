@@ -50,7 +50,7 @@ export default [
         <div className="flex items-center">
           {doctors.map((doctor, index) => (
             <Link
-              href={`/hekim/${doctor.user.username}`}
+              href={`/hekim/${doctor.id}`}
               key={doctor.id}
               className="flex items-center -ml-3 first:ml-0 hover:scale-125 transition-transform cursor-pointer"
               style={{ zIndex: doctors.length - index }}
