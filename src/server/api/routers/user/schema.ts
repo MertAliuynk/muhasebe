@@ -78,3 +78,27 @@ export const saveDoctorSchema = z
     path: ["passwordConfirm"],
     message: "Şifreler eşleşmiyor.",
   })
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Mevcut şifre gereklidir."),
+    newPassword: z.string().min(5, "Yeni şifre en az 5 karakter olmalıdır."),
+    newPasswordConfirm: z
+      .string()
+      .min(5, "Şifre tekrar en az 5 karakter olmalıdır."),
+  })
+  .refine((data) => data.newPassword === data.newPasswordConfirm, {
+    path: ["newPasswordConfirm"],
+    message: "Şifreler eşleşmiyor.",
+  })
+
+export const updateUserProfileSchema = z.object({
+  name: z.string().min(3, "İsim soyisim en az 3 karakter olmalıdır."),
+  username: z
+    .string()
+    .min(3, "Kullanıcı adı en az 3 karakter olmalıdır.")
+    .regex(
+      /^[a-zA-Z0-9]+$/,
+      "Kullanıcı adı boşluk ve türkçe karakter içeremez."
+    ),
+})

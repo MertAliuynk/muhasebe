@@ -28,14 +28,14 @@ export const sidebarData: SidebarData = {
       title: "Genel",
       items: [
         {
-          title: "Raporlar",
-          url: "/",
-          icon: FileText,
-        },
-        {
           title: "Günlük Kasa",
           url: "/gunluk-kasa",
           icon: Vault,
+        },
+        {
+          title: "Raporlar",
+          url: "/raporlar",
+          icon: FileText,
         },
       ],
     },
@@ -59,12 +59,7 @@ export const sidebarData: SidebarData = {
         {
           title: "Hekimler",
           icon: BriefcaseMedical,
-          items: [
-            {
-              title: "Listele",
-              url: "/hekim",
-            },
-          ],
+          url: "/hekim",
         },
       ],
     },
@@ -77,7 +72,7 @@ export const sidebarData: SidebarData = {
           items: [
             {
               title: "Profil",
-              url: "/settings",
+              url: "/profil",
               icon: UserCog,
             },
           ],
