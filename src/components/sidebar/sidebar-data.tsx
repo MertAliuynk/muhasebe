@@ -45,16 +45,7 @@ export const sidebarData: SidebarData = {
         {
           title: "Hastalar",
           icon: Users,
-          items: [
-            {
-              title: "Listele",
-              url: "/hasta",
-            },
-            {
-              title: "Ekle",
-              url: "/hasta/ekle",
-            },
-          ],
+          url: "/hasta",
         },
         {
           title: "Hekimler",

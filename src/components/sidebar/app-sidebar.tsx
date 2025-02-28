@@ -1,15 +1,19 @@
 "use client"
 
 import * as React from "react"
-import { Hospital } from "lucide-react"
+import Link from "next/link"
+import { Hospital, UserPlus } from "lucide-react"
 
 import { siteConfig } from "@/config/site"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/sidebar/nav-user"
 
@@ -20,6 +24,7 @@ export function AppSidebar({
   sidebarData,
   ...props
 }: React.ComponentProps<typeof Sidebar> & { sidebarData: SidebarData }) {
+  const { state } = useSidebar()
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -35,6 +40,20 @@ export function AppSidebar({
             <span className="truncate text-xs">Atakum Şube</span>
           </div>
         </SidebarMenuButton>
+        <Link
+          href="/hasta/ekle"
+          className={cn("mt-5 px-4", state === "collapsed" && "px-0")}
+        >
+          <Button
+            size={state === "collapsed" ? "icon" : "sm"}
+            className="w-full h-8"
+          >
+            <UserPlus
+              className={cn("size-4 mr-2", state === "collapsed" && "mr-0")}
+            />
+            {state !== "collapsed" && <p>Yeni Hasta Ekle</p>}
+          </Button>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         {sidebarData.navGroups.map((props) => (
