@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { type RouterOutputs } from "@/trpc/react"
 import { Hospital, UserPlus } from "lucide-react"
 
-import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,9 +22,14 @@ import type { SidebarData } from "./types"
 
 export function AppSidebar({
   sidebarData,
+  branch,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { sidebarData: SidebarData }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  sidebarData: SidebarData
+  branch: RouterOutputs["branch"]["getBranch"]
+}) {
   const { state } = useSidebar()
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -36,8 +41,10 @@ export function AppSidebar({
             <Hospital className="size-4" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">{siteConfig.name}</span>
-            <span className="truncate text-xs">Atakum Şube</span>
+            <span className="truncate font-semibold">
+              {branch?.company.name}
+            </span>
+            <span className="truncate text-xs">{branch?.name} Şube</span>
           </div>
         </SidebarMenuButton>
         <Link

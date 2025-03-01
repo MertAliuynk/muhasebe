@@ -20,8 +20,6 @@ export function CaseDetailDialog() {
   const { data: cashReport, isFetching } =
     api.cashReport.getTodayCashReport.useQuery()
 
-  console.log(cashReport)
-
   return (
     <Dialog>
       <DialogTrigger asChild>

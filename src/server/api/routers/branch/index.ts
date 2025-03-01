@@ -1,8 +1,28 @@
-import { adminProcedure, createTRPCRouter } from "@/server/api/trpc"
+import {
+  adminProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "@/server/api/trpc"
 
 import { saveBranchSchema } from "./schema"
 
 export const branchRouter = createTRPCRouter({
+  getBranch: protectedProcedure.query(async ({ ctx }) => {
+    const branch = await ctx.db.branch.findUnique({
+      where: {
+        id: ctx.session.user.branchId!,
+      },
+      select: {
+        name: true,
+        company: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    })
+    return branch
+  }),
   getAll: adminProcedure.query(async ({ ctx }) => {
     const branches = await ctx.db.branch.findMany({
       where: {

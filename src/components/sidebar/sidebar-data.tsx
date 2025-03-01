@@ -5,7 +5,6 @@ import {
   Building,
   CircleUserRound,
   FileText,
-  HelpCircle,
   LayoutDashboard,
   NotebookPen,
   Settings,
@@ -17,12 +16,6 @@ import {
 import { type SidebarData } from "./types"
 
 export const sidebarData: SidebarData = {
-  user: {
-    name: "rimedtades",
-    email: "hepsedat@gmail.com",
-    avatar: "/images/avatar.png",
-  },
-
   navGroups: [
     {
       title: "Genel",
@@ -67,11 +60,6 @@ export const sidebarData: SidebarData = {
               icon: UserCog,
             },
           ],
-        },
-        {
-          title: "Yardım",
-          url: "/yardim",
-          icon: HelpCircle,
         },
       ],
     },
@@ -128,11 +116,6 @@ export const sidebarDataCeo: SidebarData = {
               icon: UserCog,
             },
           ],
-        },
-        {
-          title: "Yardım",
-          url: "/yardim",
-          icon: HelpCircle,
         },
       ],
     },

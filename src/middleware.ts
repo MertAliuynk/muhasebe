@@ -1,5 +1,3 @@
-import { UserRole } from "@prisma/client"
-
 import { auth } from "./server/auth"
 
 const PUBLIC_ROUTES = ["/login", "/register"]
@@ -11,14 +9,14 @@ const DOCTOR_ROUTES = ["/doktor", "/doktor/.*"]
 export default auth(async (req) => {
   const { nextUrl } = req
   const isAuthenticated = !!req.auth
-  const isAdmin = req.auth?.user.role === UserRole.ADMIN
+  const isAdmin = req.auth?.user.role === "ADMIN"
   const isPublicRoute = PUBLIC_ROUTES.includes(nextUrl.pathname)
   const isAdminRoute = ADMIN_ROUTES.some((route) => {
     const regex = new RegExp(`^${route}$`)
     return regex.test(nextUrl.pathname)
   })
   const hasCompany = req.auth?.user.companyId
-  const isDoctor = req.auth?.user.role === UserRole.DOCTOR
+  const isDoctor = req.auth?.user.role === "DOCTOR"
   const isDoctorRoute = DOCTOR_ROUTES.some((route) => {
     const regex = new RegExp(`^${route}$`)
     return regex.test(nextUrl.pathname)

@@ -63,6 +63,7 @@ const NavBadge = ({ children }: { children: React.ReactNode }) => (
 
 const SidebarMenuLink = ({ item, href }: { item: NavLink; href: string }) => {
   const { setOpenMobile } = useSidebar()
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
