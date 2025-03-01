@@ -38,6 +38,8 @@ export default function ApprovedPaymentPlan({ children, data }: PageProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
 
+  const hasMultipleDoctors = data.patient.doctors.length > 1
+
   const { mutateAsync: approvePaymentPlan, isPending } =
     api.paymentPlan.approvePlan.useMutation()
 
@@ -47,11 +49,10 @@ export default function ApprovedPaymentPlan({ children, data }: PageProps) {
       id: data.id,
       doctors: data.patient.doctors.map((doctor) => ({
         id: doctor.id,
-        amount: 0,
+        amount: hasMultipleDoctors ? 0 : data.totalAmount,
       })),
     },
   })
-  const hasMultipleDoctors = data.patient.doctors.length > 1
 
   const leftAmount =
     data.totalAmount -
@@ -60,7 +61,7 @@ export default function ApprovedPaymentPlan({ children, data }: PageProps) {
     }, 0)
 
   const onSubmit = async (values: z.infer<typeof approvePaymentPlanSchema>) => {
-    if (leftAmount !== 0) {
+    if (leftAmount !== 0 && hasMultipleDoctors) {
       toast.error("Paylaşımdan kalan tutar ₺0 olmalıdır.")
       return
     }

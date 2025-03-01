@@ -131,7 +131,8 @@ export const paymentPlanRouter = createTRPCRouter({
         await tx.doctorPaymentShare.createMany({
           data: doctors.map((doctor) => ({
             doctorId: doctor.id,
-            amount: doctor.amount,
+            totalAmount: doctor.amount,
+            remainingAmount: doctor.amount,
             paymentPlanId: id,
           })),
         })

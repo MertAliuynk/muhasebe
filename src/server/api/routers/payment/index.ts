@@ -75,6 +75,7 @@ export const paymentRouter = createTRPCRouter({
                   number: "asc",
                 },
               },
+              doctorShares: true,
             },
           })
 
@@ -151,6 +152,24 @@ export const paymentRouter = createTRPCRouter({
             })
           }
 
+          const doctorShare = approvedPatientPaymentPlan.doctorShares.find(
+            (share) => share.doctorId === input.doctorId
+          )
+
+          if (doctorShare) {
+            await tx.doctorPaymentShare.update({
+              where: { id: doctorShare.id },
+              data: {
+                paidAmount: {
+                  increment: input.amount,
+                },
+                remainingAmount: {
+                  decrement: input.amount,
+                },
+              },
+            })
+          }
+
           await Promise.all([
             tx.patientPaymentPlan.update({
               where: {
@@ -175,7 +194,6 @@ export const paymentRouter = createTRPCRouter({
               amount: input.amount,
               paymentType: input.paymentType,
               paymentDate: input.paymentDate,
-              note: input.note,
               doctorId: input.doctorId!,
               commission: doctor.commission,
               paymentId: payment.id,
@@ -217,6 +235,7 @@ export const paymentRouter = createTRPCRouter({
                       installments: {
                         orderBy: { number: "desc" },
                       },
+                      doctorShares: true,
                     },
                   },
                 },
@@ -268,6 +287,28 @@ export const paymentRouter = createTRPCRouter({
               )
 
               remainingAmountToRevert -= amountToRevertForThisInstallment
+            }
+          }
+
+          if (payment.doctorIncomes.length > 0) {
+            for (const income of payment.doctorIncomes) {
+              const doctorShare = paymentPlan.doctorShares.find(
+                (share) => share.doctorId === income.doctorId
+              )
+
+              if (doctorShare) {
+                await tx.doctorPaymentShare.update({
+                  where: { id: doctorShare.id },
+                  data: {
+                    paidAmount: {
+                      decrement: income.amount,
+                    },
+                    remainingAmount: {
+                      increment: income.amount,
+                    },
+                  },
+                })
+              }
             }
           }
 

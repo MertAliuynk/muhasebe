@@ -235,7 +235,6 @@ model DoctorIncome {
     amount      Int
     paymentType PaymentType
     paymentDate DateTime    @default(now())
-    note        String?
     commission  Int
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
@@ -248,6 +247,28 @@ model DoctorIncome {
 
     // Indexes
     @@index([paymentDate])
+}
+
+model DoctorPaymentShare {
+    id              String    @id @default(cuid())
+    totalAmount     Int
+    paidAmount      Int       @default(0)
+    remainingAmount Int
+    isConfirmed     Boolean   @default(false)
+    confirmedAt     DateTime?
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+
+    // Relations
+    doctorId      String
+    doctor        Doctor             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    paymentPlanId String
+    paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([doctorId])
+    @@index([paymentPlanId])
+    @@index([isConfirmed])
 }
 
 model BranchPayment {
@@ -377,24 +398,4 @@ model CashReport {
 
     // Indexes
     @@index([branchId])
-}
-
-model DoctorPaymentShare {
-    id          String    @id @default(cuid())
-    amount      Int
-    isConfirmed Boolean   @default(false)
-    confirmedAt DateTime?
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-
-    // Relations
-    doctorId      String
-    doctor        Doctor             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    paymentPlanId String
-    paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
-
-    // Indexes
-    @@index([doctorId])
-    @@index([paymentPlanId])
-    @@index([isConfirmed])
 }
