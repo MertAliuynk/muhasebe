@@ -165,18 +165,10 @@ export const doctorRouter = createTRPCRouter({
         return acc + commissionAmount
       }, 0)
 
-      const pendingPayments = await ctx.db.patientPaymentPlan.aggregate({
+      const pendingPayments = await ctx.db.doctorPaymentShare.aggregate({
         where: {
-          patient: {
-            doctors: {
-              some: {
-                id: doctor.id,
-              },
-            },
-          },
-          isApproved: true,
-          isCompleted: false,
-          isDeleted: false,
+          doctorId: doctor.id,
+          remainingAmount: { gt: 0 },
           ...(Object.keys(dateFilter).length > 0 && {
             createdAt: dateFilter,
           }),
@@ -258,7 +250,6 @@ export const doctorRouter = createTRPCRouter({
           amount: income.amount,
           paymentDate: income.paymentDate,
           paymentType: income.paymentType,
-          note: income.note,
           patientId: income.payment?.patient?.id || null,
           patientName: income.payment?.patient?.name || "Bilinmeyen Hasta",
         }
@@ -328,95 +319,67 @@ export const doctorRouter = createTRPCRouter({
   getDoctorPendingPayments: protectedProcedure
     .input(getDoctorPendingPaymentsSchema)
     .query(async ({ ctx, input }) => {
-      const doctor = await ctx.db.doctor.findUnique({
-        where: {
-          id: input.id,
-        },
-      })
-
-      if (!doctor) {
+      if (!input.doctorId) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Hekim bulunamadı",
+          message: "Doktor bulunamadı",
         })
       }
 
-      const dateFilter: { gte?: Date; lte?: Date } = {}
-
-      if (input.startDate) {
-        const startDate = new Date(input.startDate)
-        dateFilter.gte = startDate
-
-        if (!input.endDate) {
-          const endOfDay = new Date(startDate)
-          endOfDay.setHours(23, 59, 59, 999)
-          dateFilter.lte = endOfDay
-        }
-      }
-
-      if (input.endDate) {
-        const endDate = new Date(input.endDate)
-        endDate.setHours(23, 59, 59, 999)
-        dateFilter.lte = endDate
-      }
-
-      const pendingPayments = await ctx.db.patientPaymentPlan.findMany({
+      const pendingPayments = await ctx.db.doctorPaymentShare.findMany({
         where: {
-          patient: {
-            doctors: {
-              some: {
-                id: doctor.id,
+          doctorId: input.doctorId,
+          remainingAmount: { gt: 0 },
+        },
+        include: {
+          paymentPlan: {
+            include: {
+              patient: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              installments: {
+                where: {
+                  isCompleted: false,
+                },
+                orderBy: {
+                  dueDate: "asc",
+                },
+                take: 1,
               },
             },
           },
-          isApproved: true,
-          isCompleted: false,
-          isDeleted: false,
-          ...(Object.keys(dateFilter).length > 0 && {
-            createdAt: dateFilter,
-          }),
         },
-        include: {
-          patient: {
-            select: {
-              id: true,
-              name: true,
-              phone: true,
-            },
-          },
-          installments: {
-            orderBy: {
-              dueDate: "asc",
-            },
+      })
+
+      const formattedPayments = await Promise.all(
+        pendingPayments.map(async (payment) => {
+          const totalAmount = payment.totalAmount
+          const paidAmount = payment.paidAmount
+          const remainingAmount = payment.remainingAmount
+          const nextPaymentDate =
+            payment.paymentPlan.installments[0]?.dueDate || null
+
+          const installmentCount = await ctx.db.installment.count({
             where: {
-              isCompleted: false,
+              paymentPlanId: payment.paymentPlanId,
             },
-            take: 1,
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      })
+          })
 
-      return pendingPayments.map((payment) => {
-        const installments = payment.installments || []
-        const nextPaymentDate =
-          installments.length > 0 ? installments[0]?.dueDate : null
+          return {
+            id: payment.id,
+            patientName: payment.paymentPlan.patient.name,
+            totalAmount,
+            paidAmount,
+            remainingAmount,
+            installmentCount,
+            nextPaymentDate,
+          }
+        })
+      )
 
-        return {
-          id: payment.id,
-          patientId: payment.patientId,
-          patientName: payment.patient?.name ?? "Bilinmeyen Hasta",
-          patientPhone: payment.patient?.phone ?? "",
-          totalAmount: payment.totalAmount,
-          paidAmount: payment.paidAmount,
-          remainingAmount: payment.remainingAmount,
-          installmentCount: payment.installmentCount,
-          createdAt: payment.createdAt,
-          startDate: payment.startDate,
-          nextPaymentDate,
-        }
-      })
+      return formattedPayments
     }),
 })

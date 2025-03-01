@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       headers: req.headers,
     })
 
-    const result = await caller.cashReport.generateCashReport({})
+    const result = await caller.cashReport.generateCashReport()
 
     return NextResponse.json(
       {

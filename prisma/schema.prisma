@@ -250,14 +250,12 @@ model DoctorIncome {
 }
 
 model DoctorPaymentShare {
-    id              String    @id @default(cuid())
+    id              String   @id @default(cuid())
     totalAmount     Int
-    paidAmount      Int       @default(0)
+    paidAmount      Int      @default(0)
     remainingAmount Int
-    isConfirmed     Boolean   @default(false)
-    confirmedAt     DateTime?
-    createdAt       DateTime  @default(now())
-    updatedAt       DateTime  @updatedAt
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
 
     // Relations
     doctorId      String
@@ -268,7 +266,6 @@ model DoctorPaymentShare {
     // Indexes
     @@index([doctorId])
     @@index([paymentPlanId])
-    @@index([isConfirmed])
 }
 
 model BranchPayment {

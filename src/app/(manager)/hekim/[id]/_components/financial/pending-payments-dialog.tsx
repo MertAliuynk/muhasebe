@@ -25,8 +25,10 @@ export default function PendingPaymentsDialog({
 }: PageProps) {
   const { data: pendingPayments, isLoading } =
     api.doctor.getDoctorPendingPayments.useQuery({
-      id: doctorId,
+      doctorId,
     })
+
+  console.log(pendingPayments)
 
   return (
     <Dialog>

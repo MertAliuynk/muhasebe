@@ -157,6 +157,13 @@ export const paymentRouter = createTRPCRouter({
           )
 
           if (doctorShare) {
+            if (input.amount > doctorShare.remainingAmount) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: `Ödeme tutarı doktorun kalan alacağından fazla olamaz. Doktorun kalan alacağı: ${doctorShare.remainingAmount} TL`,
+              })
+            }
+
             await tx.doctorPaymentShare.update({
               where: { id: doctorShare.id },
               data: {
