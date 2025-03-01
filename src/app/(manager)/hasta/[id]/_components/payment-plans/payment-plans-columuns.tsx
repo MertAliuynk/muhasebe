@@ -125,7 +125,10 @@ export default function PaymentPlansColumns(hasApprovedPaymentPlan: boolean) {
                 title="Ödeme Planı Sil"
                 description="Bu ödeme planını silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
                 action={{
-                  mutateAsync: () => mutateAsync({ id: data.id }),
+                  mutateAsync: async () => {
+                    await mutateAsync({ id: data.id })
+                    return
+                  },
                   isPending,
                 }}
               >
