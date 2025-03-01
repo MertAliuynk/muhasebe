@@ -195,10 +195,11 @@ model PatientPaymentPlan {
     updatedAt        DateTime  @updatedAt
 
     // Relations
-    patientId    String
-    patient      Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
-    installments Installment[]
-    doctorShares DoctorPaymentShare[]
+    patientId       String
+    patient         Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+    installments    Installment[]
+    doctorShares    DoctorPaymentShare[]
+    patientPayments PatientPayment[]
 
     // Indexes
     @@index([patientId])
@@ -217,10 +218,13 @@ model PatientPayment {
     updatedAt   DateTime    @updatedAt
 
     // Relations
-    patient   Patient? @relation(fields: [patientId], references: [id])
-    patientId String?
-    branchId  String
-    branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    patient       Patient?            @relation(fields: [patientId], references: [id])
+    patientId     String?
+    branchId      String
+    branch        Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    paymentPlan   PatientPaymentPlan? @relation(fields: [paymentPlanId], references: [id])
+    paymentPlanId String?
+    doctorIncomes DoctorIncome[]
 
     // Indexes
     @@index([paymentDate])
@@ -237,8 +241,10 @@ model DoctorIncome {
     updatedAt   DateTime    @updatedAt
 
     // Relations
-    doctorId String
-    doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    doctorId  String
+    doctor    Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    payment   PatientPayment? @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+    paymentId String?
 
     // Indexes
     @@index([paymentDate])

@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input"
 export default function SaveManagerForm() {
   const router = useRouter()
   const { mutateAsync: saveUser, isPending } = api.user.saveUser.useMutation()
+  const utils = api.useUtils()
 
   const form = useForm<z.infer<typeof saveUserSchema>>({
     resolver: zodResolver(saveUserSchema),
@@ -45,6 +46,7 @@ export default function SaveManagerForm() {
 
   const onSubmit = async (values: z.infer<typeof saveUserSchema>) => {
     await saveUser(values)
+    await utils.user.getUsers.invalidate()
     router.refresh()
     form.reset()
     toast.success("Yönetici başarıyla kaydedildi.")

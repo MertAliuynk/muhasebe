@@ -85,7 +85,7 @@ export default function PaymentPlansColumns(hasApprovedPaymentPlan: boolean) {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               {!hasApprovedPaymentPlan && (
-                <ApprovedPaymentPlan id={data.id}>
+                <ApprovedPaymentPlan data={data}>
                   <DropdownMenuItem modal>
                     İşleme Al
                     <DropdownMenuShortcut>

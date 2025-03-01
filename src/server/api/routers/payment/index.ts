@@ -94,7 +94,7 @@ export const paymentRouter = createTRPCRouter({
         }
 
         await ctx.db.$transaction(async (tx) => {
-          await tx.patientPayment.create({
+          const payment = await tx.patientPayment.create({
             data: {
               amount: input.amount,
               paymentType: input.paymentType,
@@ -102,6 +102,7 @@ export const paymentRouter = createTRPCRouter({
               note: input.note,
               patientId: input.patientId,
               branchId: ctx.session.user.branchId!,
+              paymentPlanId: approvedPatientPaymentPlan.id,
             },
           })
 
@@ -177,6 +178,7 @@ export const paymentRouter = createTRPCRouter({
               note: input.note,
               doctorId: input.doctorId!,
               commission: doctor.commission,
+              paymentId: payment.id,
             },
           })
         })
@@ -219,6 +221,7 @@ export const paymentRouter = createTRPCRouter({
                   },
                 },
               },
+              doctorIncomes: true,
             },
           })
 
@@ -281,28 +284,15 @@ export const paymentRouter = createTRPCRouter({
             },
           })
 
-          await tx.doctorIncome.deleteMany({
-            where: {
-              paymentDate: payment.paymentDate,
-              amount: payment.amount,
-              paymentType: payment.paymentType,
-              doctorId: {
-                in: await tx.patient
-                  .findUnique({
-                    where: { id: input.patientId },
-                    select: {
-                      doctors: {
-                        select: { id: true },
-                      },
-                    },
-                  })
-                  .then(
-                    (patient) =>
-                      patient?.doctors.map((doctor) => doctor.id) || []
-                  ),
+          if (payment.doctorIncomes.length > 0) {
+            await tx.doctorIncome.deleteMany({
+              where: {
+                id: {
+                  in: payment.doctorIncomes.map((income) => income.id),
+                },
               },
-            },
-          })
+            })
+          }
 
           await tx.patientPayment.delete({
             where: { id: input.id },

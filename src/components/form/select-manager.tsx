@@ -1,5 +1,6 @@
 import React from "react"
 import { api } from "@/trpc/react"
+import { UserRole } from "@prisma/client"
 
 import {
   Select,
@@ -21,12 +22,15 @@ export function SelectManager({
 }: SelectManagerProps) {
   const { data: managers } = api.user.getUsers.useQuery({
     where: {
-      role: "MANAGER",
+      role: UserRole.MANAGER,
+      branchManager: {
+        is: null,
+      },
     },
   })
 
   return (
-    <Select onValueChange={onChange} defaultValue={value} {...props}>
+    <Select onValueChange={onChange} value={value} {...props}>
       <SelectTrigger>
         <SelectValue
           className="placeholder:text-muted-foreground"

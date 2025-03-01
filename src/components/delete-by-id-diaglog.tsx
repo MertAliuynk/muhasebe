@@ -39,7 +39,6 @@ export default function DeleteByIdDiaglog({
     toast.promise(
       action.mutateAsync().then(() => {
         setIsOpen(false)
-
         router.refresh()
       }),
       {

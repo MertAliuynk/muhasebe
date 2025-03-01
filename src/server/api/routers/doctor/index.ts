@@ -235,29 +235,15 @@ export const doctorRouter = createTRPCRouter({
             paymentDate: dateFilter,
           }),
         },
-        orderBy: {
-          paymentDate: "desc",
-        },
-      })
-
-      const patientPayments = await ctx.db.patientPayment.findMany({
-        where: {
-          ...(Object.keys(dateFilter).length > 0 && {
-            paymentDate: dateFilter,
-          }),
-          patient: {
-            doctors: {
-              some: {
-                id: doctor.id,
-              },
-            },
-          },
-        },
         include: {
-          patient: {
-            select: {
-              id: true,
-              name: true,
+          payment: {
+            include: {
+              patient: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
         },
@@ -267,23 +253,14 @@ export const doctorRouter = createTRPCRouter({
       })
 
       const incomesWithPatients = incomes.map((income) => {
-        const matchingPayment = patientPayments.find(
-          (payment) =>
-            payment.amount === income.amount &&
-            payment.paymentType === income.paymentType &&
-            Math.abs(
-              payment.paymentDate.getTime() - income.paymentDate.getTime()
-            ) < 60000
-        )
-
         return {
           id: income.id,
           amount: income.amount,
           paymentDate: income.paymentDate,
           paymentType: income.paymentType,
           note: income.note,
-          patientId: matchingPayment?.patient?.id || null,
-          patientName: matchingPayment?.patient?.name || "Bilinmeyen Hasta",
+          patientId: income.payment?.patient?.id || null,
+          patientName: income.payment?.patient?.name || "Bilinmeyen Hasta",
         }
       })
 

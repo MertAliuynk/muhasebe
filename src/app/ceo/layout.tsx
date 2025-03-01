@@ -18,7 +18,7 @@ export default function AdminLayout({
 }) {
   return (
     <SidebarProvider>
-      <AppSidebar sidebarData={sidebarDataCeo} />
+      <AppSidebar sidebarData={sidebarDataCeo} branch={null} />
       <SidebarInset>
         <header className="flex justify-between h-16 px-4 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 ">

@@ -43,7 +43,7 @@ export default function RootLayout({
                 </div>
               </NuqsAdapter>
               <TailwindIndicator />
-              <Toaster position="top-center" />
+              <Toaster position="top-center" theme="dark" />
             </ThemeProvider>
           </TRPCReactProvider>
         </SessionProvider>

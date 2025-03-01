@@ -11,6 +11,12 @@ export const deletePaymentPlanSchema = z.object({
 
 export const approvePaymentPlanSchema = z.object({
   id: z.string(),
+  doctors: z.array(
+    z.object({
+      id: z.string(),
+      amount: z.number().min(0, "Tutar 0'dan büyük olmalıdır"),
+    })
+  ),
 })
 
 export const getPatientPaymentPlanByIdSchema = z.object({
