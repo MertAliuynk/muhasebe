@@ -6,11 +6,13 @@ import {
 import { TRPCError } from "@trpc/server"
 
 import {
+  deleteDoctorSchema,
   getDoctorByIdSchema,
   getDoctorExpensesSchema,
   getDoctorFinancialDataSchema,
   getDoctorIncomesSchema,
   getDoctorPendingPaymentsSchema,
+  updateDoctorSchema,
 } from "./schema"
 
 export const doctorRouter = createTRPCRouter({
@@ -43,9 +45,10 @@ export const doctorRouter = createTRPCRouter({
   getDoctorById: protectedProcedure
     .input(getDoctorByIdSchema)
     .query(async ({ ctx, input }) => {
-      const doctor = await ctx.db.doctor.findUnique({
+      const doctor = await ctx.db.doctor.findFirst({
         where: {
           id: input.id,
+          isDeleted: false,
         },
         include: {
           user: {
@@ -73,6 +76,7 @@ export const doctorRouter = createTRPCRouter({
     const doctors = await ctx.db.doctor.findMany({
       where: {
         branchId,
+        isDeleted: false,
       },
       include: {
         user: {
@@ -384,5 +388,40 @@ export const doctorRouter = createTRPCRouter({
       )
 
       return formattedPayments
+    }),
+  updateDoctor: protectedProcedure
+    .input(updateDoctorSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, imagePath, ...data } = input
+
+      const doctor = await ctx.db.doctor.update({
+        where: { id },
+        data: {
+          ...data,
+        },
+      })
+
+      if (imagePath) {
+        await ctx.db.user.update({
+          where: { id: doctor.userId },
+          data: {
+            imagePath,
+          },
+        })
+      }
+
+      return doctor
+    }),
+  deleteDoctor: protectedProcedure
+    .input(deleteDoctorSchema)
+    .mutation(async ({ ctx, input }) => {
+      const doctor = await ctx.db.doctor.update({
+        where: { id: input.id },
+        data: {
+          isDeleted: true,
+        },
+      })
+
+      return doctor
     }),
 })

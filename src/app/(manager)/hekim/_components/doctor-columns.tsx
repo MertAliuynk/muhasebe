@@ -4,11 +4,21 @@ import Link from "next/link"
 import type { Doctor, Patient, User } from "@prisma/client"
 import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
+import { MoreVertical } from "lucide-react"
 import { formatPhoneNumber } from "react-phone-number-input"
 
 import { getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import DeleteDoctorDialog from "./delete-doctor-dialog"
+import EditDoctorDialog from "./edit-doctor-dialog"
 
 interface DoctorWithDetails extends User {
   doctor:
@@ -77,5 +87,28 @@ export default [
         </div>
       )
     },
+  },
+  {
+    accessorKey: "actions",
+    header: "",
+    cell: ({ row }) => {
+      const data = row.original
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <EditDoctorDialog doctor={data} />
+            <DeleteDoctorDialog doctor={data} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+    side: "end",
+    size: "10",
   },
 ] as ColumnDef<DoctorWithDetails>[]
