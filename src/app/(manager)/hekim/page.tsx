@@ -10,6 +10,9 @@ export default async function page() {
   const doctors = await db.user.findMany({
     where: {
       role: UserRole.DOCTOR,
+      doctor: {
+        isDeleted: false,
+      },
     },
     orderBy: {
       createdAt: "desc",
