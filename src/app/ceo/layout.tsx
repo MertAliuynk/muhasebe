@@ -1,3 +1,5 @@
+import { api } from "@/trpc/server"
+
 import {
   SidebarInset,
   SidebarProvider,
@@ -8,14 +10,16 @@ import { Shell } from "@/components/shell"
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { sidebarDataCeo } from "@/components/sidebar/sidebar-data"
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const user = await api.user.getUserProfile()
+
   return (
     <SidebarProvider>
-      <AppSidebar sidebarData={sidebarDataCeo} branch={null} />
+      <AppSidebar sidebarData={sidebarDataCeo} branch={null} user={user} />
       <SidebarInset>
         <header className="flex justify-between h-16 px-4 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 ">
