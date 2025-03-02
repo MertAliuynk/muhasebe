@@ -31,6 +31,7 @@ export default function Expenses() {
   const { data: doctors, isFetching: doctorsIsFetching } =
     api.doctor.getDoctorsByBranch.useQuery()
 
+  const isToday = date === format(new Date(), "yyyy-MM-dd")
   return (
     <Card>
       <CardHeader>
@@ -101,7 +102,7 @@ export default function Expenses() {
                         {format(item.createdAt, "HH:mm")}
                       </div>
                     </div>
-                    <DeleteExpenseDialog expense={item} />
+                    {isToday && <DeleteExpenseDialog expense={item} />}
                   </div>
                 </div>
               ))

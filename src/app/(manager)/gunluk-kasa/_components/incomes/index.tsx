@@ -31,6 +31,7 @@ export default function Incomes() {
   const { data: patients, isFetching: patientsIsFetching } =
     api.patient.getPatientsByBranch.useQuery()
 
+  const isToday = date === format(new Date(), "yyyy-MM-dd")
   return (
     <Card>
       <CardHeader>
@@ -94,7 +95,7 @@ export default function Incomes() {
                         {format(payment.createdAt, "HH:mm")}
                       </div>
                     </div>
-                    <DeleteIncomeDialog payment={payment} />
+                    {isToday && <DeleteIncomeDialog payment={payment} />}
                   </div>
                 </div>
               ))
