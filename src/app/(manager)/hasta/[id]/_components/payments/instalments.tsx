@@ -38,7 +38,7 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
       <CardContent>
         <div className="space-y-8">
           <div className="divide-y">
-            <div className="grid grid-cols-4 items-center justify-between text-muted-foreground">
+            <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr] items-center justify-between text-muted-foreground">
               <p className="font-medium">Ödeme Tarihi</p>
               <p className="font-medium">Taksit Ödeme Tarihi</p>
               <p className="font-medium">En Son Ödeme Yapılan Tarih</p>
@@ -54,27 +54,29 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
                 <div key={instalment.id} className="relative">
                   <div
                     className={
-                      "grid grid-cols-4 items-center justify-between py-4"
+                      "grid grid-cols-[1.5fr_1fr_1fr_1fr] items-center justify-between py-4"
                     }
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-5">
                       <p className="font-medium">{instalment.number}.Taksit</p>
-                      {paidPercentage > 0 && !isCompleted && (
-                        <span className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                          {formatCurrencyWithSymbol(instalment.paidAmount)}{" "}
-                          Ödendi ( %{Math.round(paidPercentage)})
-                        </span>
-                      )}
-                      {isOverdue && !isCompleted && !instalment.paidAmount && (
-                        <span className="text-sm px-2 py-1 rounded-full bg-red-100 text-red-700">
-                          Gecikmiş Ödeme
-                        </span>
-                      )}
-                      {isCompleted && (
-                        <span className="text-sm px-2 py-1 rounded-full bg-green-100 text-green-700">
-                          Tamamlandı
-                        </span>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {isOverdue && !isCompleted && (
+                          <span className="text-sm px-2 py-1 rounded-full bg-red-100 text-red-700 text-center">
+                            Gecikmiş Ödeme
+                          </span>
+                        )}
+                        {paidPercentage > 0 && !isCompleted && (
+                          <span className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                            {formatCurrencyWithSymbol(instalment.paidAmount)}{" "}
+                            Ödendi ( %{Math.round(paidPercentage)})
+                          </span>
+                        )}
+                        {isCompleted && (
+                          <span className="text-sm px-2 py-1 rounded-full bg-green-100 text-green-700">
+                            Tamamlandı
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="font-medium">
                       {format(instalment.dueDate, "PPP EEEE")}
