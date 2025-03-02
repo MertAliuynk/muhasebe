@@ -48,3 +48,9 @@ export const savePaymentPlanSchema = z.object({
     })
   ),
 })
+
+export const getFilteredPatientsSchema = z.object({
+  filters: z
+    .array(z.enum(["ALL", "PENDING_PAYMENT", "OVERDUE_PAYMENT"]))
+    .default(["ALL"]),
+})

@@ -42,6 +42,7 @@ interface DataTableProps<TData, TValue> {
   paginationPageSize?: boolean
   searchKey?: string
   selectOption?: (props: { selectedRows: TData[] }) => React.ReactNode
+  filters?: React.ReactNode
   className?: string
   isPassiveRow?: (row: TData) => boolean
   filterFields?: {
@@ -65,6 +66,7 @@ export function DataTable<TData, TValue>({
   searchKey,
   className,
   selectOption,
+  filters,
   isPassiveRow,
   filterFields,
 }: DataTableProps<TData, TValue>) {
@@ -115,6 +117,7 @@ export function DataTable<TData, TValue>({
                 className="h-8 w-40 lg:w-64"
               />
             )}
+            {filters && filters}
             {filterableColumns.length > 0 &&
               filterableColumns.map(
                 (column) =>

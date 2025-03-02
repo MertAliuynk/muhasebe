@@ -5,6 +5,7 @@ import {
 } from "@/server/api/trpc"
 
 import {
+  getFilteredPatientsSchema,
   getPatientByIdSchema,
   savePatientSchema,
   savePaymentPlanSchema,
@@ -86,6 +87,122 @@ export const patientRouter = createTRPCRouter({
 
     return patients
   }),
+  getFilteredPatients: protectedProcedure
+    .input(getFilteredPatientsSchema)
+    .query(async ({ ctx, input }) => {
+      const branchId = ctx.session.user.branchId!
+      const today = new Date()
+
+      // Eğer "ALL" filtresi seçilmişse, diğer filtreleri yoksay
+      if (input.filters.includes("ALL")) {
+        const patients = await ctx.db.patient.findMany({
+          where: {
+            branchId: branchId,
+            isDeleted: false,
+          },
+          include: {
+            doctors: {
+              select: {
+                id: true,
+                specialty: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    username: true,
+                    imagePath: true,
+                  },
+                },
+              },
+            },
+            paymentPlans: {
+              where: {
+                isDeleted: false,
+              },
+              include: {
+                installments: true,
+              },
+            },
+          },
+        })
+        return patients
+      }
+
+      // Çoklu filtre için koşulları hazırla
+      const conditions = []
+
+      if (input.filters.includes("PENDING_PAYMENT")) {
+        conditions.push({
+          paymentPlans: {
+            some: {
+              isCompleted: false,
+              isDeleted: false,
+            },
+          },
+        })
+      }
+
+      if (input.filters.includes("OVERDUE_PAYMENT")) {
+        conditions.push({
+          paymentPlans: {
+            some: {
+              isCompleted: false,
+              isDeleted: false,
+              installments: {
+                some: {
+                  dueDate: {
+                    lt: today,
+                  },
+                  remainingAmount: {
+                    gt: 0,
+                  },
+                },
+              },
+            },
+          },
+        })
+      }
+
+      // Hiçbir filtre seçilmediyse boş dizi döndür
+      if (conditions.length === 0) {
+        return []
+      }
+
+      // Seçilen filtrelere göre hastaları getir
+      const patients = await ctx.db.patient.findMany({
+        where: {
+          branchId: branchId,
+          isDeleted: false,
+          OR: conditions,
+        },
+        include: {
+          doctors: {
+            select: {
+              id: true,
+              specialty: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  username: true,
+                  imagePath: true,
+                },
+              },
+            },
+          },
+          paymentPlans: {
+            where: {
+              isDeleted: false,
+            },
+            include: {
+              installments: true,
+            },
+          },
+        },
+      })
+
+      return patients
+    }),
   savePatient: protectedProcedure
     .input(savePatientSchema)
     .mutation(async ({ ctx, input }) => {
