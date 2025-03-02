@@ -5,7 +5,7 @@ import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
-import { env } from "@/env"
+import { getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
@@ -56,9 +56,7 @@ export default [
               style={{ zIndex: doctors.length - index }}
             >
               <Avatar className="ring-2 ring-border">
-                <AvatarImage
-                  src={`${env.NEXT_PUBLIC_MINIO_URL}${doctor?.user?.imagePath}`}
-                />
+                <AvatarImage src={getImageUrl(doctor?.user?.imagePath)} />
                 <AvatarFallback>
                   {doctor?.user?.name?.split(" ")[0]?.charAt(0)}
                   {doctor?.user?.name?.split(" ")[1]?.charAt(0)}

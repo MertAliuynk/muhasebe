@@ -338,6 +338,7 @@ export const doctorRouter = createTRPCRouter({
                 select: {
                   id: true,
                   name: true,
+                  doctors: true,
                 },
               },
               installments: {
@@ -361,6 +362,7 @@ export const doctorRouter = createTRPCRouter({
           const remainingAmount = payment.remainingAmount
           const nextPaymentDate =
             payment.paymentPlan.installments[0]?.dueDate || null
+          const doctorCount = payment.paymentPlan.patient.doctors.length
 
           const installmentCount = await ctx.db.installment.count({
             where: {
@@ -376,6 +378,7 @@ export const doctorRouter = createTRPCRouter({
             remainingAmount,
             installmentCount,
             nextPaymentDate,
+            doctorCount,
           }
         })
       )

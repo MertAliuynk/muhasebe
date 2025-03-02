@@ -22,9 +22,10 @@ async function uploadToMinio(file: File): Promise<UploadResult> {
   try {
     const buffer = Buffer.from(await file.arrayBuffer())
     const slug = slugify(file.name.split(".")[0] ?? "")
-    const fileName = `${slug}.webp`
+    const fileName = `${slug}-${Date.now()}.webp`
 
-    const webpBuffer: Buffer = await sharp(buffer)
+    const webpBuffer: Buffer = await sharp(buffer, { failOn: "none" })
+      .withMetadata()
       .webp({ quality: 100, effort: 6 })
       .toBuffer()
 

@@ -1,9 +1,11 @@
 "use client"
 
+import { type RouterOutputs } from "@/trpc/react"
 import { ChevronsUpDown, LogOut } from "lucide-react"
-import { signOut, useSession } from "next-auth/react"
+import { signOut } from "next-auth/react"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { getImageUrl } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,13 +19,15 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavUser() {
-  const { data: session } = useSession()
+export function NavUser({
+  user,
+}: {
+  user: RouterOutputs["user"]["getUserProfile"]
+}) {
   const { isMobile } = useSidebar()
 
-  if (!session?.user) return null
+  if (!user) return null
 
-  const user = session.user
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -33,7 +37,8 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="size-8">
+                <AvatarImage src={getImageUrl(user.imagePath)} />
                 <AvatarFallback className="rounded-lg">
                   {user.name
                     ?.split(" ")

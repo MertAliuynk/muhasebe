@@ -5,8 +5,7 @@ import Image from "next/image"
 import { type RouterOutputs } from "@/trpc/react"
 import { useFormContext } from "react-hook-form"
 
-import { env } from "@/env"
-import { cn } from "@/lib/utils"
+import { cn, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Dialog,
@@ -59,7 +58,7 @@ export default function SelectDoctor({ name, label, doctors }: Props) {
                         >
                           <Avatar>
                             <AvatarImage
-                              src={`${env.NEXT_PUBLIC_MINIO_URL}${doctor.user.imagePath}`}
+                              src={getImageUrl(doctor.user.imagePath)}
                             />
                             <AvatarFallback>CN</AvatarFallback>
                           </Avatar>
@@ -151,7 +150,7 @@ const DoctorCard = ({
           alt="Thumbnail"
           src={
             doctor.user.imagePath
-              ? `${env.NEXT_PUBLIC_MINIO_URL}${doctor.user.imagePath}`
+              ? getImageUrl(doctor.user.imagePath)
               : "/images/placeholder.svg"
           }
           className="object-cover size-full rounded-md"

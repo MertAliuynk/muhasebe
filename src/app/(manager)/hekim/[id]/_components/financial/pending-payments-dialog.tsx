@@ -9,10 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
 import Spinner from "@/components/spinner"
 
 import columns from "./pending-payments-columuns"
+import PendingPaymentsMonth from "./pending-payments-month"
 
 type PageProps = {
   doctorId: string
@@ -27,8 +29,6 @@ export default function PendingPaymentsDialog({
     api.doctor.getDoctorPendingPayments.useQuery({
       doctorId,
     })
-
-  console.log(pendingPayments)
 
   return (
     <Dialog>
@@ -45,7 +45,18 @@ export default function PendingPaymentsDialog({
             <Spinner />
           </div>
         ) : (
-          <DataTable columns={columns} data={pendingPayments || []} />
+          <Tabs defaultValue="list" className="w-full">
+            <TabsList>
+              <TabsTrigger value="list">Liste</TabsTrigger>
+              <TabsTrigger value="month">Aylık</TabsTrigger>
+            </TabsList>
+            <TabsContent value="list">
+              <DataTable columns={columns} data={pendingPayments || []} />
+            </TabsContent>
+            <TabsContent value="month">
+              <PendingPaymentsMonth data={pendingPayments || []} />
+            </TabsContent>
+          </Tabs>
         )}
       </DialogContent>
     </Dialog>

@@ -148,6 +148,7 @@ export const updateUserProfileSchema = z.object({
       /^[a-zA-Z0-9]+$/,
       "Kullanıcı adı boşluk ve türkçe karakter içeremez."
     ),
+  imagePath: z.any().optional(),
 })
 
 export const deleteUserSchema = z.object({

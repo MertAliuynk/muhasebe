@@ -23,10 +23,12 @@ import type { SidebarData } from "./types"
 export function AppSidebar({
   sidebarData,
   branch,
+  user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   sidebarData: SidebarData
-  branch: RouterOutputs["branch"]["getBranch"] | null
+  branch: RouterOutputs["branch"]["getBranch"]
+  user: RouterOutputs["user"]["getUserProfile"]
 }) {
   const { state } = useSidebar()
 
@@ -71,7 +73,7 @@ export function AppSidebar({
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

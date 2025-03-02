@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { saveDoctorSchema } from "@/server/api/routers/user/schema"
 import { api } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -27,6 +28,7 @@ import UploadImage from "@/components/form/upload-image"
 import { PhoneInput } from "@/components/phone-input"
 
 export default function SaveDoctorForm() {
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const { mutateAsync: saveDoctor, isPending } =
     api.user.saveDoctor.useMutation()
 
@@ -62,6 +64,7 @@ export default function SaveDoctorForm() {
       const formData = new FormData()
       formData.append("file", values.imagePath as unknown as File)
 
+      setIsUploadingImage(true)
       toast.promise(
         fetch("/api/upload", {
           method: "POST",
@@ -80,10 +83,13 @@ export default function SaveDoctorForm() {
                 error: (error: TRPCError) => error.message,
               }
             )
+          })
+          .finally(() => {
+            setIsUploadingImage(false)
           }),
         {
-          loading: "Dosya yükleniyor...",
-          success: "Dosya yüklendi.",
+          loading: "Resim yükleniyor...",
+          success: "Resim yüklendi.",
           error: (error: TRPCError) => error.message,
         }
       )
@@ -274,7 +280,11 @@ export default function SaveDoctorForm() {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button
+              type="submit"
+              className="w-full"
+              loading={isPending || isUploadingImage}
+            >
               Kaydet
             </Button>
           </div>

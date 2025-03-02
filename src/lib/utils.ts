@@ -2,6 +2,8 @@ import { type PaymentType } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+import { env } from "@/env"
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -89,4 +91,9 @@ export const paymentTypeLabels: Record<PaymentType, string> = {
   CASH: "Nakit",
   CREDIT_CARD: "Kredi Kartı",
   BANK_TRANSFER: "Havale/EFT",
+}
+
+export function getImageUrl(imagePath: string | null) {
+  if (!imagePath) return ""
+  return `${env.NEXT_PUBLIC_MINIO_URL}${imagePath}`
 }

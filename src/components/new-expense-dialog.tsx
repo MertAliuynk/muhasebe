@@ -10,8 +10,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
 
-import { env } from "@/env"
-import { cn, paymentTypeLabels } from "@/lib/utils"
+import { cn, getImageUrl, paymentTypeLabels } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -142,9 +141,7 @@ export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
                     >
                       <div className="flex gap-2 items-center">
                         <Avatar className="size-12">
-                          <AvatarImage
-                            src={`${env.NEXT_PUBLIC_MINIO_URL}${doctor.imagePath}`}
-                          />
+                          <AvatarImage src={getImageUrl(doctor.imagePath)} />
                           <AvatarFallback>
                             {doctor.name
                               .split(" ")

@@ -5,8 +5,7 @@ import { format } from "date-fns"
 import { CalendarDays, Phone } from "lucide-react"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
-import { env } from "@/env"
-import { calculateAge } from "@/lib/utils"
+import { calculateAge, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DateRangePicker } from "@/components/date-range-picker"
 
@@ -25,7 +24,7 @@ export default function PreviewDoctor({
             <div className="relative">
               <Avatar className="size-16">
                 <AvatarImage
-                  src={`${env.NEXT_PUBLIC_MINIO_URL}${doctor?.user.imagePath}`}
+                  src={getImageUrl(doctor?.user.imagePath ?? null)}
                 />
                 <AvatarFallback>
                   {doctor?.user.name

@@ -6,8 +6,7 @@ import { format } from "date-fns"
 import { CalendarDays, Phone } from "lucide-react"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
-import { env } from "@/env"
-import { calculateAge } from "@/lib/utils"
+import { calculateAge, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import CreatePaymentPlan from "../payment-plans/create-payment-plan"
@@ -71,9 +70,7 @@ export default function PreviewPatient({
                 className="flex items-center gap-2 hover:bg-muted-foreground/20 rounded-md p-2 px-4 transition-colors duration-300"
               >
                 <Avatar className="ring ring-border">
-                  <AvatarImage
-                    src={`${env.NEXT_PUBLIC_MINIO_URL}${doctor.user.imagePath}`}
-                  />
+                  <AvatarImage src={getImageUrl(doctor.user.imagePath)} />
                   <AvatarFallback>
                     {doctor.user.name
                       ?.split(" ")

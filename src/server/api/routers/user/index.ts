@@ -210,6 +210,7 @@ export const userRouter = createTRPCRouter({
         name: true,
         username: true,
         role: true,
+        imagePath: true,
       },
     })
 
@@ -260,6 +261,7 @@ export const userRouter = createTRPCRouter({
         data: {
           name: input.name,
           username: input.username,
+          imagePath: input.imagePath,
         },
       })
 

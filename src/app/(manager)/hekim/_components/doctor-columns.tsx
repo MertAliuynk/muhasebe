@@ -6,7 +6,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { formatPhoneNumber } from "react-phone-number-input"
 
-import { env } from "@/env"
+import { getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
@@ -33,7 +33,7 @@ export default [
           className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition-all duration-300"
         >
           <Avatar className="rounded-xl">
-            <AvatarImage src={`${env.NEXT_PUBLIC_MINIO_URL}${image}`} />
+            <AvatarImage src={getImageUrl(image)} />
             <AvatarFallback>
               {name
                 .split(" ")

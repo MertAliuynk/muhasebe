@@ -4,6 +4,8 @@ import { Trash2 } from "lucide-react"
 import Cropper, { type Area } from "react-easy-crop"
 import { type ControllerRenderProps } from "react-hook-form"
 
+import { getImageUrl } from "@/lib/utils"
+
 import { Button } from "../ui/button"
 import {
   Dialog,
@@ -24,7 +26,9 @@ export default function UploadImage({ ...field }: ControllerRenderProps) {
   const imageRef = useRef<HTMLInputElement>(null)
 
   const [isHovered, setIsHovered] = useState(false)
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    field.value ? getImageUrl(field.value) : null
+  )
 
   const [isCropOpen, setIsCropOpen] = useState(false)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
@@ -85,14 +89,23 @@ export default function UploadImage({ ...field }: ControllerRenderProps) {
           croppedAreaPixels.height
         )
 
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const croppedFile = new File([blob], originalFile.name, {
-              type: originalFile.type,
-            })
-            resolve(croppedFile)
-          }
-        }, originalFile.type)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const croppedFile = new File(
+                [blob],
+                `cropped-${originalFile.name}`,
+                {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                }
+              )
+              resolve(croppedFile)
+            }
+          },
+          "image/jpeg",
+          0.95
+        )
       }
     })
   }
