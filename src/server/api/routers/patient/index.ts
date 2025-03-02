@@ -5,19 +5,24 @@ import {
 } from "@/server/api/trpc"
 
 import {
+  deletePatientSchema,
   getFilteredPatientsSchema,
   getPatientByIdSchema,
   savePatientSchema,
   savePaymentPlanSchema,
   searchPatientSchema,
+  updatePatientSchema,
 } from "./schema"
 
 export const patientRouter = createTRPCRouter({
   getPatientById: protectedProcedure
     .input(getPatientByIdSchema)
     .query(async ({ ctx, input }) => {
-      const patient = await ctx.db.patient.findUnique({
-        where: { id: input.id },
+      const patient = await ctx.db.patient.findFirst({
+        where: {
+          id: input.id,
+          isDeleted: false,
+        },
         include: {
           doctors: {
             include: {
@@ -66,6 +71,7 @@ export const patientRouter = createTRPCRouter({
     const patients = await ctx.db.patient.findMany({
       where: {
         branchId: branchId!,
+        isDeleted: false,
       },
       include: {
         doctors: {
@@ -231,6 +237,7 @@ export const patientRouter = createTRPCRouter({
             { name: { contains: input.query, mode: "insensitive" } },
             { tcNo: { contains: input.query, mode: "insensitive" } },
           ],
+          isDeleted: false,
         },
         take: 10,
         orderBy: {
@@ -287,5 +294,31 @@ export const patientRouter = createTRPCRouter({
 
         return paymentPlan
       })
+    }),
+  updatePatient: protectedProcedure
+    .input(updatePatientSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input
+
+      const patient = await ctx.db.patient.update({
+        where: { id },
+        data: {
+          ...data,
+        },
+      })
+
+      return patient
+    }),
+  deletePatient: protectedProcedure
+    .input(deletePatientSchema)
+    .mutation(async ({ ctx, input }) => {
+      const patient = await ctx.db.patient.update({
+        where: { id: input.id },
+        data: {
+          isDeleted: true,
+        },
+      })
+
+      return patient
     }),
 })

@@ -47,16 +47,15 @@ export default function PatientTableFilters({
 }: PatientTableFiltersProps) {
   return (
     <div className="flex items-center gap-2">
-      <div className="relative w-64">
+      <div className="relative w-80">
         <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           prefix={<Search className="size-4" />}
-          placeholder="Hasta ara..."
+          placeholder="İsim Soyisim, telefon veya TC göre ara..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="border-dashed">

@@ -3,11 +3,21 @@
 import Link from "next/link"
 import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { MoreVertical } from "lucide-react"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
 import { getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import DeletePatientDialog from "./delete-patient-dialog"
+import EditPatientDialog from "./edit-patient-dialog"
 
 type Item = RouterOutputs["patient"]["getPatientsByBranch"][number]
 
@@ -25,6 +35,14 @@ export default [
           <div>{patient.name}</div>
         </Link>
       )
+    },
+  },
+  {
+    accessorKey: "tcNo",
+    header: "TC Kimlik Numarası",
+    cell: ({ row }) => {
+      const tcNo = row.original.tcNo
+      return <div>{tcNo ? tcNo : "Yok"}</div>
     },
   },
   {
@@ -67,5 +85,28 @@ export default [
         </div>
       )
     },
+  },
+  {
+    accessorKey: "actions",
+    header: "",
+    cell: ({ row }) => {
+      const data = row.original
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <EditPatientDialog patient={data} />
+            <DeletePatientDialog patient={data} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+    side: "end",
+    size: "10",
   },
 ] as ColumnDef<Item>[]

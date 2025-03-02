@@ -17,6 +17,18 @@ export const savePatientSchema = z.object({
     ),
 })
 
+export const updatePatientSchema = z.object({
+  id: z.string(),
+  name: z.string().min(3, "İsim soyisim en az 3 karakter olmalıdır."),
+  phone: z.string().min(10, "Geçerli bir telefon numarası giriniz."),
+  birthDate: z.date({
+    required_error: "Doğum tarihi seçiniz.",
+  }),
+  address: z.string().min(3, "Adres en az 3 karakter olmalıdır."),
+  notes: z.array(z.string()).optional(),
+  tcNo: z.string().min(11, "TC Kimlik No en az 11 karakter olmalıdır."),
+})
+
 export const searchPatientSchema = z.object({
   query: z.string(),
 })
@@ -53,4 +65,8 @@ export const getFilteredPatientsSchema = z.object({
   filters: z
     .array(z.enum(["ALL", "PENDING_PAYMENT", "OVERDUE_PAYMENT"]))
     .default(["ALL"]),
+})
+
+export const deletePatientSchema = z.object({
+  id: z.string(),
 })
