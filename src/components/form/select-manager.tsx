@@ -15,22 +15,17 @@ interface SelectManagerProps
   onChange?: (value: string) => void
 }
 
-export function SelectManager({
-  onChange,
-  value,
-  ...props
-}: SelectManagerProps) {
+export function SelectManager({ onChange, value }: SelectManagerProps) {
   const { data: managers } = api.user.getUsers.useQuery({
     where: {
       role: UserRole.MANAGER,
-      branchManager: {
-        is: null,
-      },
     },
   })
 
+  console.log(value)
+
   return (
-    <Select onValueChange={onChange} value={value} {...props}>
+    <Select onValueChange={onChange} value={value} defaultValue={value}>
       <SelectTrigger>
         <SelectValue
           className="placeholder:text-muted-foreground"

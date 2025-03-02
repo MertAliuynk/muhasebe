@@ -1,6 +1,6 @@
 "use client"
 
-import type { RouterOutputs } from "@/trpc/react"
+import { api, type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { EllipsisVerticalIcon, Pencil, Trash2 } from "lucide-react"
@@ -13,6 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { DataTableColumnHeader } from "@/components/data-table/components/column-header"
+import DeleteByIdDiaglog from "@/components/delete-by-id-diaglog"
+
+import SaveManagerDialog from "./save-manager-dialog"
 
 type Item = RouterOutputs["user"]["getUsers"][number]
 
@@ -38,7 +41,8 @@ export default [
   {
     accessorKey: "action",
     header: "",
-    cell: () => {
+    cell: ({ row }) => {
+      const { mutateAsync, isPending } = api.user.deleteUser.useMutation()
       return (
         <div className="flex justify-end">
           <DropdownMenu>
@@ -48,14 +52,28 @@ export default [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>
-                Düzenle
-                <Pencil size={16} />
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Sil
-                <Trash2 size={16} />
-              </DropdownMenuItem>
+              <SaveManagerDialog
+                user={row.original}
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    Düzenle
+                    <Pencil size={16} className="ml-auto" />
+                  </DropdownMenuItem>
+                }
+              />
+              <DeleteByIdDiaglog
+                title="Yönetici Sil"
+                description="Bu yöneticiyi silmek istediğinize emin misiniz?"
+                action={{
+                  mutateAsync: () => mutateAsync({ id: row.original.id }),
+                  isPending,
+                }}
+              >
+                <DropdownMenuItem modal variant="destructive">
+                  Sil
+                  <Trash2 size={16} className="ml-auto" />
+                </DropdownMenuItem>
+              </DeleteByIdDiaglog>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

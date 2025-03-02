@@ -28,6 +28,7 @@ export const getUsersSchema = z.object({
 
 export const saveUserSchema = z
   .object({
+    id: z.string().optional(),
     name: z.string().min(3, "İsim soyisim en az 3 karakter olmalıdır."),
     username: z
       .string()
@@ -36,16 +37,62 @@ export const saveUserSchema = z
         /^[a-zA-Z0-9]+$/,
         "Kullanıcı adı boşluk ve türkçe karakter içeremez."
       ),
-    password: z.string().min(5, "Şifre en az 5 karakter olmalıdır."),
-    passwordConfirm: z
-      .string()
-      .min(5, "Şifre tekrar en az 5 karakter olmalıdır."),
+    password: z.string(),
+    passwordConfirm: z.string(),
     role: z.nativeEnum(UserRole),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     path: ["passwordConfirm"],
     message: "Şifreler eşleşmiyor.",
   })
+  .refine(
+    (data) => {
+      if (!data.id) {
+        return data.password.length >= 5
+      }
+      return true
+    },
+    {
+      path: ["password"],
+      message: "Şifre en az 5 karakter olmalıdır.",
+    }
+  )
+  .refine(
+    (data) => {
+      if (!data.id) {
+        return data.passwordConfirm.length >= 5
+      }
+      return true
+    },
+    {
+      path: ["passwordConfirm"],
+      message: "Şifre tekrar en az 5 karakter olmalıdır.",
+    }
+  )
+  .refine(
+    (data) => {
+      if (!data.id) {
+        return data.password.length > 0
+      }
+      return true
+    },
+    {
+      path: ["password"],
+      message: "Şifre gereklidir.",
+    }
+  )
+  .refine(
+    (data) => {
+      if (!data.id) {
+        return data.passwordConfirm.length > 0
+      }
+      return true
+    },
+    {
+      path: ["passwordConfirm"],
+      message: "Şifre tekrar gereklidir.",
+    }
+  )
 
 export const saveDoctorSchema = z
   .object({
@@ -101,4 +148,8 @@ export const updateUserProfileSchema = z.object({
       /^[a-zA-Z0-9]+$/,
       "Kullanıcı adı boşluk ve türkçe karakter içeremez."
     ),
+})
+
+export const deleteUserSchema = z.object({
+  id: z.string().min(1, "Kullanıcı ID gereklidir."),
 })

@@ -1,14 +1,11 @@
-import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { ModeSwitcher } from "@/components/mode-switcher"
-import { SearchMenu } from "@/components/search-menu"
 import { Shell } from "@/components/shell"
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
-import SidebarBreadcrumbs from "@/components/sidebar/sidebar-breadcrumbs"
 import { sidebarDataCeo } from "@/components/sidebar/sidebar-data"
 
 export default function AdminLayout({
@@ -23,11 +20,8 @@ export default function AdminLayout({
         <header className="flex justify-between h-16 px-4 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 ">
             <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <SidebarBreadcrumbs />
           </div>
           <div className="flex items-center gap-2">
-            <SearchMenu />
             <ModeSwitcher />
           </div>
         </header>

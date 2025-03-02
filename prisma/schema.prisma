@@ -100,10 +100,10 @@ model Branch {
 
     // Relations
     companyId String
-    company   Company @relation(fields: [companyId], references: [id])
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
     managerId String @unique
-    manager   User   @relation(fields: [managerId], references: [id])
+    manager   User   @relation(fields: [managerId], references: [id], onDelete: Cascade)
 
     doctors  Doctor[]
     patients Patient[]
@@ -389,7 +389,7 @@ model CashReport {
     totalBalance Int
 
     branchId String
-    branch   Branch @relation(fields: [branchId], references: [id])
+    branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
 

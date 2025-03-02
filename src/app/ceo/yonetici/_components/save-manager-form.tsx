@@ -1,8 +1,9 @@
 "use client"
 
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { saveUserSchema } from "@/server/api/routers/user/schema"
-import { api } from "@/trpc/react"
+import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { UserRole } from "@prisma/client"
 import { useForm } from "react-hook-form"
@@ -11,12 +12,12 @@ import type { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import {
-  DrawerClose,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -28,7 +29,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-export default function SaveManagerForm() {
+type User = RouterOutputs["user"]["getUsers"][number]
+
+interface SaveManagerFormProps {
+  user?: User
+}
+
+export default function SaveManagerForm({ user }: SaveManagerFormProps) {
   const router = useRouter()
   const { mutateAsync: saveUser, isPending } = api.user.saveUser.useMutation()
   const utils = api.useUtils()
@@ -44,22 +51,43 @@ export default function SaveManagerForm() {
     },
   })
 
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        password: "",
+        passwordConfirm: "",
+        role: user.role,
+      })
+    }
+  }, [user, form])
+
   const onSubmit = async (values: z.infer<typeof saveUserSchema>) => {
     await saveUser(values)
     await utils.user.getUsers.invalidate()
     router.refresh()
     form.reset()
-    toast.success("Yönetici başarıyla kaydedildi.")
+    toast.success(
+      user
+        ? "Yönetici başarıyla güncellendi."
+        : "Yönetici başarıyla kaydedildi."
+    )
   }
 
   return (
     <Form {...form}>
-      <DrawerHeader>
-        <DrawerTitle>Yeni Yönetici Ekle</DrawerTitle>
-        <DrawerDescription>
-          Yeni bir yönetici ekleyin ve yönetin.
-        </DrawerDescription>
-      </DrawerHeader>
+      <DialogHeader>
+        <DialogTitle>
+          {user ? "Yönetici Düzenle" : "Yeni Yönetici Ekle"}
+        </DialogTitle>
+        <DialogDescription>
+          {user
+            ? "Yönetici bilgilerini düzenleyin."
+            : "Yeni bir yönetici ekleyin ve yönetin."}
+        </DialogDescription>
+      </DialogHeader>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 p-5">
         <FormField
           control={form.control}
@@ -104,7 +132,9 @@ export default function SaveManagerForm() {
                   <Input type="password" {...field} />
                 </FormControl>
                 <FormDescription className="hidden md:block">
-                  Lütfen yönetici için bir şifre giriniz.
+                  {user
+                    ? "Değiştirmek istemiyorsanız boş bırakabilirsiniz."
+                    : "Lütfen yönetici için bir şifre giriniz."}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -120,23 +150,25 @@ export default function SaveManagerForm() {
                   <Input type="password" {...field} />
                 </FormControl>
                 <FormDescription className="hidden md:block">
-                  Lütfen şifrenizi tekrar giriniz.
+                  {user
+                    ? "Değiştirmek istemiyorsanız boş bırakabilirsiniz."
+                    : "Lütfen şifrenizi tekrar giriniz."}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <DrawerFooter className="flex-row">
-          <DrawerClose asChild>
-            <Button variant="outline" className="w-28 md:w-40" type="submit">
+        <DialogFooter className="flex-row">
+          <DialogClose asChild>
+            <Button variant="outline" className="w-28 md:w-40" type="button">
               İptal
             </Button>
-          </DrawerClose>
+          </DialogClose>
           <Button className="flex-1" loading={isPending}>
-            Kaydet
+            {user ? "Güncelle" : "Kaydet"}
           </Button>
-        </DrawerFooter>
+        </DialogFooter>
       </form>
     </Form>
   )

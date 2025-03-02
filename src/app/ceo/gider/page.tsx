@@ -5,7 +5,7 @@ import { DashboardHeader } from "@/components/dashboard-heading"
 import { DataTable } from "@/components/data-table"
 
 import columns from "./_components/expense-type-columns"
-import SaveExpenseTypeDrawer from "./_components/save-expense-type-drawer"
+import SaveExpenseTypeDialog from "./_components/save-expense-type-dialog"
 
 export default async function page() {
   const expenseTypes = await api.expense.getAllExpenseTypes()
@@ -16,7 +16,7 @@ export default async function page() {
         heading="Gider Kalemleri"
         text="Gider kalemlerini listeleyin ve yönetin."
       >
-        <SaveExpenseTypeDrawer />
+        <SaveExpenseTypeDialog />
       </DashboardHeader>
 
       <DataTable columns={columns} data={expenseTypes} />

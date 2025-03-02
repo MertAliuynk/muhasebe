@@ -1,6 +1,6 @@
 "use client"
 
-import type { RouterOutputs } from "@/trpc/react"
+import { api, type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { EllipsisVerticalIcon, Pencil, Trash2 } from "lucide-react"
 import { formatPhoneNumber } from "react-phone-number-input"
@@ -13,16 +13,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { DataTableColumnHeader } from "@/components/data-table/components/column-header"
+import DeleteByIdDiaglog from "@/components/delete-by-id-diaglog"
+
+import SaveBranchDialog from "./save-branch-dialog"
 
 type Item = RouterOutputs["branch"]["getAll"][number]
 
 export default [
   {
     accessorKey: "name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Şube Adı" />
-    ),
+    header: "Şube Adı",
   },
   {
     accessorKey: "address",
@@ -55,7 +55,9 @@ export default [
   {
     accessorKey: "action",
     header: "",
-    cell: () => {
+    cell: ({ row }) => {
+      const { mutateAsync, isPending } = api.branch.deleteBranch.useMutation()
+
       return (
         <div className="flex justify-end">
           <DropdownMenu>
@@ -65,14 +67,28 @@ export default [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>
-                Düzenle
-                <Pencil size={16} />
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Sil
-                <Trash2 size={16} />
-              </DropdownMenuItem>
+              <SaveBranchDialog
+                branch={row.original}
+                trigger={
+                  <DropdownMenuItem modal>
+                    Düzenle
+                    <Pencil size={14} className="ml-auto" />
+                  </DropdownMenuItem>
+                }
+              />
+              <DeleteByIdDiaglog
+                title="Şube Sil"
+                description="Bu şubeyi silmek istediğinize emin misiniz?"
+                action={{
+                  mutateAsync: () => mutateAsync({ id: row.original.id }),
+                  isPending,
+                }}
+              >
+                <DropdownMenuItem modal variant="destructive">
+                  Sil
+                  <Trash2 size={14} className="ml-auto" />
+                </DropdownMenuItem>
+              </DeleteByIdDiaglog>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

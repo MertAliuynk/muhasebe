@@ -4,7 +4,7 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc"
 
-import { saveBranchSchema } from "./schema"
+import { deleteBranchSchema, saveBranchSchema } from "./schema"
 
 export const branchRouter = createTRPCRouter({
   getBranch: protectedProcedure.query(async ({ ctx }) => {
@@ -40,16 +40,78 @@ export const branchRouter = createTRPCRouter({
   saveBranch: adminProcedure
     .input(saveBranchSchema)
     .mutation(async ({ ctx, input }) => {
-      const { name, address, phone, managerId } = input
+      const { id, name, address, phone, managerId, cashReports } = input
 
-      await ctx.db.branch.create({
-        data: {
-          name,
-          address,
-          phone,
-          managerId,
-          companyId: ctx.session.user.companyId!,
-        },
-      })
+      if (id) {
+        const branchToUpdate = await ctx.db.branch.findUnique({
+          where: {
+            id,
+          },
+        })
+
+        if (!branchToUpdate) {
+          throw new Error("Güncellenecek şube bulunamadı.")
+        }
+
+        // Sadece şube bilgilerini güncelle
+        await ctx.db.branch.update({
+          where: {
+            id,
+          },
+          data: {
+            name,
+            address,
+            phone,
+            ...(branchToUpdate.managerId !== managerId && { managerId }),
+          },
+        })
+      } else {
+        await ctx.db.$transaction(async (tx) => {
+          const branch = await tx.branch.create({
+            data: {
+              name,
+              address,
+              phone,
+              managerId,
+              companyId: ctx.session.user.companyId!,
+            },
+          })
+
+          const totalIncome =
+            cashReports.cashIncome +
+            cashReports.creditCardIncome +
+            cashReports.transferIncome
+          const totalExpense =
+            cashReports.cashExpense +
+            cashReports.creditCardExpense +
+            cashReports.transferExpense
+
+          await tx.cashReport.create({
+            data: {
+              branchId: branch.id,
+              cashIncome: cashReports.cashIncome,
+              cashExpense: cashReports.cashExpense,
+              cashBalance: cashReports.cashIncome - cashReports.cashExpense,
+              cardIncome: cashReports.creditCardIncome,
+              cardExpense: cashReports.creditCardExpense,
+              cardBalance:
+                cashReports.creditCardIncome - cashReports.creditCardExpense,
+              transferIncome: cashReports.transferIncome,
+              transferExpense: cashReports.transferExpense,
+              transferBalance:
+                cashReports.transferIncome - cashReports.transferExpense,
+              totalIncome,
+              totalExpense,
+              totalBalance: totalIncome - totalExpense,
+            },
+          })
+        })
+      }
+    }),
+  deleteBranch: adminProcedure
+    .input(deleteBranchSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input
+      await ctx.db.branch.delete({ where: { id } })
     }),
 })

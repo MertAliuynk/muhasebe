@@ -11,12 +11,12 @@ import type { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import {
-  DrawerClose,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -28,10 +28,12 @@ import { Input } from "@/components/ui/input"
 
 interface SaveExpenseTypeFormProps {
   expenseType?: ExpenseType
+  setIsOpen: (isOpen: boolean) => void
 }
 
 export default function SaveExpenseTypeForm({
   expenseType,
+  setIsOpen,
 }: SaveExpenseTypeFormProps) {
   const router = useRouter()
   const { mutateAsync: saveExpenseType, isPending } =
@@ -50,6 +52,7 @@ export default function SaveExpenseTypeForm({
       saveExpenseType({ ...values, id: expenseType?.id }).then(() => {
         router.refresh()
         form.reset()
+        setIsOpen(false)
       }),
       {
         loading: `Gider kalemi ${expenseType ? "düzenleniyor" : "kaydediliyor"}...`,
@@ -61,16 +64,16 @@ export default function SaveExpenseTypeForm({
 
   return (
     <Form {...form}>
-      <DrawerHeader>
-        <DrawerTitle>
+      <DialogHeader>
+        <DialogTitle>
           {expenseType ? "Gider Kalemini Düzenle" : "Yeni Gider Kalemi Ekle"}
-        </DrawerTitle>
-        <DrawerDescription>
+        </DialogTitle>
+        <DialogDescription>
           {expenseType
             ? "Gider kalemini düzenleyin."
             : "Yeni bir gider kalemi ekleyin ve yönetin."}
-        </DrawerDescription>
-      </DrawerHeader>
+        </DialogDescription>
+      </DialogHeader>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 p-5">
         <FormField
           control={form.control}
@@ -97,16 +100,16 @@ export default function SaveExpenseTypeForm({
           )}
         />
 
-        <DrawerFooter className="flex-row">
-          <DrawerClose asChild>
+        <DialogFooter className="flex-row">
+          <DialogClose asChild>
             <Button variant="outline" className="w-28 md:w-40" type="submit">
               İptal
             </Button>
-          </DrawerClose>
+          </DialogClose>
           <Button className="flex-1" loading={isPending}>
             Kaydet
           </Button>
-        </DrawerFooter>
+        </DialogFooter>
       </form>
     </Form>
   )

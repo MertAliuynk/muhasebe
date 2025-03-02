@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import DeleteByIdDiaglog from "@/components/delete-by-id-diaglog"
 
-import SaveExpenseTypeDrawer from "./save-expense-type-drawer"
+import SaveExpenseTypeDrawer from "./save-expense-type-dialog"
 
 type Item = RouterOutputs["expense"]["getAllExpenseTypes"][number]
 

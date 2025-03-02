@@ -8,6 +8,7 @@ import { compare, hash } from "bcryptjs"
 
 import {
   changePasswordSchema,
+  deleteUserSchema,
   getUsersSchema,
   saveDoctorSchema,
   saveUserSchema,
@@ -31,30 +32,84 @@ export const userRouter = createTRPCRouter({
   saveUser: adminProcedure
     .input(saveUserSchema)
     .mutation(async ({ ctx, input }) => {
-      const existingUser = await ctx.db.user.findUnique({
-        where: {
-          username: input.username,
-        },
-      })
-
-      if (existingUser) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Kullanıcı adı zaten mevcut.",
+      if (input.id) {
+        const userToUpdate = await ctx.db.user.findUnique({
+          where: {
+            id: input.id,
+          },
         })
-      }
 
-      const hashedPassword = await hash(input.password, 10)
+        if (!userToUpdate) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Güncellenecek kullanıcı bulunamadı.",
+          })
+        }
 
-      const user = await ctx.db.user.create({
-        data: {
+        if (input.username !== userToUpdate.username) {
+          const usernameExists = await ctx.db.user.findUnique({
+            where: {
+              username: input.username,
+            },
+          })
+
+          if (usernameExists) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Kullanıcı adı zaten mevcut.",
+            })
+          }
+        }
+
+        const updateData: {
+          name: string
+          username: string
+          role: typeof input.role
+          password?: string
+        } = {
           name: input.name,
           username: input.username,
-          password: hashedPassword,
           role: input.role,
-        },
-      })
-      return user
+        }
+
+        if (input.password && input.password.length > 0) {
+          updateData.password = await hash(input.password, 10)
+        }
+
+        const updatedUser = await ctx.db.user.update({
+          where: {
+            id: input.id,
+          },
+          data: updateData,
+        })
+
+        return updatedUser
+      } else {
+        const existingUser = await ctx.db.user.findUnique({
+          where: {
+            username: input.username,
+          },
+        })
+
+        if (existingUser) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Kullanıcı adı zaten mevcut.",
+          })
+        }
+
+        const hashedPassword = await hash(input.password, 10)
+
+        const user = await ctx.db.user.create({
+          data: {
+            name: input.name,
+            username: input.username,
+            password: hashedPassword,
+            role: input.role,
+          },
+        })
+        return user
+      }
     }),
   saveDoctor: adminProcedure
     .input(saveDoctorSchema)
@@ -212,5 +267,11 @@ export const userRouter = createTRPCRouter({
         success: true,
         message: "Profil bilgileriniz başarıyla güncellendi.",
       }
+    }),
+  deleteUser: adminProcedure
+    .input(deleteUserSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input
+      await ctx.db.user.delete({ where: { id } })
     }),
 })
