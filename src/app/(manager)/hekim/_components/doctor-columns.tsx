@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import type { Doctor, Patient, User } from "@prisma/client"
+import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { MoreVertical } from "lucide-react"
@@ -20,26 +20,20 @@ import {
 import DeleteDoctorDialog from "./delete-doctor-dialog"
 import EditDoctorDialog from "./edit-doctor-dialog"
 
-interface DoctorWithDetails extends User {
-  doctor:
-    | (Doctor & {
-        patients: Patient[]
-      })
-    | null
-}
+type Item = RouterOutputs["doctor"]["getDoctorsByBranch"][number]
 
 export default [
   {
     accessorKey: "name",
     header: "",
     cell: ({ row }) => {
-      const name = row.original.name
-      const image = row.original.imagePath
-      const specialty = row.original.doctor?.specialty ?? ""
+      const name = row.original.user.name
+      const image = row.original.user.imagePath
+      const specialty = row.original.specialty ?? ""
 
       return (
         <Link
-          href={`/hekim/${row.original.doctor?.id}`}
+          href={`/hekim/${row.original.id}`}
           className="flex items-center gap-2 hover:bg-muted p-2 rounded-md transition-all duration-300"
         >
           <Avatar className="rounded-xl">
@@ -63,7 +57,7 @@ export default [
     accessorKey: "phoneNumber",
     header: "Telefon Numarası",
     cell: ({ row }) => {
-      const phone = row.original.doctor?.phoneNumber
+      const phone = row.original.phoneNumber
       return phone ? formatPhoneNumber(phone) : "Yok"
     },
   },
@@ -71,7 +65,7 @@ export default [
     accessorKey: "birthDate",
     header: "Doğum Tarihi",
     cell: ({ row }) => {
-      const birthDate = row.original.doctor?.birthDate
+      const birthDate = row.original.birthDate
       return birthDate ? format(birthDate, "dd MMMM yyyy") : "Yok"
     },
   },
@@ -79,7 +73,7 @@ export default [
     accessorKey: "patients",
     header: () => <p className="text-center">Hasta Sayısı</p>,
     cell: ({ row }) => {
-      const patients = row.original.doctor?.patients
+      const patients = row.original.patients
 
       return (
         <div className="flex justify-center">
@@ -111,4 +105,4 @@ export default [
     side: "end",
     size: "10",
   },
-] as ColumnDef<DoctorWithDetails>[]
+] as ColumnDef<Item>[]

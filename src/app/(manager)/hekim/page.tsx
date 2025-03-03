@@ -1,34 +1,12 @@
 import React from "react"
-import { db } from "@/server/db"
-import { UserRole } from "@prisma/client"
+import { api } from "@/trpc/server"
 
 import { DataTable } from "@/components/data-table"
 
 import doctorColumns from "./_components/doctor-columns"
 
 export default async function page() {
-  const doctors = await db.user.findMany({
-    where: {
-      role: UserRole.DOCTOR,
-      doctor: {
-        isDeleted: false,
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      doctor: {
-        include: {
-          patients: {
-            include: {
-              _count: true,
-            },
-          },
-        },
-      },
-    },
-  })
+  const doctors = await api.doctor.getDoctorsByBranch()
 
   return (
     <div className="space-y-5">

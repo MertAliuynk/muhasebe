@@ -12,9 +12,12 @@ export const paymentRouter = createTRPCRouter({
   getAllPaymentsByDate: protectedProcedure
     .input(getPaymentsSchema)
     .query(async ({ ctx, input }) => {
+      const branchId = ctx.session.user.branchId!
+
       const payments = await ctx.db.$transaction(async (tx) => {
         const branchPayments = tx.branchPayment.findMany({
           where: {
+            branchId,
             createdAt: {
               gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
               lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
@@ -24,6 +27,7 @@ export const paymentRouter = createTRPCRouter({
 
         const patientPayments = tx.patientPayment.findMany({
           where: {
+            branchId,
             createdAt: {
               gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
               lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),

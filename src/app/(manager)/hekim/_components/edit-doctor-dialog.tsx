@@ -3,9 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { updateDoctorSchema } from "@/server/api/routers/doctor/schema"
-import { api } from "@/trpc/react"
+import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import type { Doctor, Patient, User } from "@prisma/client"
 import { Pencil } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -38,16 +37,8 @@ import { DatePicker } from "@/components/form/date-picker"
 import UploadImage from "@/components/form/upload-image"
 import { PhoneInput } from "@/components/phone-input"
 
-interface DoctorWithDetails extends User {
-  doctor:
-    | (Doctor & {
-        patients: Patient[]
-      })
-    | null
-}
-
 type Props = {
-  doctor: DoctorWithDetails
+  doctor: RouterOutputs["doctor"]["getDoctorsByBranch"][number]
 }
 
 export default function EditDoctorDialog({ doctor }: Props) {
@@ -62,11 +53,11 @@ export default function EditDoctorDialog({ doctor }: Props) {
   const form = useForm<z.infer<typeof updateDoctorSchema>>({
     resolver: zodResolver(updateDoctorSchema),
     defaultValues: {
-      id: doctor.doctor?.id || "",
-      specialty: doctor.doctor?.specialty || "",
-      phoneNumber: doctor.doctor?.phoneNumber || "",
-      birthDate: doctor.doctor?.birthDate || new Date(),
-      imagePath: doctor.imagePath || "",
+      id: doctor.id,
+      specialty: doctor.specialty || "",
+      phoneNumber: doctor.phoneNumber || "",
+      birthDate: doctor.birthDate || new Date(),
+      imagePath: doctor.user.imagePath || "",
     },
   })
 

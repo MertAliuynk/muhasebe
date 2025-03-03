@@ -1,14 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { api } from "@/trpc/react"
-import type { Doctor, Patient, User } from "@prisma/client"
+import { api, type RouterOutputs } from "@/trpc/react"
 import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -23,20 +21,11 @@ import {
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu"
 
-interface DoctorWithDetails extends User {
-  doctor:
-    | (Doctor & {
-        patients: Patient[]
-      })
-    | null
-}
-
 type Props = {
-  doctor: DoctorWithDetails
-  onSuccess?: () => void
+  doctor: RouterOutputs["doctor"]["getDoctorsByBranch"][number]
 }
 
-export default function DeleteDoctorDialog({ doctor, onSuccess }: Props) {
+export default function DeleteDoctorDialog({ doctor }: Props) {
   const utils = api.useUtils()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -44,10 +33,9 @@ export default function DeleteDoctorDialog({ doctor, onSuccess }: Props) {
 
   const handleDelete = async () => {
     toast.promise(
-      mutateAsync({ id: doctor.doctor?.id || "" }).then(async () => {
+      mutateAsync({ id: doctor.id }).then(async () => {
         setIsOpen(false)
         await utils.doctor.getDoctorsByBranch.invalidate()
-        if (onSuccess) onSuccess()
       }),
       {
         loading: "Hekim siliniyor...",
@@ -71,21 +59,20 @@ export default function DeleteDoctorDialog({ doctor, onSuccess }: Props) {
         <AlertDialogHeader>
           <AlertDialogTitle>Hekim Sil</AlertDialogTitle>
           <AlertDialogDescription>
-            <span className="font-medium">{doctor.name}</span> isimli hekimi
-            silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            <span className="font-medium">{doctor.user.name}</span> isimli
+            hekimi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>İptal</AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isPending}
-            >
-              {isPending ? "Siliniyor..." : "Sil"}
-            </Button>
-          </AlertDialogAction>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            loading={isPending}
+          >
+            <Trash2 size={14} className="mr-2" />
+            Sil
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

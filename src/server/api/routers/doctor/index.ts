@@ -79,6 +79,11 @@ export const doctorRouter = createTRPCRouter({
         isDeleted: false,
       },
       include: {
+        patients: {
+          select: {
+            _count: true,
+          },
+        },
         user: {
           select: {
             id: true,

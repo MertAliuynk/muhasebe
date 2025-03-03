@@ -174,8 +174,7 @@ export default function ChangeProfile({ userProfile }: PageProps) {
                 )}
               />
             </div>
-
-            <div className="flex justify-end">
+            <div className="flex justify-end col-span-2">
               <Button type="submit" loading={isPending || isUploadingImage}>
                 Bilgileri Güncelle
               </Button>

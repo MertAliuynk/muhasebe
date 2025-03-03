@@ -37,11 +37,12 @@ export const expenseRouter = createTRPCRouter({
   getExpensesByBranchId: protectedProcedure
     .input(getExpensesByBranchIdSchema)
     .query(async ({ ctx, input }) => {
-      const { branchId } = ctx.session.user
+      const branchId = ctx.session.user.branchId!
 
       const expenses = await ctx.db.$transaction(async (tx) => {
         const doctorExpenses = tx.doctorExpense.findMany({
           where: {
+            branchId,
             createdAt: {
               gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
               lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
@@ -63,7 +64,7 @@ export const expenseRouter = createTRPCRouter({
 
         const branchExpenses = tx.branchExpense.findMany({
           where: {
-            branchId: branchId!,
+            branchId,
             createdAt: {
               gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
               lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
