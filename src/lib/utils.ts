@@ -97,3 +97,10 @@ export function getImageUrl(imagePath: string | null) {
   if (!imagePath) return ""
   return `${env.NEXT_PUBLIC_MINIO_URL}${imagePath}`
 }
+
+export function capitalize(str: string) {
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}

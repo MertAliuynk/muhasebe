@@ -6,6 +6,8 @@ import {
 import { TRPCError } from "@trpc/server"
 import { compare, hash } from "bcryptjs"
 
+import { capitalize } from "@/lib/utils"
+
 import {
   changePasswordSchema,
   deleteUserSchema,
@@ -67,7 +69,7 @@ export const userRouter = createTRPCRouter({
           role: typeof input.role
           password?: string
         } = {
-          name: input.name,
+          name: capitalize(input.name),
           username: input.username,
           role: input.role,
         }
@@ -102,7 +104,7 @@ export const userRouter = createTRPCRouter({
 
         const user = await ctx.db.user.create({
           data: {
-            name: input.name,
+            name: capitalize(input.name),
             username: input.username,
             password: hashedPassword,
             role: input.role,
@@ -131,7 +133,7 @@ export const userRouter = createTRPCRouter({
       await ctx.db.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: {
-            name: input.name,
+            name: capitalize(input.name),
             username: input.username,
             password: hashedPassword,
             role: input.role,
@@ -259,7 +261,7 @@ export const userRouter = createTRPCRouter({
           id: user.id,
         },
         data: {
-          name: input.name,
+          name: capitalize(input.name),
           username: input.username,
           imagePath: input.imagePath,
         },

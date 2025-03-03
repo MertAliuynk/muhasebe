@@ -1,5 +1,7 @@
 import { adminProcedure, createTRPCRouter } from "@/server/api/trpc"
 
+import { capitalize } from "@/lib/utils"
+
 import { saveCompanySchema } from "./schema"
 
 export const companyRouter = createTRPCRouter({
@@ -10,7 +12,7 @@ export const companyRouter = createTRPCRouter({
 
       await ctx.db.company.create({
         data: {
-          name,
+          name: capitalize(name),
           address,
           phone,
           taxNumber,

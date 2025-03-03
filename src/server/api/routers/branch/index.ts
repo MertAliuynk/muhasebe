@@ -4,6 +4,8 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc"
 
+import { capitalize } from "@/lib/utils"
+
 import { deleteBranchSchema, saveBranchSchema } from "./schema"
 
 export const branchRouter = createTRPCRouter({
@@ -59,7 +61,7 @@ export const branchRouter = createTRPCRouter({
             id,
           },
           data: {
-            name,
+            name: capitalize(name),
             address,
             phone,
             ...(branchToUpdate.managerId !== managerId && { managerId }),
@@ -69,7 +71,7 @@ export const branchRouter = createTRPCRouter({
         await ctx.db.$transaction(async (tx) => {
           const branch = await tx.branch.create({
             data: {
-              name,
+              name: capitalize(name),
               address,
               phone,
               managerId,

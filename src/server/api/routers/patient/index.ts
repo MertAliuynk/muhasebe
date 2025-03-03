@@ -4,6 +4,8 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc"
 
+import { capitalize } from "@/lib/utils"
+
 import {
   deletePatientSchema,
   getFilteredPatientsSchema,
@@ -217,6 +219,7 @@ export const patientRouter = createTRPCRouter({
       const patient = await ctx.db.patient.create({
         data: {
           ...input,
+          name: capitalize(input.name),
           branchId,
           doctors: {
             connect: input.doctors.map((doctor) => ({ id: doctor })),
