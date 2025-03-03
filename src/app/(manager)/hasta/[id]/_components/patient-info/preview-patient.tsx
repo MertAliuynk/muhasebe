@@ -27,17 +27,8 @@ export default function PreviewPatient({
         {/* Sol Taraf - Hasta Detayları */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-2xl font-semibold text-primary">
-                  {patient?.name?.split(" ")[0]?.charAt(0)}
-                  {patient?.name?.split(" ")[1]?.charAt(0)}
-                </span>
-              </div>
-              <div className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-2 border-background" />
-            </div>
             <div>
-              <h2 className="text-3xl font-light">{patient?.name}</h2>
+              <h2 className="text-4xl font-light">{patient?.name}</h2>
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <CalendarDays className="size-3" />
                 {patient?.birthDate &&

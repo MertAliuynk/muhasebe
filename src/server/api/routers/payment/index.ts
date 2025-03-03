@@ -292,6 +292,7 @@ export const paymentRouter = createTRPCRouter({
                     remainingAmount: {
                       increment: amountToRevertForThisInstallment,
                     },
+                    lastPaymentDate: null,
                     isCompleted: false,
                   },
                 })
