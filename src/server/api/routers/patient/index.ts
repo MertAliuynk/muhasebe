@@ -107,6 +107,30 @@ export const patientRouter = createTRPCRouter({
           where: {
             branchId: branchId,
             isDeleted: false,
+            paymentPlans:
+              input.startDate && input.endDate
+                ? {
+                    some: {
+                      isDeleted: false,
+                      isApproved: true,
+                      installments: {
+                        some: {
+                          AND: [
+                            {
+                              dueDate: {
+                                gte: input.startDate,
+                                lte: input.endDate,
+                              },
+                            },
+                            {
+                              isCompleted: false,
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  }
+                : undefined,
           },
           include: {
             doctors: {
@@ -126,6 +150,25 @@ export const patientRouter = createTRPCRouter({
             paymentPlans: {
               where: {
                 isDeleted: false,
+                isApproved: true,
+                installments:
+                  input.startDate && input.endDate
+                    ? {
+                        some: {
+                          AND: [
+                            {
+                              dueDate: {
+                                gte: input.startDate,
+                                lte: input.endDate,
+                              },
+                            },
+                            {
+                              isCompleted: false,
+                            },
+                          ],
+                        },
+                      }
+                    : undefined,
               },
               include: {
                 installments: true,
@@ -133,7 +176,18 @@ export const patientRouter = createTRPCRouter({
             },
           },
         })
-        return patients
+
+        return patients.map((patient) => ({
+          ...patient,
+          totalRemainingAmount: patient.paymentPlans.find(
+            (plan) => plan.isApproved === true
+          )?.remainingAmount,
+          remainingInstallmentCount: patient.paymentPlans
+            .find((plan) => plan.isApproved === true)
+            ?.installments.filter(
+              (installment) => installment.isCompleted === false
+            ).length,
+        }))
       }
 
       // Çoklu filtre için koşulları hazırla
@@ -145,6 +199,24 @@ export const patientRouter = createTRPCRouter({
             some: {
               isCompleted: false,
               isDeleted: false,
+              isApproved: true,
+              installments: {
+                some: {
+                  AND: [
+                    input.startDate && input.endDate
+                      ? {
+                          dueDate: {
+                            gte: input.startDate,
+                            lte: input.endDate,
+                          },
+                        }
+                      : {},
+                    {
+                      isCompleted: false,
+                    },
+                  ],
+                },
+              },
             },
           },
         })
@@ -156,14 +228,32 @@ export const patientRouter = createTRPCRouter({
             some: {
               isCompleted: false,
               isDeleted: false,
+              isApproved: true,
               installments: {
                 some: {
-                  dueDate: {
-                    lt: today,
-                  },
-                  remainingAmount: {
-                    gt: 0,
-                  },
+                  AND: [
+                    {
+                      dueDate: {
+                        lt: today,
+                      },
+                    },
+                    input.startDate && input.endDate
+                      ? {
+                          dueDate: {
+                            gte: input.startDate,
+                            lte: input.endDate,
+                          },
+                        }
+                      : {},
+                    {
+                      remainingAmount: {
+                        gt: 0,
+                      },
+                    },
+                    {
+                      isCompleted: false,
+                    },
+                  ],
                 },
               },
             },
@@ -209,7 +299,17 @@ export const patientRouter = createTRPCRouter({
         },
       })
 
-      return patients
+      return patients.map((patient) => ({
+        ...patient,
+        totalRemainingAmount: patient.paymentPlans.find(
+          (plan) => plan.isApproved === true
+        )?.remainingAmount,
+        remainingInstallmentCount: patient.paymentPlans
+          .find((plan) => plan.isApproved === true)
+          ?.installments.filter(
+            (installment) => installment.isCompleted === false
+          ).length,
+      }))
     }),
   savePatient: protectedProcedure
     .input(savePatientSchema)

@@ -65,6 +65,8 @@ export const getFilteredPatientsSchema = z.object({
   filters: z
     .array(z.enum(["ALL", "PENDING_PAYMENT", "OVERDUE_PAYMENT"]))
     .default(["ALL"]),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 })
 
 export const deletePatientSchema = z.object({

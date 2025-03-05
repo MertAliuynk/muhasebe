@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { api } from "@/trpc/react"
 import { UserPlus } from "lucide-react"
 
@@ -15,11 +16,25 @@ import { usePatientFilters } from "./_hooks/usePatientFilters"
 
 export default function Page() {
   const { selectedFilters, apiFilters, toggleFilter } = usePatientFilters()
+
   const [searchTerm, setSearchTerm] = useState("")
+  const searchParams = useSearchParams()
+  const dateParam = searchParams.get("date")
+
+  let startDate: string | undefined
+  let endDate: string | undefined
+
+  if (dateParam) {
+    const dates = dateParam.split(",")
+    startDate = dates[0] || undefined
+    endDate = dates[1] || undefined
+  }
 
   const { data: patients, isLoading } =
     api.patient.getFilteredPatients.useQuery({
       filters: apiFilters,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
     })
 
   const filteredPatients = useMemo(() => {
@@ -54,6 +69,7 @@ export default function Page() {
         </Link>
       </div>
       <PatientTableFilters
+        filteredPatients={filteredPatients}
         selectedFilters={selectedFilters}
         toggleFilter={toggleFilter}
         searchTerm={searchTerm}

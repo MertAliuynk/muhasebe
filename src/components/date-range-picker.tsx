@@ -24,7 +24,10 @@ import {
 
 export function DateRangePicker({
   className,
-}: React.HTMLAttributes<HTMLDivElement>) {
+  variant = "default",
+}: React.HTMLAttributes<HTMLDivElement> & {
+  variant?: "default" | "outline"
+}) {
   const searchParams = useSearchParams()
   const hasDateParam = searchParams.has("date")
 
@@ -101,7 +104,7 @@ export function DateRangePicker({
           <PopoverTrigger asChild>
             <Button
               id="date"
-              variant="default"
+              variant={variant}
               size="sm"
               className={cn("justify-start text-left font-normal")}
             >

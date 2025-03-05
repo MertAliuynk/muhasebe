@@ -169,10 +169,11 @@ export const doctorRouter = createTRPCRouter({
         },
       })
 
-      const totalCommission = doctorIncomes.reduce((acc, income) => {
-        const commissionAmount = (income.amount * income.commission) / 100
-        return acc + commissionAmount
-      }, 0)
+      const totalCommission =
+        doctorIncomes.reduce((acc, income) => {
+          const commissionAmount = (income.amount * income.commission) / 100
+          return acc + commissionAmount
+        }, 0) - (totalExpense._sum.amount || 0)
 
       const pendingPayments = await ctx.db.doctorPaymentShare.aggregate({
         where: {

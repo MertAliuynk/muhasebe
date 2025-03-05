@@ -3,10 +3,10 @@
 import Link from "next/link"
 import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { MoreVertical } from "lucide-react"
-import { formatPhoneNumberIntl } from "react-phone-number-input"
+import { CalendarSync, MoreVertical, Phone } from "lucide-react"
+import { formatPhoneNumber } from "react-phone-number-input"
 
-import { getImageUrl } from "@/lib/utils"
+import { formatCurrencyWithSymbol, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ import {
 import DeletePatientDialog from "./delete-patient-dialog"
 import EditPatientDialog from "./edit-patient-dialog"
 
-type Item = RouterOutputs["patient"]["getPatientsByBranch"][number]
+type Item = RouterOutputs["patient"]["getFilteredPatients"][number]
 
 export default [
   {
@@ -38,19 +38,16 @@ export default [
     },
   },
   {
-    accessorKey: "tcNo",
-    header: "TC Kimlik Numarası",
-    cell: ({ row }) => {
-      const tcNo = row.original.tcNo
-      return <div>{tcNo ? tcNo : "Yok"}</div>
-    },
-  },
-  {
     accessorKey: "phone",
     header: "Telefon Numarası",
     cell: ({ row }) => {
       const phone = row.original.phone
-      return <div>{phone ? formatPhoneNumberIntl(phone) : "Yok"}</div>
+      return (
+        <div className="flex items-center gap-2">
+          <Phone className="size-4 text-muted-foreground" />
+          {phone ? formatPhoneNumber(phone) : "Yok"}
+        </div>
+      )
     },
   },
   {
@@ -82,6 +79,29 @@ export default [
               </Avatar>
             </Link>
           ))}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "totalRemainingAmount",
+    header: "Toplam Kalan Tutar",
+    cell: ({ row }) => {
+      const totalRemainingAmount = row.original.totalRemainingAmount || 0
+      return formatCurrencyWithSymbol(totalRemainingAmount)
+    },
+  },
+  {
+    accessorKey: "remainingInstallmentCount",
+    header: "Kalan Taksit Sayısı",
+    cell: ({ row }) => {
+      const remainingInstallmentCount =
+        row.original.remainingInstallmentCount || 0
+
+      return (
+        <div className="flex items-center gap-2">
+          <CalendarSync className="size-4 text-muted-foreground" />
+          {remainingInstallmentCount}
         </div>
       )
     },
