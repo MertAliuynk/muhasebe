@@ -113,9 +113,10 @@ export function IncomeExpenseLineChart({ chartData }: PageProps) {
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("tr-TR", {
-                      month: "short",
+                    const date = new Date(value)
+                    return date.toLocaleDateString("tr-TR", {
                       day: "numeric",
+                      month: "long",
                       year: "numeric",
                     })
                   }}

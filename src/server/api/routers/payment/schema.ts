@@ -49,3 +49,13 @@ export const deletePaymentSchema = z.object({
 export const getPaymentsByPatientIdSchema = z.object({
   patientId: z.string(),
 })
+
+export const updatePaymentSchema = z.object({
+  id: z.string(),
+  whereToPay: z.enum(["patient", "branch"]),
+  amount: z.number().positive(),
+  paymentType: z.enum(["CASH", "CREDIT_CARD", "BANK_TRANSFER"]),
+  paymentDate: z.date(),
+  note: z.string().optional(),
+  patientId: z.string().optional(),
+})

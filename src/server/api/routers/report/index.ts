@@ -1,13 +1,19 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import {
+  eachDayOfInterval,
   eachMonthOfInterval,
+  endOfDay,
   endOfMonth,
   format,
+  isSameDay,
   isSameMonth,
+  startOfDay,
   startOfMonth,
   subMonths,
 } from "date-fns"
 import { z } from "zod"
+
+const periodEnum = z.enum(["daily", "monthly"])
 
 export const reportRouter = createTRPCRouter({
   incomeExpenseLineChart: protectedProcedure
@@ -16,6 +22,7 @@ export const reportRouter = createTRPCRouter({
         .object({
           startDate: z.date().optional(),
           endDate: z.date().optional(),
+          period: periodEnum.optional(),
         })
         .optional()
     )
@@ -27,13 +34,23 @@ export const reportRouter = createTRPCRouter({
       }
 
       const today = new Date()
+      const period = input?.period ?? "daily"
 
-      // Eğer startDate ve endDate verilmişse onları kullan, yoksa son 12 ayı hesapla
-      const startDate = input?.startDate ?? startOfMonth(subMonths(today, 11))
-      const endDate = input?.endDate ?? endOfMonth(today)
+      // Eğer startDate ve endDate verilmişse onları kullan, yoksa son 30 günü veya 12 ayı hesapla
+      const startDate =
+        input?.startDate ??
+        (period === "daily"
+          ? startOfDay(new Date(today.setDate(today.getDate() - 30)))
+          : startOfMonth(subMonths(today, 11)))
+      const endDate =
+        input?.endDate ??
+        (period === "daily" ? endOfDay(new Date()) : endOfMonth(today))
 
-      // Tarih aralığındaki tüm ayları oluştur
-      const months = eachMonthOfInterval({ start: startDate, end: endDate })
+      // Tarih aralığındaki tüm günleri veya ayları oluştur
+      const intervals =
+        period === "daily"
+          ? eachDayOfInterval({ start: startDate, end: endDate })
+          : eachMonthOfInterval({ start: startDate, end: endDate })
 
       // Gelir verileri
       const patientPayments = await ctx.db.patientPayment.findMany({
@@ -95,46 +112,60 @@ export const reportRouter = createTRPCRouter({
         },
       })
 
-      // Aylık gelir ve gider verilerini hesapla
-      const chartData = months.map((month) => {
-        const monthStr = format(month, "yyyy-MM")
-        const monthLabel = format(month, "MMMM yyyy")
+      // Gelir ve gider verilerini hesapla
+      const chartData = intervals.map((interval) => {
+        const dateStr =
+          period === "daily"
+            ? format(interval, "yyyy-MM-dd")
+            : format(interval, "yyyy-MM")
+        const dateLabel =
+          period === "daily"
+            ? format(interval, "d MMMM yyyy")
+            : format(interval, "MMMM yyyy")
 
-        // O ay için gelirler
-        const monthPatientPayments = patientPayments.filter((payment) =>
-          isSameMonth(payment.paymentDate, month)
+        // O periyot için gelirler
+        const periodPatientPayments = patientPayments.filter((payment) =>
+          period === "daily"
+            ? isSameDay(payment.paymentDate, interval)
+            : isSameMonth(payment.paymentDate, interval)
         )
-        const monthBranchPayments = branchPayments.filter((payment) =>
-          isSameMonth(payment.paymentDate, month)
+        const periodBranchPayments = branchPayments.filter((payment) =>
+          period === "daily"
+            ? isSameDay(payment.paymentDate, interval)
+            : isSameMonth(payment.paymentDate, interval)
         )
 
-        // O ay için giderler
-        const monthBranchExpenses = branchExpenses.filter((expense) =>
-          isSameMonth(expense.createdAt, month)
+        // O periyot için giderler
+        const periodBranchExpenses = branchExpenses.filter((expense) =>
+          period === "daily"
+            ? isSameDay(expense.createdAt, interval)
+            : isSameMonth(expense.createdAt, interval)
         )
-        const monthDoctorExpenses = doctorExpenses.filter((expense) =>
-          isSameMonth(expense.createdAt, month)
+        const periodDoctorExpenses = doctorExpenses.filter((expense) =>
+          period === "daily"
+            ? isSameDay(expense.createdAt, interval)
+            : isSameMonth(expense.createdAt, interval)
         )
 
         // Toplam gelir
         const income =
-          monthPatientPayments.reduce(
+          periodPatientPayments.reduce(
             (sum, payment) => sum + payment.amount,
             0
           ) +
-          monthBranchPayments.reduce((sum, payment) => sum + payment.amount, 0)
+          periodBranchPayments.reduce((sum, payment) => sum + payment.amount, 0)
 
         // Toplam gider
         const expense =
-          monthBranchExpenses.reduce(
+          periodBranchExpenses.reduce(
             (sum, expense) => sum + expense.amount,
             0
           ) +
-          monthDoctorExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+          periodDoctorExpenses.reduce((sum, expense) => sum + expense.amount, 0)
 
         return {
-          date: monthStr,
-          label: monthLabel,
+          date: dateStr,
+          label: dateLabel,
           income,
           expense,
         }

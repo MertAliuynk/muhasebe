@@ -4,6 +4,8 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc"
 import { TRPCError } from "@trpc/server"
+import { format } from "date-fns"
+import { tr } from "date-fns/locale"
 
 import {
   deleteDoctorSchema,
@@ -336,6 +338,25 @@ export const doctorRouter = createTRPCRouter({
         })
       }
 
+      const dateFilter: { gte?: Date; lte?: Date } = {}
+
+      if (input.startDate) {
+        const startDate = new Date(input.startDate)
+        dateFilter.gte = startDate
+
+        if (!input.endDate) {
+          const endOfDay = new Date(startDate)
+          endOfDay.setHours(23, 59, 59, 999)
+          dateFilter.lte = endOfDay
+        }
+      }
+
+      if (input.endDate) {
+        const endDate = new Date(input.endDate)
+        endDate.setHours(23, 59, 59, 999)
+        dateFilter.lte = endDate
+      }
+
       const pendingPayments = await ctx.db.doctorPaymentShare.findMany({
         where: {
           doctorId: input.doctorId,
@@ -354,11 +375,13 @@ export const doctorRouter = createTRPCRouter({
               installments: {
                 where: {
                   isCompleted: false,
+                  ...(Object.keys(dateFilter).length > 0 && {
+                    dueDate: dateFilter,
+                  }),
                 },
                 orderBy: {
                   dueDate: "asc",
                 },
-                take: 1,
               },
             },
           },
@@ -370,15 +393,70 @@ export const doctorRouter = createTRPCRouter({
           const totalAmount = payment.totalAmount
           const paidAmount = payment.paidAmount
           const remainingAmount = payment.remainingAmount
-          const nextPaymentDate =
-            payment.paymentPlan.installments[0]?.dueDate || null
           const doctorCount = payment.paymentPlan.patient.doctors.length
 
-          const installmentCount = await ctx.db.installment.count({
-            where: {
-              paymentPlanId: payment.paymentPlanId,
-            },
+          // Kalan taksitleri al
+          const remainingInstallments = payment.paymentPlan.installments
+
+          // Her taksit için doktorun alacağı tutarı hesapla
+          const monthlyPayments = remainingInstallments.map((installment) => {
+            const installmentAmount = installment.amount
+
+            // Eğer hastanın tek doktoru varsa, tüm ödemeyi o doktor alır
+            if (doctorCount === 1) {
+              return {
+                date: installment.dueDate,
+                amount: installmentAmount,
+              }
+            }
+
+            // Birden fazla doktor varsa, pay oranlarına göre hesapla
+            const doctorSharePercentage =
+              (payment.totalAmount / payment.paymentPlan.totalAmount) * 100
+            const doctorShare = Math.ceil(
+              (installmentAmount * doctorSharePercentage) / 100
+            )
+
+            return {
+              date: installment.dueDate,
+              amount: doctorShare,
+            }
           })
+
+          // Aylık ödemeleri grupla
+          const monthlyPaymentGroups = monthlyPayments.reduce(
+            (acc, curr) => {
+              const monthKey = format(new Date(curr.date), "MMMM yyyy", {
+                locale: tr,
+              })
+              if (!acc[monthKey]) {
+                acc[monthKey] = {
+                  month: monthKey,
+                  amount: 0,
+                  count: 0,
+                }
+              }
+              acc[monthKey].amount += curr.amount
+              acc[monthKey].count += 1
+              return acc
+            },
+            {} as Record<
+              string,
+              { month: string; amount: number; count: number }
+            >
+          )
+
+          // Aylık ortalama ödeme tutarını hesapla
+          const averageMonthlyPayment =
+            monthlyPayments.length > 0
+              ? Math.ceil(
+                  monthlyPayments.reduce((acc, curr) => acc + curr.amount, 0) /
+                    monthlyPayments.length
+                )
+              : 0
+
+          // Sonraki ödeme tarihini bul
+          const nextPaymentDate = monthlyPayments[0]?.date || null
 
           return {
             id: payment.id,
@@ -386,9 +464,11 @@ export const doctorRouter = createTRPCRouter({
             totalAmount,
             paidAmount,
             remainingAmount,
-            installmentCount,
+            installmentCount: remainingInstallments.length,
             nextPaymentDate,
             doctorCount,
+            averageMonthlyPayment,
+            monthlyPayments: Object.values(monthlyPaymentGroups),
           }
         })
       )

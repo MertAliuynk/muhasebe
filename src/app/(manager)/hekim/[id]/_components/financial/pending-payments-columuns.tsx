@@ -3,56 +3,46 @@
 import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
+import { tr } from "date-fns/locale"
 
 import { formatCurrencyWithSymbol } from "@/lib/utils"
 
 type Item = RouterOutputs["doctor"]["getDoctorPendingPayments"][number]
 
-export default [
+const columns: ColumnDef<Item>[] = [
   {
     accessorKey: "patientName",
-    header: "Hasta Adı ve Soyadı",
+    header: "Hasta Adı",
   },
   {
     accessorKey: "totalAmount",
     header: "Toplam Tutar",
-    cell: ({ row }) => {
-      const item = row.original
-      return formatCurrencyWithSymbol(item.totalAmount)
-    },
+    cell: ({ row }) => formatCurrencyWithSymbol(row.original.totalAmount),
   },
   {
     accessorKey: "paidAmount",
     header: "Ödenen Tutar",
-    cell: ({ row }) => {
-      const item = row.original
-      return formatCurrencyWithSymbol(item.paidAmount)
-    },
+    cell: ({ row }) => formatCurrencyWithSymbol(row.original.paidAmount),
   },
   {
     accessorKey: "remainingAmount",
     header: "Kalan Tutar",
-    cell: ({ row }) => {
-      const item = row.original
-      return formatCurrencyWithSymbol(item.remainingAmount)
-    },
+    cell: ({ row }) => formatCurrencyWithSymbol(row.original.remainingAmount),
   },
   {
     accessorKey: "installmentCount",
-    header: "Taksit Sayısı",
-    cell: ({ row }) => {
-      const item = row.original
-      return item.installmentCount
-    },
+    header: "Kalan Taksit",
   },
   {
     accessorKey: "nextPaymentDate",
-    header: "Sonraki Ödeme Tarihi",
-    cell: ({ row }) => {
-      const item = row.original
-      return item.nextPaymentDate
-        ? format(item.nextPaymentDate, "PPP")
-        : "Bilinmiyor"
-    },
+    header: "Sonraki Ödeme",
+    cell: ({ row }) =>
+      row.original.nextPaymentDate
+        ? format(new Date(row.original.nextPaymentDate), "dd MMMM yyyy", {
+            locale: tr,
+          })
+        : "-",
   },
-] as ColumnDef<Item>[]
+]
+
+export default columns
