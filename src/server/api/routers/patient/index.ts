@@ -175,19 +175,62 @@ export const patientRouter = createTRPCRouter({
               },
             },
           },
+          orderBy: {
+            createdAt: "desc",
+          },
         })
 
-        return patients.map((patient) => ({
-          ...patient,
-          totalRemainingAmount: patient.paymentPlans.find(
+        return patients.map((patient) => {
+          const approvedPlan = patient.paymentPlans.find(
             (plan) => plan.isApproved === true
-          )?.remainingAmount,
-          remainingInstallmentCount: patient.paymentPlans
-            .find((plan) => plan.isApproved === true)
-            ?.installments.filter(
+          )
+
+          if (!approvedPlan) {
+            return {
+              ...patient,
+              totalRemainingAmount: 0,
+              remainingInstallmentCount: 0,
+              nextPaymentAmount: 0,
+            }
+          }
+
+          const today = new Date()
+          const currentMonth = today.getMonth()
+          const currentYear = today.getFullYear()
+
+          const sortedInstallments = approvedPlan.installments
+            .filter((installment) => !installment.isCompleted)
+            .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+
+          // Geçmiş ve bugünkü taksitlerden kalan tutarları topla
+          const pastDueAmount = sortedInstallments
+            .filter((installment) => installment.dueDate < today)
+            .reduce((sum, installment) => sum + installment.remainingAmount, 0)
+
+          // Bu ay içindeki taksitlerden kalan tutarları topla
+          const currentMonthDueAmount = sortedInstallments
+            .filter((installment) => {
+              const installmentDate = new Date(installment.dueDate)
+              return (
+                installmentDate.getMonth() === currentMonth &&
+                installmentDate.getFullYear() === currentYear &&
+                installmentDate >= today
+              )
+            })
+            .reduce((sum, installment) => sum + installment.remainingAmount, 0)
+
+          // Sonraki ödeme tutarı: Geçmiş taksitlerden kalan + bu ayın taksitleri
+          const nextPaymentAmount = pastDueAmount + currentMonthDueAmount
+
+          return {
+            ...patient,
+            totalRemainingAmount: approvedPlan.remainingAmount,
+            remainingInstallmentCount: approvedPlan.installments.filter(
               (installment) => installment.isCompleted === false
             ).length,
-        }))
+            nextPaymentAmount,
+          }
+        })
       }
 
       // Çoklu filtre için koşulları hazırla
@@ -297,19 +340,62 @@ export const patientRouter = createTRPCRouter({
             },
           },
         },
+        orderBy: {
+          createdAt: "desc",
+        },
       })
 
-      return patients.map((patient) => ({
-        ...patient,
-        totalRemainingAmount: patient.paymentPlans.find(
+      return patients.map((patient) => {
+        const approvedPlan = patient.paymentPlans.find(
           (plan) => plan.isApproved === true
-        )?.remainingAmount,
-        remainingInstallmentCount: patient.paymentPlans
-          .find((plan) => plan.isApproved === true)
-          ?.installments.filter(
+        )
+
+        if (!approvedPlan) {
+          return {
+            ...patient,
+            totalRemainingAmount: 0,
+            remainingInstallmentCount: 0,
+            nextPaymentAmount: 0,
+          }
+        }
+
+        const today = new Date()
+        const currentMonth = today.getMonth()
+        const currentYear = today.getFullYear()
+
+        const sortedInstallments = approvedPlan.installments
+          .filter((installment) => !installment.isCompleted)
+          .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+
+        // Geçmiş ve bugünkü taksitlerden kalan tutarları topla
+        const pastDueAmount = sortedInstallments
+          .filter((installment) => installment.dueDate < today)
+          .reduce((sum, installment) => sum + installment.remainingAmount, 0)
+
+        // Bu ay içindeki taksitlerden kalan tutarları topla
+        const currentMonthDueAmount = sortedInstallments
+          .filter((installment) => {
+            const installmentDate = new Date(installment.dueDate)
+            return (
+              installmentDate.getMonth() === currentMonth &&
+              installmentDate.getFullYear() === currentYear &&
+              installmentDate >= today
+            )
+          })
+          .reduce((sum, installment) => sum + installment.remainingAmount, 0)
+
+        // Sonraki ödeme tutarı: Geçmiş taksitlerden kalan + bu ayın taksitleri
+        const nextPaymentAmount = pastDueAmount + currentMonthDueAmount
+
+        return {
+          ...patient,
+          totalRemainingAmount: approvedPlan.remainingAmount,
+          remainingInstallmentCount: approvedPlan.installments.filter(
             (installment) => installment.isCompleted === false
           ).length,
-      }))
+          nextPaymentAmount,
+        }
+      })
     }),
   savePatient: protectedProcedure
     .input(savePatientSchema)

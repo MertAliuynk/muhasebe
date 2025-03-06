@@ -107,6 +107,15 @@ export default [
     },
   },
   {
+    accessorKey: "nextPaymentAmount",
+    header: "Sonraki Ödeme Tutarı",
+    cell: ({ row }) => {
+      const nextPaymentAmount = row.original.nextPaymentAmount || 0
+
+      return formatCurrencyWithSymbol(nextPaymentAmount)
+    },
+  },
+  {
     accessorKey: "actions",
     header: "",
     cell: ({ row }) => {

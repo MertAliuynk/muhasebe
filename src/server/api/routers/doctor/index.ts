@@ -158,24 +158,10 @@ export const doctorRouter = createTRPCRouter({
         },
       })
 
-      const doctorIncomes = await ctx.db.doctorIncome.findMany({
-        where: {
-          doctorId: doctor.id,
-          ...(Object.keys(dateFilter).length > 0 && {
-            paymentDate: dateFilter,
-          }),
-        },
-        select: {
-          amount: true,
-          commission: true,
-        },
-      })
-
       const totalCommission =
-        doctorIncomes.reduce((acc, income) => {
-          const commissionAmount = (income.amount * income.commission) / 100
-          return acc + commissionAmount
-        }, 0) - (totalExpense._sum.amount || 0)
+        (((totalIncome._sum.amount || 0) - (totalExpense._sum.amount || 0)) *
+          doctor.commission) /
+        100
 
       const pendingPayments = await ctx.db.doctorPaymentShare.aggregate({
         where: {

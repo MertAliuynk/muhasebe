@@ -14,7 +14,9 @@ export default function Logo({ textClassName, className }: Props) {
       <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
         <Hospital className="size-5" />
       </div>
-      <p className={cn(textClassName)}>Karadeniz Ağız ve Diş Polikliniği</p>
+      <p className={cn(textClassName)}>
+        Özel Karadeniz Ağız ve Diş Sağlığı Polikliniği
+      </p>
     </div>
   )
 }

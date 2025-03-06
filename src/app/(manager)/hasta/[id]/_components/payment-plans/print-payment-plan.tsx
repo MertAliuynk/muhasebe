@@ -86,7 +86,7 @@ export function PrintPaymentPlan({ children, data }: PrintPaymentPlanProps) {
                   </div>
                 </div>
                 <div style="text-align: right;">
-                  <p><strong>Karadeniz Özel Ağız ve Diş Polikliniği</strong></p>
+                  <p><strong>Özel Karadeniz Ağız ve Diş Sağlığı Polikliniği</strong></p>
                   <div>
                     <div style="height: 100px; border: 1px solid #000;">
                     <p style="padding:5px; text-align: left; margin:0px;">İmza</p>
