@@ -1,9 +1,11 @@
 "use client"
 
+import Link from "next/link"
 import { api, type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import {
+  Edit2,
   MoreVertical,
   Printer,
   ReceiptText,
@@ -94,6 +96,14 @@ export default function PaymentPlansColumns(hasApprovedPaymentPlan: boolean) {
                   </DropdownMenuItem>
                 </ApprovedPaymentPlan>
               )}
+              <Link href={`/hasta/odeme-plani-duzenle/${data.id}`}>
+                <DropdownMenuItem modal>
+                  Düzenle
+                  <DropdownMenuShortcut>
+                    <Edit2 size={14} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              </Link>
               <PrintPaymentPlan
                 data={{
                   patientName: data.patient.name,

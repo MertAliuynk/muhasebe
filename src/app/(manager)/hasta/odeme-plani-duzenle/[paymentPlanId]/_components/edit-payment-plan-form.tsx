@@ -1,0 +1,495 @@
+"use client"
+
+import React, { useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { updatePaymentPlanSchema } from "@/server/api/routers/payment-plan/schema"
+import { api, type RouterOutputs } from "@/trpc/react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { type TRPCError } from "@trpc/server"
+import { Eraser, Printer } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import type { z } from "zod"
+
+import { formatCurrencyWithSymbol } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { DatePicker } from "@/components/form/date-picker"
+
+import { PrintPaymentPlan } from "../../../[id]/_components/payment-plans/print-payment-plan"
+
+function calculateTotalDoctorShares(doctorShares: { totalAmount: number }[]) {
+  return doctorShares.reduce((sum, share) => sum + (share.totalAmount || 0), 0)
+}
+
+function calculateRemainingAmount(
+  totalAmount: number,
+  doctorShares: { totalAmount: number }[]
+) {
+  const totalShares = calculateTotalDoctorShares(doctorShares)
+  return totalAmount - totalShares
+}
+
+function isSharesValid(
+  totalAmount: number,
+  doctorShares: { totalAmount: number }[]
+) {
+  const difference = calculateRemainingAmount(totalAmount, doctorShares)
+  return Math.abs(difference) < 1 // 1 kuruştan az fark varsa geçerli sayalım (yuvarlamadan kaynaklı)
+}
+
+export default function EditPaymentPlanForm({
+  paymentPlan,
+}: {
+  paymentPlan: NonNullable<RouterOutputs["paymentPlan"]["getPaymentPlanById"]>
+}) {
+  const router = useRouter()
+  const { mutateAsync: updatePaymentPlan, isPending } =
+    api.paymentPlan.updatePatientPlan.useMutation()
+
+  const form = useForm<z.infer<typeof updatePaymentPlanSchema>>({
+    resolver: zodResolver(updatePaymentPlanSchema),
+    defaultValues: {
+      id: paymentPlan.id,
+      totalAmount: paymentPlan.totalAmount,
+      originalAmount: paymentPlan.originalAmount,
+      installmentCount: paymentPlan.installmentCount,
+      interestRate: paymentPlan.interestRate,
+      installments: paymentPlan.installments,
+      note: paymentPlan.note ?? undefined,
+      doctorShares: paymentPlan.doctorShares,
+    },
+  })
+
+  const totalAmount = form.watch("totalAmount")
+  const originalAmount = form.watch("originalAmount")
+  const installmentCount = form.watch("installmentCount")
+  const interestRate = form.watch("interestRate")
+  const installments = form.watch("installments")
+
+  const calculateTotalAmount = useCallback(() => {
+    return (
+      installments?.reduce(
+        (sum, installment) => sum + (installment?.amount || 0),
+        0
+      ) || 0
+    )
+  }, [installments])
+
+  // Doktor sayısını kontrol et
+  const hasMultipleDoctors = paymentPlan.doctorShares.length > 1
+
+  // Tek doktor varsa otomatik olarak tüm tutarı alacak
+  useEffect(() => {
+    if (!hasMultipleDoctors && paymentPlan.doctorShares.length === 1) {
+      const calculatedTotal = calculateTotalAmount()
+      form.setValue(`doctorShares.0.totalAmount`, calculatedTotal)
+    }
+  }, [
+    calculateTotalAmount,
+    form,
+    hasMultipleDoctors,
+    paymentPlan.doctorShares.length,
+  ])
+
+  const initializeInstallments = () => {
+    if (!originalAmount || !installmentCount || interestRate === undefined)
+      return
+
+    const interestAmount = originalAmount * (interestRate / 100)
+    const totalWithInterest = originalAmount + interestAmount
+    form.setValue("totalAmount", totalWithInterest)
+    const baseInstallmentAmount = totalWithInterest / installmentCount
+
+    const newInstallments = Array.from(
+      { length: installmentCount },
+      (_, index) => {
+        const date = new Date(paymentPlan.startDate)
+        date.setMonth(date.getMonth() + index)
+        return {
+          date,
+          amount: baseInstallmentAmount,
+        }
+      }
+    )
+
+    form.setValue("installments", newInstallments)
+  }
+
+  useEffect(() => {
+    if (paymentPlan.startDate && installmentCount > 0) {
+      initializeInstallments()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [installmentCount, paymentPlan.startDate, interestRate, originalAmount])
+
+  const handleInstallmentAmountChange = (index: number, newAmount: number) => {
+    const currentInstallments = [...installments]
+    const interestAmount = originalAmount * (interestRate / 100)
+    const totalWithInterest = originalAmount + interestAmount
+
+    currentInstallments[index]!.amount = newAmount
+
+    const previousTotal = currentInstallments
+      .slice(0, index)
+      .reduce((sum, installment) => sum + installment.amount, 0)
+
+    const remainingAmount = totalWithInterest - previousTotal - newAmount
+    const remainingInstallments = installmentCount - (index + 1)
+
+    if (remainingInstallments > 0) {
+      const remainingInstallmentAmount = remainingAmount / remainingInstallments
+
+      for (let i = index + 1; i < installmentCount; i++) {
+        currentInstallments[i]!.amount = remainingInstallmentAmount
+      }
+    }
+
+    form.setValue("installments", currentInstallments)
+  }
+
+  const onSubmit = (values: z.infer<typeof updatePaymentPlanSchema>) => {
+    const calculatedTotal = calculateTotalAmount()
+
+    // Tek doktor varsa validasyon yapmaya gerek yok
+    if (!hasMultipleDoctors) {
+      toast.promise(updatePaymentPlan(values), {
+        loading: "Ödeme planı düzenleniyor...",
+        success: () => {
+          router.push(`/hasta/${paymentPlan.patientId}`)
+          return "Ödeme planı düzenlendi"
+        },
+        error: (error: TRPCError) => error.message,
+      })
+      return
+    }
+
+    const totalDoctorShares = calculateTotalDoctorShares(values.doctorShares)
+
+    if (!isSharesValid(calculatedTotal, values.doctorShares)) {
+      if (totalDoctorShares > calculatedTotal) {
+        toast.error("Doktor paylaşımlarının toplamı, toplam tutardan fazla!")
+      } else {
+        toast.error(
+          "Doktor paylaşımlarının toplamı, toplam tutara eşit olmalı!"
+        )
+      }
+      return
+    }
+
+    toast.promise(updatePaymentPlan(values), {
+      loading: "Ödeme planı düzenleniyor...",
+      success: () => {
+        router.push(`/hasta/${paymentPlan.patientId}`)
+        return "Ödeme planı düzenlendi"
+      },
+      error: (error: TRPCError) => error.message,
+    })
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex justify-between">
+        <div>
+          <p className="text-2xl font-bold">Ödeme Planı Düzenle</p>
+        </div>
+        {form.formState.dirtyFields && (
+          <div className="flex items-center gap-2">
+            <PrintPaymentPlan
+              data={{
+                patientName: paymentPlan.patient.name,
+                totalAmount,
+                installmentCount,
+                startDate: paymentPlan.startDate,
+                installments,
+              }}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Printer className="size-4" />
+                Yazdır
+              </Button>
+            </PrintPaymentPlan>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                form.reset()
+              }}
+            >
+              <Eraser className="mr-2" size={16} />
+              Formu Temizle
+            </Button>
+          </div>
+        )}
+      </div>
+      <div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-10">
+                <FormField
+                  control={form.control}
+                  name="originalAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Toplam Tutar</FormLabel>
+                      <FormControl>
+                        <Input
+                          prefix="₺"
+                          {...field}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="installmentCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Taksit Sayısı</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="interestRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Faiz Oranı (%)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Not</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {installmentCount > 0 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-10">
+                  <div className="col-span-2">
+                    <DatePicker
+                      name="startDate"
+                      label="Taksit Başlangıç Tarihi"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <h3 className="text-lg font-medium">Taksit Tarihleri</h3>
+                  <ScrollArea className="pr-4 max-h-[40vh] overflow-y-auto">
+                    <div className="grid grid-cols-3 gap-4">
+                      {Array.from({ length: installmentCount }).map(
+                        (_, index) => (
+                          <Card key={index} className="rounded-md p-5">
+                            <div className="space-y-4">
+                              <DatePicker
+                                name={`installments.${index}.date`}
+                                label={`${index + 1}. Taksit`}
+                              />
+                              <FormField
+                                control={form.control}
+                                name={`installments.${index}.amount`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <Input
+                                        prefix="₺"
+                                        {...field}
+                                        onChange={(e) => {
+                                          const value = e.target.value.replace(
+                                            /[^0-9]/g,
+                                            ""
+                                          )
+                                          const numValue = Number(value)
+                                          handleInstallmentAmountChange(
+                                            index,
+                                            numValue
+                                          )
+                                        }}
+                                        value={
+                                          field.value === undefined ||
+                                          field.value === 0
+                                            ? ""
+                                            : field.value.toLocaleString(
+                                                "tr-TR"
+                                              )
+                                        }
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </Card>
+                        )
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            )}
+
+            {/* Doktor Paylaşımları */}
+            {hasMultipleDoctors && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Doktor Paylaşımları</h3>
+                  <div className="flex flex-col items-end gap-1">
+                    <p className="text-sm text-muted-foreground">
+                      Paylaşılabilir Tutar:{" "}
+                      <span
+                        className={`font-medium ${!isSharesValid(calculateTotalAmount(), form.watch("doctorShares")) && "text-red-500"}`}
+                      >
+                        {formatCurrencyWithSymbol(
+                          Math.max(
+                            0,
+                            calculateRemainingAmount(
+                              calculateTotalAmount(),
+                              form.watch("doctorShares")
+                            )
+                          )
+                        )}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                {paymentPlan.doctorShares.map((share, index) => (
+                  <div key={share.id} className="flex items-center gap-4">
+                    <p className="w-48 line-clamp-1">
+                      {share.doctor.user.name}
+                    </p>
+                    <FormField
+                      control={form.control}
+                      name={`doctorShares.${index}.totalAmount`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              prefix="₺"
+                              {...field}
+                              value={
+                                field.value === 0
+                                  ? ""
+                                  : field.value.toLocaleString("tr-TR")
+                              }
+                              onChange={(e) => {
+                                const value = e.target.value.replace(
+                                  /[^0-9]/g,
+                                  ""
+                                )
+                                field.onChange(Number(value))
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Daha önce bu doktora{" "}
+                      <span className="font-bold">
+                        {formatCurrencyWithSymbol(share.paidAmount)}
+                      </span>{" "}
+                      ödeme yapılmış.
+                    </p>
+                    <input
+                      type="hidden"
+                      {...form.register(`doctorShares.${index}.id`)}
+                      value={share.id}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              <div>
+                <p>
+                  <span className="text-muted-foreground text-sm">
+                    Toplam Ödenecek Tutar:{" "}
+                  </span>
+                  <span className="font-bold">
+                    {formatCurrencyWithSymbol(calculateTotalAmount())}
+                  </span>
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={isPending}>
+                  Plan Düzenle
+                </Button>
+              </div>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </div>
+  )
+}

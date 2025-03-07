@@ -183,10 +183,6 @@ export function DatePicker({ name, label }: Props) {
                   }}
                   month={currentMonth}
                   onMonthChange={setCurrentMonth}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                  disableNavigation
                   initialFocus
                 />
               </DialogContent>

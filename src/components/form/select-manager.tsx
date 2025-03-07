@@ -22,8 +22,6 @@ export function SelectManager({ onChange, value }: SelectManagerProps) {
     },
   })
 
-  console.log(value)
-
   return (
     <Select onValueChange={onChange} value={value} defaultValue={value}>
       <SelectTrigger>
