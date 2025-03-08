@@ -51,6 +51,14 @@ export default [
     },
   },
   {
+    accessorKey: "doctorName",
+    header: "Ödeme Yapılan Doktor",
+    cell: ({ row }) => {
+      const doctroName = row.original.doctorIncomes[0]?.doctor.user.name
+      return doctroName
+    },
+  },
+  {
     accessorKey: "actions",
     header: "",
     cell: ({ row }) => {

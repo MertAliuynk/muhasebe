@@ -53,6 +53,21 @@ export const paymentRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const payments = await ctx.db.patientPayment.findMany({
         where: { patientId: input.patientId },
+        include: {
+          doctorIncomes: {
+            select: {
+              doctor: {
+                select: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         orderBy: { paymentDate: "asc" },
       })
 
