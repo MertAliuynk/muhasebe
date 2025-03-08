@@ -52,10 +52,8 @@ export const getPaymentsByPatientIdSchema = z.object({
 
 export const updatePaymentSchema = z.object({
   id: z.string(),
-  whereToPay: z.enum(["patient", "branch"]),
-  amount: z.number().positive(),
-  paymentType: z.enum(["CASH", "CREDIT_CARD", "BANK_TRANSFER"]),
-  paymentDate: z.date(),
+  amount: z.number().min(1, { message: "Miktar zorunludur" }),
+  paymentType: z.nativeEnum(PaymentType),
   note: z.string().optional(),
-  patientId: z.string().optional(),
+  whereToPay: z.enum(["patient", "branch"]),
 })

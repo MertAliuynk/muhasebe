@@ -365,230 +365,15 @@ export const paymentRouter = createTRPCRouter({
     .input(updatePaymentSchema)
     .mutation(async ({ ctx, input }) => {
       if (input.whereToPay === "patient") {
-        // await api.payment.deletePayment({
-        //   id: input.id,
-        //   whereToPay: "patient",
-        //   patientId: input.patientId,
-        // })
-        return await ctx.db.$transaction(async (tx) => {
-          // Önce mevcut ödemeyi bul
-
-          const existingPayment = await tx.patientPayment.findUnique({
-            where: { id: input.id },
-            include: {
-              patient: {
-                include: {
-                  paymentPlans: {
-                    where: { isApproved: true },
-                    include: {
-                      installments: {
-                        orderBy: { number: "desc" },
-                      },
-                      doctorShares: true,
-                    },
-                  },
-                },
-              },
-              doctorIncomes: true,
-            },
-          })
-
-          if (!existingPayment) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Ödeme bulunamadı.",
-            })
-          }
-
-          const paymentPlan = existingPayment.patient?.paymentPlans[0]
-          if (!paymentPlan) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Ödeme planı bulunamadı.",
-            })
-          }
-
-          // Önce eski tutarı geri al
-          let remainingAmountToRevert = existingPayment.amount
-          const installmentUpdates = []
-
-          for (const installment of paymentPlan.installments) {
-            if (remainingAmountToRevert <= 0) break
-
-            const amountToRevertForThisInstallment = Math.min(
-              remainingAmountToRevert,
-              installment.paidAmount
-            )
-
-            if (amountToRevertForThisInstallment > 0) {
-              installmentUpdates.push(
-                tx.installment.update({
-                  where: { id: installment.id },
-                  data: {
-                    paidAmount: {
-                      decrement: amountToRevertForThisInstallment,
-                    },
-                    remainingAmount: {
-                      increment: amountToRevertForThisInstallment,
-                    },
-                    lastPaymentDate: null,
-                    isCompleted: false,
-                  },
-                })
-              )
-
-              remainingAmountToRevert -= amountToRevertForThisInstallment
-            }
-          }
-
-          // Doktor paylarını güncelle
-          if (existingPayment.doctorIncomes.length > 0) {
-            for (const income of existingPayment.doctorIncomes) {
-              const doctorShare = paymentPlan.doctorShares.find(
-                (share) => share.doctorId === income.doctorId
-              )
-
-              if (doctorShare) {
-                await tx.doctorPaymentShare.update({
-                  where: { id: doctorShare.id },
-                  data: {
-                    paidAmount: {
-                      decrement: income.amount,
-                    },
-                    remainingAmount: {
-                      increment: income.amount,
-                    },
-                  },
-                })
-              }
-            }
-          }
-
-          // Ödeme planını güncelle
-          await tx.patientPaymentPlan.update({
-            where: { id: paymentPlan.id },
-            data: {
-              paidAmount: {
-                decrement: existingPayment.amount,
-              },
-              remainingAmount: {
-                increment: existingPayment.amount,
-              },
-              isCompleted: false,
-            },
-          })
-
-          // Doktor gelirlerini sil
-          if (existingPayment.doctorIncomes.length > 0) {
-            await tx.doctorIncome.deleteMany({
-              where: {
-                id: {
-                  in: existingPayment.doctorIncomes.map((income) => income.id),
-                },
-              },
-            })
-          }
-
-          // Eski ödemeyi sil
-          await tx.patientPayment.delete({
-            where: { id: input.id },
-          })
-
-          // Yeni ödemeyi oluştur
-          const newPayment = await tx.patientPayment.create({
-            data: {
-              amount: input.amount,
-              paymentType: input.paymentType,
-              paymentDate: input.paymentDate,
-              note: input.note,
-              patientId: existingPayment.patientId!,
-              branchId: ctx.session.user.branchId!,
-              paymentPlanId: paymentPlan.id,
-            },
-          })
-
-          // Yeni tutarı uygula
-          let remainingPayment = input.amount
-          const newInstallmentUpdates = []
-
-          for (const installment of paymentPlan.installments) {
-            if (remainingPayment <= 0) break
-
-            const paymentForThisInstallment = Math.min(
-              remainingPayment,
-              installment.remainingAmount
-            )
-
-            if (paymentForThisInstallment > 0) {
-              newInstallmentUpdates.push(
-                tx.installment.update({
-                  where: { id: installment.id },
-                  data: {
-                    paidAmount: {
-                      increment: paymentForThisInstallment,
-                    },
-                    remainingAmount: {
-                      decrement: paymentForThisInstallment,
-                    },
-                    isCompleted:
-                      installment.remainingAmount <= paymentForThisInstallment,
-                    lastPaymentDate: new Date(),
-                  },
-                })
-              )
-
-              remainingPayment -= paymentForThisInstallment
-            }
-          }
-
-          // Doktor paylarını güncelle
-          for (const doctorShare of paymentPlan.doctorShares) {
-            await tx.doctorPaymentShare.update({
-              where: { id: doctorShare.id },
-              data: {
-                paidAmount: {
-                  increment: input.amount,
-                },
-                remainingAmount: {
-                  decrement: input.amount,
-                },
-              },
-            })
-
-            await tx.doctorIncome.create({
-              data: {
-                amount: input.amount,
-                paymentType: input.paymentType,
-                paymentDate: input.paymentDate,
-                doctorId: doctorShare.doctorId,
-                commission: doctorShare.totalAmount / paymentPlan.totalAmount,
-                paymentId: newPayment.id,
-              },
-            })
-          }
-
-          // Ödeme planını güncelle
-          await tx.patientPaymentPlan.update({
-            where: { id: paymentPlan.id },
-            data: {
-              paidAmount: {
-                increment: input.amount,
-              },
-              remainingAmount: {
-                decrement: input.amount,
-              },
-              isCompleted: paymentPlan.remainingAmount <= input.amount,
-            },
-          })
-
-          await Promise.all([...installmentUpdates, ...newInstallmentUpdates])
-
-          return newPayment
-        })
-      } else {
-        // Şube ödemesi için önce silip sonra yeniden oluştur
-        const existingPayment = await ctx.db.branchPayment.findUnique({
+        const existingPayment = await ctx.db.patientPayment.findUnique({
           where: { id: input.id },
+          include: {
+            paymentPlan: {
+              include: {
+                doctorShares: true,
+              },
+            },
+          },
         })
 
         if (!existingPayment) {
@@ -598,17 +383,155 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
-        await ctx.db.branchPayment.delete({
-          where: { id: input.id },
-        })
+        const amountDifference = input.amount - existingPayment.amount
 
-        return await ctx.db.branchPayment.create({
+        if (existingPayment.paymentPlan) {
+          if (
+            amountDifference > 0 &&
+            amountDifference > existingPayment.paymentPlan.remainingAmount
+          ) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Ödeme tutarı kalan tutardan fazla olamaz. Kalan tutar: ${existingPayment.paymentPlan.remainingAmount} TL`,
+            })
+          }
+
+          await ctx.db.$transaction(async (tx) => {
+            // Ödemeyi güncelle
+            await tx.patientPayment.update({
+              where: { id: input.id },
+              data: {
+                amount: input.amount,
+                paymentType: input.paymentType,
+                note: input.note,
+              },
+            })
+
+            // Taksitleri güncelle
+            if (amountDifference !== 0) {
+              // Ödeme planına ait taksitleri getir
+              const installments = await tx.installment.findMany({
+                where: { paymentPlanId: existingPayment.paymentPlan?.id },
+                orderBy: { number: "asc" },
+              })
+
+              // Eğer ödeme tutarı azaltıldıysa, en son ödenen taksitlerden başlayarak geri al
+              if (amountDifference < 0) {
+                const absAmountDifference = Math.abs(amountDifference)
+                let remainingToRevert = absAmountDifference
+
+                // Taksitleri tersten dolaş (en son ödenenlerden başla)
+                for (const installment of [...installments].reverse()) {
+                  if (remainingToRevert <= 0) break
+
+                  const amountToRevert = Math.min(
+                    remainingToRevert,
+                    installment.paidAmount
+                  )
+
+                  if (amountToRevert > 0) {
+                    await tx.installment.update({
+                      where: { id: installment.id },
+                      data: {
+                        paidAmount: {
+                          decrement: amountToRevert,
+                        },
+                        remainingAmount: {
+                          increment: amountToRevert,
+                        },
+                        isCompleted:
+                          installment.paidAmount - amountToRevert >=
+                          installment.amount,
+                      },
+                    })
+
+                    remainingToRevert -= amountToRevert
+                  }
+                }
+              }
+              // Eğer ödeme tutarı artırıldıysa, ödenmemiş taksitlere dağıt
+              else if (amountDifference > 0) {
+                let remainingToAdd = amountDifference
+
+                for (const installment of installments) {
+                  if (remainingToAdd <= 0) break
+
+                  const amountToAdd = Math.min(
+                    remainingToAdd,
+                    installment.remainingAmount
+                  )
+
+                  if (amountToAdd > 0) {
+                    await tx.installment.update({
+                      where: { id: installment.id },
+                      data: {
+                        paidAmount: {
+                          increment: amountToAdd,
+                        },
+                        remainingAmount: {
+                          decrement: amountToAdd,
+                        },
+                        isCompleted: installment.remainingAmount <= amountToAdd,
+                        lastPaymentDate: new Date(),
+                      },
+                    })
+
+                    remainingToAdd -= amountToAdd
+                  }
+                }
+              }
+            }
+
+            // Ödeme planını güncelle
+            await tx.patientPaymentPlan.update({
+              where: { id: existingPayment.paymentPlan?.id ?? "" },
+              data: {
+                paidAmount: {
+                  increment: amountDifference,
+                },
+                remainingAmount: {
+                  decrement: amountDifference,
+                },
+                isCompleted:
+                  (existingPayment.paymentPlan?.remainingAmount ?? 0) <=
+                  amountDifference,
+              },
+            })
+
+            // Doktor gelirini güncelle
+            const doctorIncome = await tx.doctorIncome.findFirst({
+              where: { paymentId: input.id },
+            })
+
+            if (doctorIncome) {
+              await tx.doctorIncome.update({
+                where: { id: doctorIncome.id },
+                data: {
+                  amount: input.amount,
+                  paymentType: input.paymentType,
+                },
+              })
+            }
+          })
+        } else {
+          // Ödeme planı olmayan hasta ödemesi güncelleme
+          await ctx.db.patientPayment.update({
+            where: { id: input.id },
+            data: {
+              amount: input.amount,
+              paymentType: input.paymentType,
+              note: input.note,
+            },
+          })
+        }
+      } else {
+        // Şube ödemesi güncelleme
+        await ctx.db.branchPayment.update({
+          where: { id: input.id },
           data: {
             amount: input.amount,
             paymentType: input.paymentType,
-            paymentDate: input.paymentDate,
             note: input.note,
-            branchId: ctx.session.user.branchId!,
           },
         })
       }

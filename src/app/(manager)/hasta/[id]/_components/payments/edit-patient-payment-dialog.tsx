@@ -65,9 +65,7 @@ export default function EditPatientPaymentDialog({
       whereToPay: "patient",
       amount: payment.amount,
       paymentType: payment.paymentType,
-      paymentDate: payment.paymentDate || new Date(),
       note: payment.note || "",
-      patientId: payment.patientId!,
     },
   })
 
