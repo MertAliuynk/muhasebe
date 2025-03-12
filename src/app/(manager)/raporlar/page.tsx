@@ -11,24 +11,24 @@ import { PeriodSelect } from "./_components/period-select"
 export default async function page({
   searchParams,
 }: {
-  searchParams: {
+  searchParams: Promise<{
     startDate?: string
     endDate?: string
     period?: "daily" | "monthly"
-  }
+  }>
 }) {
+  const params = await searchParams
+
   const currentMonthStart = startOfMonth(new Date())
   const currentMonthEnd = endOfMonth(new Date())
 
-  const startDate = searchParams.startDate
-    ? new Date(searchParams.startDate)
+  const startDate = params.startDate
+    ? new Date(params.startDate)
     : currentMonthStart
 
-  const endDate = searchParams.endDate
-    ? new Date(searchParams.endDate)
-    : currentMonthEnd
+  const endDate = params.endDate ? new Date(params.endDate) : currentMonthEnd
 
-  const period = searchParams.period ?? "daily"
+  const period = params.period ?? "daily"
 
   const incomeExpenseLineChart = await api.report.incomeExpenseLineChart({
     startDate,
