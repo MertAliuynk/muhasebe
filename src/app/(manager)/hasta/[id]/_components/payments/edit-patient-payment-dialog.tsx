@@ -112,10 +112,17 @@ export default function EditPatientPaymentDialog({
                   <FormLabel>Ödeme Tutarı</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      placeholder="Ödeme tutarını giriniz"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      prefix="₺"
+                      value={
+                        field.value === 0
+                          ? ""
+                          : field.value.toLocaleString("tr-TR")
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, "")
+                        field.onChange(Number(value))
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

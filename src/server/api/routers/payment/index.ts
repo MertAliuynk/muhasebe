@@ -450,6 +450,13 @@ export const paymentRouter = createTRPCRouter({
                   )
 
                   if (amountToRevert > 0) {
+                    // Taksit tamamen geri alınıyorsa lastPaymentDate'i null yap
+                    // Kısmen geri alınıyorsa mevcut lastPaymentDate'i koru
+                    const newLastPaymentDate =
+                      amountToRevert >= installment.paidAmount
+                        ? null
+                        : installment.lastPaymentDate
+
                     await tx.installment.update({
                       where: { id: installment.id },
                       data: {
@@ -459,6 +466,7 @@ export const paymentRouter = createTRPCRouter({
                         remainingAmount: {
                           increment: amountToRevert,
                         },
+                        lastPaymentDate: newLastPaymentDate,
                         isCompleted:
                           installment.paidAmount - amountToRevert >=
                           installment.amount,
@@ -482,6 +490,16 @@ export const paymentRouter = createTRPCRouter({
                   )
 
                   if (amountToAdd > 0) {
+                    // Taksit daha önce hiç ödenmemişse veya tamamen ödeniyorsa lastPaymentDate'i güncelle
+                    // Aksi halde mevcut lastPaymentDate'i koru
+                    const shouldUpdateLastPaymentDate =
+                      installment.paidAmount === 0 ||
+                      amountToAdd >= installment.remainingAmount
+
+                    const newLastPaymentDate = shouldUpdateLastPaymentDate
+                      ? input.editedAt || new Date()
+                      : installment.lastPaymentDate
+
                     await tx.installment.update({
                       where: { id: installment.id },
                       data: {
@@ -492,7 +510,7 @@ export const paymentRouter = createTRPCRouter({
                           decrement: amountToAdd,
                         },
                         isCompleted: installment.remainingAmount <= amountToAdd,
-                        lastPaymentDate: input.editedAt || new Date(),
+                        lastPaymentDate: newLastPaymentDate,
                       },
                     })
 
