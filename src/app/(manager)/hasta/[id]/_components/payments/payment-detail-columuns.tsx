@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import DeletePatientPaymentDialog from "./delete-patient-payment-dialog"
 import EditPatientPaymentDialog from "./edit-patient-payment-dialog"
 
 type Item = RouterOutputs["payment"]["getAllPaymentsByPatientId"][number]
@@ -73,6 +74,7 @@ export default [
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <EditPatientPaymentDialog payment={data} />
+            <DeletePatientPaymentDialog payment={data} />
           </DropdownMenuContent>
         </DropdownMenu>
       )

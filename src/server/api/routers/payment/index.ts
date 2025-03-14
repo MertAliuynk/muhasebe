@@ -455,7 +455,7 @@ export const paymentRouter = createTRPCRouter({
                     const newLastPaymentDate =
                       amountToRevert >= installment.paidAmount
                         ? null
-                        : installment.lastPaymentDate
+                        : input.editedAt
 
                     await tx.installment.update({
                       where: { id: installment.id },
