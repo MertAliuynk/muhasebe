@@ -6,7 +6,7 @@ export const savePatientSchema = z.object({
   birthDate: z.date({
     required_error: "Doğum tarihi seçiniz.",
   }),
-  address: z.string().min(3, "Adres en az 3 karakter olmalıdır."),
+  address: z.string().optional(),
   notes: z.array(z.string()).optional(),
   tcNo: z.string().min(11, "TC Kimlik No en az 11 karakter olmalıdır."),
   doctors: z
