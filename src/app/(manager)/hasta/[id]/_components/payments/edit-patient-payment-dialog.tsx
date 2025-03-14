@@ -41,7 +41,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { DatePicker } from "@/components/form/date-picker"
 
 type Props = {
   payment: RouterOutputs["payment"]["getAllPaymentsByPatientId"][number]
@@ -149,8 +148,6 @@ export default function EditPatientPaymentDialog({
                 </FormItem>
               )}
             />
-
-            <DatePicker name="paymentDate" label="Ödeme Tarihi" />
 
             <FormField
               control={form.control}
