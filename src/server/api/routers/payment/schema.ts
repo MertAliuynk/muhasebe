@@ -10,6 +10,7 @@ export const savePaymentSchema = z
     note: z.string().optional(),
     patientId: z.string().optional(),
     doctorId: z.string().optional(),
+    createdAt: z.date().optional(),
   })
   .refine(
     (data) => {

@@ -33,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input"
 
 import { Combobox } from "./combobox"
+import { DatePicker } from "./form/date-picker"
 import {
   Select,
   SelectContent,
@@ -64,6 +65,7 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
       note: "",
       patientId: undefined,
       doctorId: undefined,
+      createdAt: new Date(),
     },
   })
 
@@ -210,6 +212,8 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
                     )}
                   </>
                 )}
+
+                <DatePicker name="createdAt" label="Ödeme Tarihi" />
 
                 <FormField
                   control={form.control}

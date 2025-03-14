@@ -125,6 +125,7 @@ export const paymentRouter = createTRPCRouter({
               patientId: input.patientId,
               branchId: ctx.session.user.branchId!,
               paymentPlanId: approvedPatientPaymentPlan.id,
+              createdAt: input.createdAt,
             },
           })
 
@@ -225,6 +226,7 @@ export const paymentRouter = createTRPCRouter({
               doctorId: input.doctorId!,
               commission: doctor.commission,
               paymentId: payment.id,
+              createdAt: input.createdAt,
             },
           })
         })
@@ -236,6 +238,7 @@ export const paymentRouter = createTRPCRouter({
             paymentDate: input.paymentDate,
             note: input.note,
             branchId: ctx.session.user.branchId!,
+            createdAt: input.createdAt,
           },
         })
       }
