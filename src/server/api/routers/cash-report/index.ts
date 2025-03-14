@@ -1,6 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc"
 import { PaymentType } from "@prisma/client"
 import { TRPCError } from "@trpc/server"
+import { addHours } from "date-fns"
 
 export const cashReportRouter = createTRPCRouter({
   generateCashReport: publicProcedure.mutation(async ({ ctx }) => {
@@ -292,7 +293,7 @@ export const cashReportRouter = createTRPCRouter({
 
     const today = new Date()
     const startOfDay = new Date(today.setHours(0, 0, 0, 0))
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999))
+    const endOfDay = addHours(new Date(today.setHours(23, 59, 59, 999)), 3)
 
     const [
       cashPatientIncomes,
