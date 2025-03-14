@@ -57,4 +57,6 @@ export const updatePaymentSchema = z.object({
   paymentType: z.nativeEnum(PaymentType),
   note: z.string().optional(),
   whereToPay: z.enum(["patient", "branch"]),
+  editedAt: z.date().optional(),
+  paymentDate: z.date().optional(),
 })

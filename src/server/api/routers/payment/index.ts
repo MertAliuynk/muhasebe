@@ -422,6 +422,8 @@ export const paymentRouter = createTRPCRouter({
                 amount: input.amount,
                 paymentType: input.paymentType,
                 note: input.note,
+                paymentDate: input.editedAt || existingPayment.paymentDate,
+                createdAt: input.editedAt || existingPayment.createdAt,
               },
             })
 
@@ -490,7 +492,7 @@ export const paymentRouter = createTRPCRouter({
                           decrement: amountToAdd,
                         },
                         isCompleted: installment.remainingAmount <= amountToAdd,
-                        lastPaymentDate: new Date(),
+                        lastPaymentDate: input.editedAt || new Date(),
                       },
                     })
 
@@ -527,6 +529,8 @@ export const paymentRouter = createTRPCRouter({
                 data: {
                   amount: input.amount,
                   paymentType: input.paymentType,
+                  paymentDate: input.editedAt || doctorIncome.paymentDate,
+                  createdAt: input.editedAt || doctorIncome.createdAt,
                 },
               })
             }
@@ -539,17 +543,32 @@ export const paymentRouter = createTRPCRouter({
               amount: input.amount,
               paymentType: input.paymentType,
               note: input.note,
+              paymentDate: input.editedAt || existingPayment.paymentDate,
+              createdAt: input.editedAt || existingPayment.createdAt,
             },
           })
         }
       } else {
         // Şube ödemesi güncelleme
+        const existingBranchPayment = await ctx.db.branchPayment.findUnique({
+          where: { id: input.id },
+        })
+
+        if (!existingBranchPayment) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Ödeme bulunamadı.",
+          })
+        }
+
         await ctx.db.branchPayment.update({
           where: { id: input.id },
           data: {
             amount: input.amount,
             paymentType: input.paymentType,
             note: input.note,
+            paymentDate: input.editedAt || existingBranchPayment.paymentDate,
+            createdAt: input.editedAt || existingBranchPayment.createdAt,
           },
         })
       }
