@@ -41,7 +41,7 @@ export default function DoctorIncomes({ doctorId }: { doctorId: string }) {
           Bu bölümde hekimin gelirlerini görebilirsiniz.
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[calc(100vh-20rem)] overflow-y-auto no-scrollbar">
+      <CardContent className="h-[calc(100vh-20rem)] overflow-y-auto">
         <div className="grid grid-cols-[2fr_3fr_1fr] gap-4 text-sm text-muted-foreground">
           <p>Hasta</p>
           <p>Tarih</p>

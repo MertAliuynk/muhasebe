@@ -46,7 +46,7 @@ export default function Expenses() {
           />
         </div>
       </CardHeader>
-      <CardContent className="h-[calc(100vh-16rem)] overflow-y-auto no-scrollbar">
+      <CardContent className="h-[calc(100vh-16rem)] overflow-y-auto">
         <div className="space-y-8">
           <div className="divide-y">
             {isFetching || !expenses ? (
