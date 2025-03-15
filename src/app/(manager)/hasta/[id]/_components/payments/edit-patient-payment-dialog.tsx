@@ -54,6 +54,7 @@ export default function EditPatientPaymentDialog({
 }: Props) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const utils = api.useUtils()
 
   const { mutateAsync: updatePayment, isPending } =
     api.payment.updatePayment.useMutation()
@@ -75,6 +76,7 @@ export default function EditPatientPaymentDialog({
       updatePayment(values).then(async () => {
         router.refresh()
         setIsOpen(false)
+        await utils.cashReport.getTodayCashReport.invalidate()
         if (onSuccess) onSuccess()
       }),
       {

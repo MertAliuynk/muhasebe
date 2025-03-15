@@ -72,3 +72,8 @@ export const getFilteredPatientsSchema = z.object({
 export const deletePatientSchema = z.object({
   id: z.string(),
 })
+
+export const savePatientNoteSchema = z.object({
+  patientId: z.string(),
+  note: z.string().min(3, "Not en az 3 karakter olmalıdır."),
+})

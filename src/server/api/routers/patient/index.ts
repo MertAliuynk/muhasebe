@@ -3,6 +3,7 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "@/server/api/trpc"
+import { TRPCError } from "@trpc/server"
 
 import { capitalize } from "@/lib/utils"
 
@@ -10,6 +11,7 @@ import {
   deletePatientSchema,
   getFilteredPatientsSchema,
   getPatientByIdSchema,
+  savePatientNoteSchema,
   savePatientSchema,
   savePaymentPlanSchema,
   searchPatientSchema,
@@ -509,5 +511,35 @@ export const patientRouter = createTRPCRouter({
       })
 
       return patient
+    }),
+  savePatientNote: protectedProcedure
+    .input(savePatientNoteSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { patientId, note } = input
+
+      const patient = await ctx.db.patient.findUnique({
+        where: { id: patientId },
+      })
+
+      if (!patient) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Hasta bulunamadı",
+        })
+      }
+
+      const notes =
+        !patient.notes || patient.notes.length === 0
+          ? [note]
+          : [note, ...patient.notes]
+
+      const patientNote = await ctx.db.patient.update({
+        where: { id: patientId },
+        data: {
+          notes,
+        },
+      })
+
+      return patientNote
     }),
 })

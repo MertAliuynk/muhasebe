@@ -567,7 +567,6 @@ export const paymentRouter = createTRPCRouter({
           })
         }
       } else {
-        // Şube ödemesi güncelleme
         const existingBranchPayment = await ctx.db.branchPayment.findUnique({
           where: { id: input.id },
         })
