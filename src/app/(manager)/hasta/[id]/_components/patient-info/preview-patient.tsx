@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import CreatePaymentPlan from "../payment-plans/create-payment-plan"
 import PreviewPaymentPlans from "../payment-plans/preview-payment-plans"
 import PatientNotesDialog from "./patient-notes-dialog"
+import SendSmsDialog from "./send-sms-dialog"
 
 export default function PreviewPatient({
   patient,
@@ -28,7 +29,9 @@ export default function PreviewPatient({
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div>
-              <h2 className="text-4xl font-light">{patient?.name}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-4xl font-light">{patient?.name}</h2>
+              </div>
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <CalendarDays className="size-3" />
                 {patient?.birthDate &&
@@ -38,10 +41,11 @@ export default function PreviewPatient({
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm flex-wrap">
             <div className="flex items-center gap-2">
               <Phone className="size-4 text-primary" />
               <span>{formatPhoneNumberIntl(patient?.phone ?? "")}</span>
+              <SendSmsDialog patient={patient} />
             </div>
             <PatientNotesDialog patient={patient} />
             <PreviewPaymentPlans paymentPlans={paymentPlans} />
