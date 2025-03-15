@@ -3,11 +3,12 @@
 import Link from "next/link"
 import { type RouterOutputs } from "@/trpc/react"
 import { format } from "date-fns"
-import { CalendarDays, Phone } from "lucide-react"
+import { CalendarDays, MessageSquare, Phone } from "lucide-react"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
 import { calculateAge, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 
 import CreatePaymentPlan from "../payment-plans/create-payment-plan"
 import PreviewPaymentPlans from "../payment-plans/preview-payment-plans"
@@ -45,7 +46,12 @@ export default function PreviewPatient({
             <div className="flex items-center gap-2">
               <Phone className="size-4 text-primary" />
               <span>{formatPhoneNumberIntl(patient?.phone ?? "")}</span>
-              <SendSmsDialog patient={patient} />
+              <SendSmsDialog patient={patient}>
+                <Button variant="outline" size="sm">
+                  <MessageSquare className="size-4 text-muted-foreground mr-2" />
+                  SMS Gönder
+                </Button>
+              </SendSmsDialog>
             </div>
             <PatientNotesDialog patient={patient} />
             <PreviewPaymentPlans paymentPlans={paymentPlans} />

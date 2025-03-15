@@ -41,7 +41,10 @@ export default async function page({ params }: PageProps) {
       </div>
       <Separator />
       {approvedPaymentPlan && <PaymentDetailDialog payments={payments} />}
-      <Instalments approvedPaymentPlan={approvedPaymentPlan!} />
+      <Instalments
+        payments={payments}
+        approvedPaymentPlan={approvedPaymentPlan!}
+      />
     </div>
   )
 }

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { MessageSquare } from "lucide-react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
@@ -34,10 +33,13 @@ const formSchema = z.object({
 })
 
 type PageProps = {
-  patient: RouterOutputs["patient"]["getPatientById"]
+  patient:
+    | RouterOutputs["patient"]["getPatientById"]
+    | RouterOutputs["patient"]["getFilteredPatients"][number]
+  children: React.ReactNode
 }
 
-export default function SendSmsDialog({ patient }: PageProps) {
+export default function SendSmsDialog({ patient, children }: PageProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const message = `Sayın ${patient?.name},
@@ -55,12 +57,7 @@ export default function SendSmsDialog({ patient }: PageProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <MessageSquare className="size-4 text-muted-foreground mr-2" />
-          SMS Gönder
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader className="sr-only">
           <DialogTitle>SMS Gönder</DialogTitle>

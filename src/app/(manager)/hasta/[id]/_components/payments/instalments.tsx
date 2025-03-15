@@ -10,11 +10,17 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+import PrintInstalments from "./print-instalments"
+
 type PageProps = {
   approvedPaymentPlan: RouterOutputs["paymentPlan"]["getPatientPaymentPlanById"][number]
+  payments: RouterOutputs["payment"]["getAllPaymentsByPatientId"]
 }
 
-export default function Instalments({ approvedPaymentPlan }: PageProps) {
+export default function Instalments({
+  payments,
+  approvedPaymentPlan,
+}: PageProps) {
   if (!approvedPaymentPlan)
     return (
       <p className="text-muted-foreground text-center">
@@ -25,7 +31,7 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row justify-between">
         <div className="flex justify-between">
           <div>
             <CardTitle>Taksitler</CardTitle>
@@ -34,6 +40,11 @@ export default function Instalments({ approvedPaymentPlan }: PageProps) {
             </CardDescription>
           </div>
         </div>
+        <PrintInstalments
+          payments={payments}
+          patientName={approvedPaymentPlan.patient.name}
+          instalments={approvedPaymentPlan.installments}
+        />
       </CardHeader>
       <CardContent>
         <div className="space-y-8">

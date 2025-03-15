@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { type RouterOutputs } from "@/trpc/react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { CalendarSync, MoreVertical, Phone } from "lucide-react"
+import { CalendarSync, MessageSquare, MoreVertical, Phone } from "lucide-react"
 import { formatPhoneNumber } from "react-phone-number-input"
 
 import { formatCurrencyWithSymbol, getImageUrl } from "@/lib/utils"
@@ -13,9 +13,12 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import SendSmsDialog from "../[id]/_components/patient-info/send-sms-dialog"
 import DeletePatientDialog from "./delete-patient-dialog"
 import EditPatientDialog from "./edit-patient-dialog"
 
@@ -129,6 +132,14 @@ export default [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
+            <SendSmsDialog patient={data}>
+              <DropdownMenuItem modal>
+                SMS Gönder
+                <DropdownMenuShortcut>
+                  <MessageSquare size={14} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </SendSmsDialog>
             <EditPatientDialog patient={data} />
             <DeletePatientDialog patient={data} />
           </DropdownMenuContent>
