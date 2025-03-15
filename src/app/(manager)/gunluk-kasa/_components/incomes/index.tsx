@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import NewPaymentDialog from "@/components/new-payment-dialog"
 import Spinner from "@/components/spinner"
 
@@ -77,6 +78,15 @@ export default function Incomes() {
                     <div className="flex items-center gap-2 h-4">
                       <p className="text-sm text-muted-foreground">
                         {paymentTypeLabels[payment.paymentType]}
+                      </p>{" "}
+                      <Separator orientation="vertical" />
+                      <p className="text-sm text-muted-foreground">
+                        {"doctorIncomes" in payment &&
+                        payment.doctorIncomes &&
+                        Array.isArray(payment.doctorIncomes) &&
+                        payment.doctorIncomes.length > 0
+                          ? payment.doctorIncomes[0]?.doctor?.user?.name
+                          : ""}
                       </p>
                     </div>
                     {payment.note && (

@@ -36,6 +36,19 @@ export const paymentRouter = createTRPCRouter({
           },
           include: {
             patient: true,
+            doctorIncomes: {
+              include: {
+                doctor: {
+                  include: {
+                    user: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         })
 
