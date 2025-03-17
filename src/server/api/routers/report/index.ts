@@ -173,4 +173,52 @@ export const reportRouter = createTRPCRouter({
 
       return chartData
     }),
+
+  branchPaymentSummary: protectedProcedure.query(async ({ ctx }) => {
+    const { branchId } = ctx.session.user
+
+    if (!branchId) {
+      throw new Error("Şube bilgisi bulunamadı")
+    }
+
+    const today = new Date()
+
+    // Onaylanmış ve tamamlanmamış ödeme planlarını al
+    const paymentPlans = await ctx.db.patientPaymentPlan.findMany({
+      where: {
+        patient: {
+          branchId,
+        },
+        isApproved: true,
+        isCompleted: false,
+        isDeleted: false,
+      },
+      include: {
+        installments: true,
+      },
+    })
+
+    let totalPendingAmount = 0
+    let totalOverdueAmount = 0
+
+    // Her ödeme planı için bekleyen ve gecikmiş tutarları hesapla
+    paymentPlans.forEach((plan) => {
+      plan.installments.forEach((installment) => {
+        if (!installment.isCompleted) {
+          // Bekleyen tutar
+          totalPendingAmount += installment.remainingAmount
+
+          // Gecikmiş tutar (vadesi geçmiş)
+          if (new Date(installment.dueDate) < today) {
+            totalOverdueAmount += installment.remainingAmount
+          }
+        }
+      })
+    })
+
+    return {
+      totalPendingAmount,
+      totalOverdueAmount,
+    }
+  }),
 })
