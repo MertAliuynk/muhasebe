@@ -9,6 +9,7 @@ import { patientRouter } from "./routers/patient"
 import { paymentRouter } from "./routers/payment"
 import { paymentPlanRouter } from "./routers/payment-plan"
 import { reportRouter } from "./routers/report"
+import { smsRouter } from "./routers/sms"
 import { userRouter } from "./routers/user"
 
 export const appRouter = createTRPCRouter({
@@ -22,6 +23,7 @@ export const appRouter = createTRPCRouter({
   payment: paymentRouter,
   paymentPlan: paymentPlanRouter,
   cashReport: cashReportRouter,
+  sms: smsRouter,
 })
 
 export type AppRouter = typeof appRouter

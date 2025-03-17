@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { type RouterOutputs } from "@/trpc/react"
+import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 import * as z from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -41,6 +42,19 @@ type PageProps = {
 
 export default function SendSmsDialog({ patient, children }: PageProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const sendSmsMutation = api.sms.sendPatient.useMutation({
+    onSuccess: () => {
+      toast.success("SMS başarıyla gönderildi")
+      setIsOpen(false)
+      form.reset()
+    },
+    onError: (error) => {
+      toast.error(`SMS gönderimi başarısız: ${error.message}`)
+      setIsLoading(false)
+    },
+  })
 
   const message = `Sayın ${patient?.name},
   `
@@ -52,7 +66,20 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
   })
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values)
+    if (!patient?.phone) {
+      toast.error("Hastanın telefon numarası bulunamadı")
+      return
+    }
+
+    setIsLoading(true)
+
+    // Telefon numarasından uluslararası format öneki (+90) kaldırılıyor
+    const phoneNumber = patient.phone.replace("+90", "")
+
+    sendSmsMutation.mutate({
+      msg: values.message,
+      no: phoneNumber,
+    })
   }
 
   return (
@@ -66,10 +93,7 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-5 p-5"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="message"
@@ -79,6 +103,7 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
                   <FormControl>
                     <Textarea
                       placeholder="Mesajınızı buraya yazınız..."
+                      className="min-h-32"
                       {...field}
                     />
                   </FormControl>
@@ -90,7 +115,9 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
               )}
             />
             <div className="flex justify-end">
-              <Button type="submit">Gönder</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Gönderiliyor..." : "Gönder"}
+              </Button>
             </div>
           </form>
         </Form>

@@ -106,6 +106,24 @@ export default function EditPaymentPlanForm({
     if (!originalAmount || !installmentCount || interestRate === undefined)
       return
 
+    // Eğer önceden tanımlanmış taksit tutarları ve tarihleri varsa, onları koruyalım
+    if (
+      paymentPlan.installments &&
+      paymentPlan.installments.length > 0 &&
+      installmentCount === paymentPlan.installmentCount
+    ) {
+      // Mevcut taksitleri formata dönüştür ve kullan
+      const formattedInstallments = paymentPlan.installments.map(
+        (installment) => ({
+          date: installment.dueDate,
+          amount: installment.amount,
+        })
+      )
+      form.setValue("installments", formattedInstallments)
+      return
+    }
+
+    // Eğer taksit sayısı değiştiyse veya yeni bir plan oluşturuluyorsa
     const interestAmount = originalAmount * (interestRate / 100)
     const totalWithInterest = originalAmount + interestAmount
     form.setValue("totalAmount", totalWithInterest)
@@ -127,7 +145,13 @@ export default function EditPaymentPlanForm({
   }
 
   useEffect(() => {
-    if (paymentPlan.startDate && installmentCount > 0) {
+    // Sadece taksit sayısı veya diğer temel parametreler değişirse installments'ı başlat
+    if (
+      paymentPlan.startDate &&
+      (installmentCount !== paymentPlan.installmentCount ||
+        interestRate !== paymentPlan.interestRate ||
+        originalAmount !== paymentPlan.originalAmount)
+    ) {
       initializeInstallments()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,26 +159,7 @@ export default function EditPaymentPlanForm({
 
   const handleInstallmentAmountChange = (index: number, newAmount: number) => {
     const currentInstallments = [...installments]
-    const interestAmount = originalAmount * (interestRate / 100)
-    const totalWithInterest = originalAmount + interestAmount
-
     currentInstallments[index]!.amount = newAmount
-
-    const previousTotal = currentInstallments
-      .slice(0, index)
-      .reduce((sum, installment) => sum + installment.amount, 0)
-
-    const remainingAmount = totalWithInterest - previousTotal - newAmount
-    const remainingInstallments = installmentCount - (index + 1)
-
-    if (remainingInstallments > 0) {
-      const remainingInstallmentAmount = remainingAmount / remainingInstallments
-
-      for (let i = index + 1; i < installmentCount; i++) {
-        currentInstallments[i]!.amount = remainingInstallmentAmount
-      }
-    }
-
     form.setValue("installments", currentInstallments)
   }
 

@@ -129,10 +129,7 @@ export default function PendingPaymentsDialog({
               <CardHeader>
                 <CardTitle>Aylık Ödemeler</CardTitle>
                 <CardDescription>
-                  Gösterilen tutarlar ortalama tutarlardır. Aylık ortalama:{" "}
-                  {formatCurrencyWithSymbol(
-                    totalRemainingAmount / allMonthlyPayments.length
-                  )}
+                  Gösterilen tutarlar ortalama tutarlardır.
                 </CardDescription>
               </CardHeader>
               <CardContent>

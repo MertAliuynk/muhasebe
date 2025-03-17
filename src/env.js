@@ -15,6 +15,9 @@ export const env = createEnv({
     MINIO_SECRET_KEY: z.string(),
     MINIO_BUCKET: z.string(),
     MINIO_URL: z.string(),
+    NETGSM_USERNAME: z.string(),
+    NETGSM_PASSWORD: z.string(),
+    NETGSM_API_URL: z.string(),
   },
 
   client: {
@@ -30,6 +33,9 @@ export const env = createEnv({
     MINIO_BUCKET: process.env.MINIO_BUCKET,
     MINIO_URL: process.env.MINIO_URL,
     NEXT_PUBLIC_MINIO_URL: process.env.NEXT_PUBLIC_MINIO_URL,
+    NETGSM_USERNAME: process.env.NETGSM_USERNAME,
+    NETGSM_PASSWORD: process.env.NETGSM_PASSWORD,
+    NETGSM_API_URL: process.env.NETGSM_API_URL,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
