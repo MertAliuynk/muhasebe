@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DashboardHeader } from "@/components/dashboard-heading"
 
 import AllSmsForm, { type AllSmsFormValues } from "./_components/all-sms-form"
 import BranchSmsForm, {
@@ -74,14 +75,11 @@ export default function SmsPage() {
   }
 
   return (
-    <div className="container mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">SMS Yönetimi</h1>
-        <p className="text-muted-foreground mt-2">
-          Hastalara toplu veya bireysel olarak SMS gönderme işlemlerini buradan
-          gerçekleştirebilirsiniz.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <DashboardHeader
+        heading="SMS Yönetimi"
+        text="Hastalara toplu veya bireysel olarak SMS gönderme işlemlerini buradan gerçekleştirebilirsiniz."
+      />
 
       <Card className="w-full">
         <CardHeader>

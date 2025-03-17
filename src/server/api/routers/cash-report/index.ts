@@ -1,7 +1,20 @@
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc"
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "@/server/api/trpc"
 import { PaymentType } from "@prisma/client"
 import { TRPCError } from "@trpc/server"
 import { addHours } from "date-fns"
+import { z } from "zod"
+
+const updateCashReportSchema = z.object({
+  date: z.date(),
+  branchId: z.string(),
+  amount: z.number(),
+  paymentType: z.nativeEnum(PaymentType),
+  isAddition: z.boolean(),
+})
 
 export const cashReportRouter = createTRPCRouter({
   generateCashReport: publicProcedure.mutation(async ({ ctx }) => {
@@ -498,4 +511,187 @@ export const cashReportRouter = createTRPCRouter({
       total: totalBalance,
     }
   }),
+
+  updateCashReportFromDate: protectedProcedure
+    .input(updateCashReportSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { date, branchId, amount, paymentType, isAddition } = input
+
+      // Güncelleme yapılacak tarih
+      const targetDate = new Date(date)
+      targetDate.setHours(0, 0, 0, 0)
+
+      // Bu tarihten sonraki tüm kasa raporlarını bul
+      const reportsToUpdate = await ctx.db.cashReport.findMany({
+        where: {
+          branchId,
+          createdAt: {
+            gte: targetDate,
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      })
+
+      if (reportsToUpdate.length === 0) {
+        return {
+          success: true,
+          message: "Güncellenecek kasa raporu bulunamadı.",
+        }
+      }
+
+      // Tüm kasa raporlarını güncelle
+      await ctx.db.$transaction(async (tx) => {
+        for (const report of reportsToUpdate) {
+          // Ödeme türüne göre değerleri güncelle
+          const updateData: Record<
+            string,
+            { increment?: number; decrement?: number }
+          > = {}
+
+          if (paymentType === PaymentType.CASH) {
+            if (isAddition) {
+              updateData.cashIncome = { increment: amount }
+              updateData.cashBalance = { increment: amount }
+              updateData.totalIncome = { increment: amount }
+              updateData.totalBalance = { increment: amount }
+            } else {
+              updateData.cashExpense = { increment: amount }
+              updateData.cashBalance = { decrement: amount }
+              updateData.totalExpense = { increment: amount }
+              updateData.totalBalance = { decrement: amount }
+            }
+          } else if (paymentType === PaymentType.CREDIT_CARD) {
+            if (isAddition) {
+              updateData.cardIncome = { increment: amount }
+              updateData.cardBalance = { increment: amount }
+              updateData.totalIncome = { increment: amount }
+              updateData.totalBalance = { increment: amount }
+            } else {
+              updateData.cardExpense = { increment: amount }
+              updateData.cardBalance = { decrement: amount }
+              updateData.totalExpense = { increment: amount }
+              updateData.totalBalance = { decrement: amount }
+            }
+          } else if (paymentType === PaymentType.BANK_TRANSFER) {
+            if (isAddition) {
+              updateData.transferIncome = { increment: amount }
+              updateData.transferBalance = { increment: amount }
+              updateData.totalIncome = { increment: amount }
+              updateData.totalBalance = { increment: amount }
+            } else {
+              updateData.transferExpense = { increment: amount }
+              updateData.transferBalance = { decrement: amount }
+              updateData.totalExpense = { increment: amount }
+              updateData.totalBalance = { decrement: amount }
+            }
+          }
+
+          await tx.cashReport.update({
+            where: { id: report.id },
+            data: updateData,
+          })
+        }
+      })
+
+      return {
+        success: true,
+        message: `${reportsToUpdate.length} kasa raporu başarıyla güncellendi.`,
+      }
+    }),
+
+  // Bir ödeme silindi veya düzeltildiğinde kasa raporunu düzelt
+  reverseCashReportUpdate: protectedProcedure
+    .input(updateCashReportSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { date, branchId, amount, paymentType, isAddition } = input
+
+      // Silme işlemi yaparken, ekleme/çıkarma durumunu tersine çeviriyoruz
+      // isAddition=true ise (gelir eklenmişti), şimdi onu çıkarıyoruz
+      // isAddition=false ise (gider eklenmişti), şimdi onu çıkarıyoruz
+
+      // Güncelleme yapılacak tarih
+      const targetDate = new Date(date)
+      targetDate.setHours(0, 0, 0, 0)
+
+      // Bu tarihten sonraki tüm kasa raporlarını bul
+      const reportsToUpdate = await ctx.db.cashReport.findMany({
+        where: {
+          branchId,
+          createdAt: {
+            gte: targetDate,
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      })
+
+      if (reportsToUpdate.length === 0) {
+        return {
+          success: true,
+          message: "Güncellenecek kasa raporu bulunamadı.",
+        }
+      }
+
+      // Tüm kasa raporlarını güncelle
+      await ctx.db.$transaction(async (tx) => {
+        for (const report of reportsToUpdate) {
+          // Ödeme türüne göre değerleri güncelle
+          const updateData: Record<
+            string,
+            { increment?: number; decrement?: number }
+          > = {}
+
+          if (paymentType === PaymentType.CASH) {
+            if (isAddition) {
+              updateData.cashIncome = { decrement: amount }
+              updateData.cashBalance = { decrement: amount }
+              updateData.totalIncome = { decrement: amount }
+              updateData.totalBalance = { decrement: amount }
+            } else {
+              updateData.cashExpense = { decrement: amount }
+              updateData.cashBalance = { increment: amount }
+              updateData.totalExpense = { decrement: amount }
+              updateData.totalBalance = { increment: amount }
+            }
+          } else if (paymentType === PaymentType.CREDIT_CARD) {
+            if (isAddition) {
+              updateData.cardIncome = { decrement: amount }
+              updateData.cardBalance = { decrement: amount }
+              updateData.totalIncome = { decrement: amount }
+              updateData.totalBalance = { decrement: amount }
+            } else {
+              updateData.cardExpense = { decrement: amount }
+              updateData.cardBalance = { increment: amount }
+              updateData.totalExpense = { decrement: amount }
+              updateData.totalBalance = { increment: amount }
+            }
+          } else if (paymentType === PaymentType.BANK_TRANSFER) {
+            if (isAddition) {
+              updateData.transferIncome = { decrement: amount }
+              updateData.transferBalance = { decrement: amount }
+              updateData.totalIncome = { decrement: amount }
+              updateData.totalBalance = { decrement: amount }
+            } else {
+              updateData.transferExpense = { decrement: amount }
+              updateData.transferBalance = { increment: amount }
+              updateData.totalExpense = { decrement: amount }
+              updateData.totalBalance = { increment: amount }
+            }
+          }
+
+          await tx.cashReport.update({
+            where: { id: report.id },
+            data: updateData,
+          })
+        }
+      })
+
+      return {
+        success: true,
+        message: `${reportsToUpdate.length} kasa raporu başarıyla güncellendi.`,
+      }
+    }),
 })
