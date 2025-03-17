@@ -503,12 +503,57 @@ export const patientRouter = createTRPCRouter({
   deletePatient: protectedProcedure
     .input(deletePatientSchema)
     .mutation(async ({ ctx, input }) => {
+      const patientData = await ctx.db.patient.findUnique({
+        where: { id: input.id },
+        include: {
+          paymentPlans: {
+            where: {
+              isDeleted: false,
+              isApproved: true,
+              isCompleted: false,
+            },
+            include: {
+              doctorShares: true,
+            },
+          },
+        },
+      })
+
+      if (!patientData) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Hasta bulunamadı",
+        })
+      }
+
       const patient = await ctx.db.patient.update({
         where: { id: input.id },
         data: {
           isDeleted: true,
         },
       })
+
+      if (patientData.paymentPlans.length > 0) {
+        await ctx.db.$transaction(async (tx) => {
+          await tx.patientPaymentPlan.updateMany({
+            where: {
+              patientId: input.id,
+              isDeleted: false,
+            },
+            data: {
+              isDeleted: true,
+            },
+          })
+
+          for (const plan of patientData.paymentPlans) {
+            for (const share of plan.doctorShares) {
+              await tx.doctorPaymentShare.delete({
+                where: { id: share.id },
+              })
+            }
+          }
+        })
+      }
 
       return patient
     }),

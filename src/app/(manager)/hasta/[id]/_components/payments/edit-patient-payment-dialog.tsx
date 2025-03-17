@@ -151,9 +151,7 @@ export default function EditPatientPaymentDialog({
                     <SelectContent>
                       <SelectItem value="CASH">Nakit</SelectItem>
                       <SelectItem value="CREDIT_CARD">Kredi Kartı</SelectItem>
-                      <SelectItem value="BANK_TRANSFER">
-                        Banka Transferi
-                      </SelectItem>
+                      <SelectItem value="BANK_TRANSFER">Havale/EFT</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

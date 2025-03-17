@@ -5,7 +5,7 @@ import { type RouterOutputs } from "@/trpc/react"
 import { format } from "date-fns"
 import { Printer } from "lucide-react"
 
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, paymentTypeLabels } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 export default function PrintInstalments({
@@ -189,10 +189,7 @@ export default function PrintInstalments({
                       {formatCurrency(payment.amount)}
                     </td>
                     <td className="border border-gray-300 p-2">
-                      {payment.paymentType === "CASH" && "Nakit"}
-                      {payment.paymentType === "CREDIT_CARD" && "Kredi Kartı"}
-                      {payment.paymentType === "BANK_TRANSFER" &&
-                        "Banka Transferi"}
+                      {paymentTypeLabels[payment.paymentType]}
                     </td>
                     <td className="border border-gray-300 p-2">
                       {payment.note || "-"}
