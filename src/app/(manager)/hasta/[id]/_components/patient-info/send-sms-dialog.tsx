@@ -44,7 +44,7 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const sendSmsMutation = api.sms.sendPatient.useMutation({
+  const sendSmsMutation = api.sms.send.useMutation({
     onSuccess: () => {
       toast.success("SMS başarıyla gönderildi")
       setIsOpen(false)
@@ -77,8 +77,11 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
     const phoneNumber = patient.phone.replace("+90", "")
 
     sendSmsMutation.mutate({
-      msg: values.message,
-      no: phoneNumber,
+      message: values.message,
+      recipients: {
+        type: "single",
+        phoneNumber: phoneNumber,
+      },
     })
   }
 
