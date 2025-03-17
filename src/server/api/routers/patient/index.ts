@@ -587,4 +587,18 @@ export const patientRouter = createTRPCRouter({
 
       return patientNote
     }),
+  getAllPatients: protectedProcedure.query(async ({ ctx }) => {
+    const patients = await ctx.db.patient.findMany({
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    })
+
+    return patients
+  }),
 })

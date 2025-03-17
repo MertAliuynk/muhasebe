@@ -39,6 +39,19 @@ export const branchRouter = createTRPCRouter({
 
     return branches
   }),
+  getAllBranches: protectedProcedure.query(async ({ ctx }) => {
+    const branches = await ctx.db.branch.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    })
+
+    return branches
+  }),
   saveBranch: adminProcedure
     .input(saveBranchSchema)
     .mutation(async ({ ctx, input }) => {

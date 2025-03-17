@@ -43,8 +43,6 @@ export default async function page({
 
   return (
     <div className="container mx-auto">
-      <h1 className="mb-6 text-2xl font-bold">Raporlar</h1>
-
       <div className="space-y-8">
         <section className="mb-8">
           <h2 className="mb-4 text-xl font-semibold">Ödeme Özeti</h2>
