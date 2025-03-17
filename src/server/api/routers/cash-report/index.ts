@@ -555,43 +555,59 @@ export const cashReportRouter = createTRPCRouter({
               updateData.cashIncome = { increment: amount }
               updateData.cashBalance = { increment: amount }
               updateData.totalIncome = { increment: amount }
-              updateData.totalBalance = { increment: amount }
             } else {
               updateData.cashExpense = { increment: amount }
               updateData.cashBalance = { decrement: amount }
               updateData.totalExpense = { increment: amount }
-              updateData.totalBalance = { decrement: amount }
             }
           } else if (paymentType === PaymentType.CREDIT_CARD) {
             if (isAddition) {
               updateData.cardIncome = { increment: amount }
               updateData.cardBalance = { increment: amount }
               updateData.totalIncome = { increment: amount }
-              updateData.totalBalance = { increment: amount }
             } else {
               updateData.cardExpense = { increment: amount }
               updateData.cardBalance = { decrement: amount }
               updateData.totalExpense = { increment: amount }
-              updateData.totalBalance = { decrement: amount }
             }
           } else if (paymentType === PaymentType.BANK_TRANSFER) {
             if (isAddition) {
               updateData.transferIncome = { increment: amount }
               updateData.transferBalance = { increment: amount }
               updateData.totalIncome = { increment: amount }
-              updateData.totalBalance = { increment: amount }
             } else {
               updateData.transferExpense = { increment: amount }
               updateData.transferBalance = { decrement: amount }
               updateData.totalExpense = { increment: amount }
-              updateData.totalBalance = { decrement: amount }
             }
           }
 
+          // Önce güncelleme yapalım
           await tx.cashReport.update({
             where: { id: report.id },
             data: updateData,
           })
+
+          // Sonra güncel raporu çekelim
+          const updatedReport = await tx.cashReport.findUnique({
+            where: { id: report.id },
+          })
+
+          if (updatedReport) {
+            // totalBalance'ı yeniden hesaplayalım
+            const newTotalBalance =
+              (updatedReport.cashBalance || 0) +
+              (updatedReport.cardBalance || 0) +
+              (updatedReport.transferBalance || 0)
+
+            // totalBalance'ı güncelleyelim
+            await tx.cashReport.update({
+              where: { id: report.id },
+              data: {
+                totalBalance: newTotalBalance,
+              },
+            })
+          }
         }
       })
 
@@ -649,43 +665,59 @@ export const cashReportRouter = createTRPCRouter({
               updateData.cashIncome = { decrement: amount }
               updateData.cashBalance = { decrement: amount }
               updateData.totalIncome = { decrement: amount }
-              updateData.totalBalance = { decrement: amount }
             } else {
               updateData.cashExpense = { decrement: amount }
               updateData.cashBalance = { increment: amount }
               updateData.totalExpense = { decrement: amount }
-              updateData.totalBalance = { increment: amount }
             }
           } else if (paymentType === PaymentType.CREDIT_CARD) {
             if (isAddition) {
               updateData.cardIncome = { decrement: amount }
               updateData.cardBalance = { decrement: amount }
               updateData.totalIncome = { decrement: amount }
-              updateData.totalBalance = { decrement: amount }
             } else {
               updateData.cardExpense = { decrement: amount }
               updateData.cardBalance = { increment: amount }
               updateData.totalExpense = { decrement: amount }
-              updateData.totalBalance = { increment: amount }
             }
           } else if (paymentType === PaymentType.BANK_TRANSFER) {
             if (isAddition) {
               updateData.transferIncome = { decrement: amount }
               updateData.transferBalance = { decrement: amount }
               updateData.totalIncome = { decrement: amount }
-              updateData.totalBalance = { decrement: amount }
             } else {
               updateData.transferExpense = { decrement: amount }
               updateData.transferBalance = { increment: amount }
               updateData.totalExpense = { decrement: amount }
-              updateData.totalBalance = { increment: amount }
             }
           }
 
+          // Önce güncelleme yapalım
           await tx.cashReport.update({
             where: { id: report.id },
             data: updateData,
           })
+
+          // Sonra güncel raporu çekelim
+          const updatedReport = await tx.cashReport.findUnique({
+            where: { id: report.id },
+          })
+
+          if (updatedReport) {
+            // totalBalance'ı yeniden hesaplayalım
+            const newTotalBalance =
+              (updatedReport.cashBalance || 0) +
+              (updatedReport.cardBalance || 0) +
+              (updatedReport.transferBalance || 0)
+
+            // totalBalance'ı güncelleyelim
+            await tx.cashReport.update({
+              where: { id: report.id },
+              data: {
+                totalBalance: newTotalBalance,
+              },
+            })
+          }
         }
       })
 
