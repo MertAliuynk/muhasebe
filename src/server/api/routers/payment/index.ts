@@ -1,5 +1,5 @@
+import { createCaller } from "@/server/api/root"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
-import { api } from "@/trpc/server"
 import { TRPCError } from "@trpc/server"
 import { isAfter, startOfDay } from "date-fns"
 
@@ -91,6 +91,8 @@ export const paymentRouter = createTRPCRouter({
   savePayment: protectedProcedure
     .input(savePaymentSchema)
     .mutation(async ({ ctx, input }) => {
+      const caller = createCaller(ctx)
+
       if (input.whereToPay === "patient") {
         if (!input.patientId || !input.doctorId) {
           throw new TRPCError({
@@ -255,7 +257,7 @@ export const paymentRouter = createTRPCRouter({
 
         // Sadece geçmiş tarihli ödemeler için CashReport güncelle
         if (isPastPayment) {
-          await api.cashReport.updateCashReportFromDate({
+          await caller.cashReport.updateCashReportFromDate({
             date: paymentDate,
             branchId: ctx.session.user.branchId!,
             amount: input.amount,
@@ -284,7 +286,7 @@ export const paymentRouter = createTRPCRouter({
 
         // Sadece geçmiş tarihli ödemeler için CashReport güncelle
         if (isPastPayment) {
-          await api.cashReport.updateCashReportFromDate({
+          await caller.cashReport.updateCashReportFromDate({
             date: paymentDate,
             branchId: ctx.session.user.branchId!,
             amount: input.amount,
@@ -297,6 +299,8 @@ export const paymentRouter = createTRPCRouter({
   deletePayment: protectedProcedure
     .input(deletePaymentSchema)
     .mutation(async ({ ctx, input }) => {
+      const caller = createCaller(ctx)
+
       if (input.whereToPay === "patient") {
         if (!input.patientId) {
           throw new TRPCError({
@@ -341,7 +345,7 @@ export const paymentRouter = createTRPCRouter({
 
         // Sadece geçmiş tarihli ödemeler için CashReport güncelle
         if (isPastPayment) {
-          await api.cashReport.reverseCashReportUpdate({
+          await caller.cashReport.reverseCashReportUpdate({
             date: paymentDate,
             branchId: ctx.session.user.branchId!,
             amount: payment.amount,
@@ -464,7 +468,7 @@ export const paymentRouter = createTRPCRouter({
 
         // Sadece geçmiş tarihli ödemeler için CashReport güncelle
         if (isPastPayment) {
-          await api.cashReport.reverseCashReportUpdate({
+          await caller.cashReport.reverseCashReportUpdate({
             date: paymentDate,
             branchId: ctx.session.user.branchId!,
             amount: payment.amount,
@@ -481,6 +485,8 @@ export const paymentRouter = createTRPCRouter({
   updatePayment: protectedProcedure
     .input(updatePaymentSchema)
     .mutation(async ({ ctx, input }) => {
+      const caller = createCaller(ctx)
+
       if (input.whereToPay === "patient") {
         const existingPayment = await ctx.db.patientPayment.findUnique({
           where: { id: input.id },
@@ -507,40 +513,42 @@ export const paymentRouter = createTRPCRouter({
           existingPayment.createdAt || existingPayment.paymentDate
         const newPaymentDate = input.editedAt || existingPayment.paymentDate
 
+        // Tarih değişikliği var mı kontrol et
+        const dateChanged =
+          oldPaymentDate.getTime() !== newPaymentDate.getTime()
+
         // Bugünün tarihini al
         const today = startOfDay(new Date())
 
-        // Eski ödeme geçmiş tarihli mi kontrol et
+        // Eski ve yeni tarihlerin geçmiş tarihli olup olmadığını kontrol et
         const isOldPastPayment = !isAfter(
           startOfDay(new Date(oldPaymentDate)),
           today
         )
-
-        // Yeni ödeme geçmiş tarihli mi kontrol et
         const isNewPastPayment = !isAfter(
           startOfDay(new Date(newPaymentDate)),
           today
         )
 
-        // Sadece eski ödeme geçmiş tarihli ise eski ödemeyi geri al
-        if (isOldPastPayment) {
-          await api.cashReport.reverseCashReportUpdate({
+        // 1. Eğer eski ödeme geçmiş tarihli ve tarih değişmişse veya tutar değişmişse, eski kaydı geri al
+        if (isOldPastPayment && (dateChanged || amountDifference !== 0)) {
+          await caller.cashReport.reverseCashReportUpdate({
             date: oldPaymentDate,
             branchId: ctx.session.user.branchId!,
             amount: existingPayment.amount,
             paymentType: existingPayment.paymentType,
-            isAddition: true, // Silme işlemi için: gelir eklenmişti (true), şimdi geliri çıkarıyoruz
+            isAddition: true, // Gelir olarak eklenmiş, geri alıyoruz
           })
         }
 
-        // Sadece yeni ödeme geçmiş tarihli ise yeni ödemeyi ekle
-        if (isNewPastPayment) {
-          await api.cashReport.updateCashReportFromDate({
+        // 2. Eğer yeni ödeme geçmiş tarihli ve tarih değişmişse veya tutar değişmişse, yeni kaydı ekle
+        if (isNewPastPayment && (dateChanged || amountDifference !== 0)) {
+          await caller.cashReport.updateCashReportFromDate({
             date: newPaymentDate,
             branchId: ctx.session.user.branchId!,
             amount: input.amount,
             paymentType: input.paymentType,
-            isAddition: true, // Yeni gelir olarak ekle
+            isAddition: true, // Gelir olarak ekle
           })
         }
 
@@ -725,40 +733,45 @@ export const paymentRouter = createTRPCRouter({
         const newPaymentDate =
           input.editedAt || existingBranchPayment.paymentDate
 
+        // Tarih değişikliği var mı kontrol et
+        const dateChanged =
+          oldPaymentDate.getTime() !== newPaymentDate.getTime()
+
+        // Tutar değişikliği var mı kontrol et
+        const amountDifference = input.amount - existingBranchPayment.amount
+
         // Bugünün tarihini al
         const today = startOfDay(new Date())
 
-        // Eski ödeme geçmiş tarihli mi kontrol et
+        // Eski ve yeni tarihlerin geçmiş tarihli olup olmadığını kontrol et
         const isOldPastPayment = !isAfter(
           startOfDay(new Date(oldPaymentDate)),
           today
         )
-
-        // Yeni ödeme geçmiş tarihli mi kontrol et
         const isNewPastPayment = !isAfter(
           startOfDay(new Date(newPaymentDate)),
           today
         )
 
-        // Sadece eski ödeme geçmiş tarihli ise eski ödemeyi geri al
-        if (isOldPastPayment) {
-          await api.cashReport.reverseCashReportUpdate({
+        // 1. Eğer eski ödeme geçmiş tarihli ve tarih değişmişse veya tutar değişmişse, eski kaydı geri al
+        if (isOldPastPayment && (dateChanged || amountDifference !== 0)) {
+          await caller.cashReport.reverseCashReportUpdate({
             date: oldPaymentDate,
             branchId: ctx.session.user.branchId!,
             amount: existingBranchPayment.amount,
             paymentType: existingBranchPayment.paymentType,
-            isAddition: true, // Silme işlemi için: gelir eklenmişti (true), şimdi geliri çıkarıyoruz
+            isAddition: true, // Gelir olarak eklenmiş, geri alıyoruz
           })
         }
 
-        // Sadece yeni ödeme geçmiş tarihli ise yeni ödemeyi ekle
-        if (isNewPastPayment) {
-          await api.cashReport.updateCashReportFromDate({
+        // 2. Eğer yeni ödeme geçmiş tarihli ve tarih değişmişse veya tutar değişmişse, yeni kaydı ekle
+        if (isNewPastPayment && (dateChanged || amountDifference !== 0)) {
+          await caller.cashReport.updateCashReportFromDate({
             date: newPaymentDate,
             branchId: ctx.session.user.branchId!,
             amount: input.amount,
             paymentType: input.paymentType,
-            isAddition: true, // Yeni gelir olarak ekle
+            isAddition: true, // Gelir olarak ekle
           })
         }
 
