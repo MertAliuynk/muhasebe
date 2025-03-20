@@ -9,8 +9,6 @@ import { CaseDetailDialog } from "./_components/case-detail-dialog"
 import Expenses from "./_components/expenses"
 import Incomes from "./_components/incomes"
 
-const today = format(new Date(), "yyyy-MM-dd")
-
 type PageProps = {
   searchParams: Promise<SearchParams>
 }
@@ -18,7 +16,7 @@ type PageProps = {
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams
   if (!params.date) {
-    redirect(`/gunluk-kasa?date=${today}`)
+    redirect(`/gunluk-kasa?date=${format(new Date(), "yyyy-MM-dd")}`)
   }
 
   return (

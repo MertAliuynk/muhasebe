@@ -80,7 +80,11 @@ export default function Page() {
           <Spinner />
         </div>
       ) : (
-        <DataTable columns={patientColumns} data={filteredPatients} />
+        <DataTable
+          columns={patientColumns}
+          data={filteredPatients}
+          pagination
+        />
       )}
     </div>
   )

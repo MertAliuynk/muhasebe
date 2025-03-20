@@ -39,7 +39,7 @@ interface DataTableProps<TData, TValue> {
   onAddNewRow?: () => void
   pagination?: boolean
   viewOption?: boolean
-  paginationPageSize?: boolean
+  paginationPageSize?: number
   searchKey?: string
   selectOption?: (props: { selectedRows: TData[] }) => React.ReactNode
   filters?: React.ReactNode
@@ -62,7 +62,7 @@ export function DataTable<TData, TValue>({
   data,
   pagination = false,
   viewOption = false,
-  paginationPageSize = true,
+  paginationPageSize = 10,
   searchKey,
   className,
   selectOption,

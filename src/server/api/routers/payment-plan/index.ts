@@ -26,7 +26,11 @@ export const paymentPlanRouter = createTRPCRouter({
               },
             },
           },
-          installments: true,
+          installments: {
+            orderBy: {
+              number: "asc",
+            },
+          },
         },
       })
 

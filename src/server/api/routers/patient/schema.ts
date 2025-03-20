@@ -77,3 +77,17 @@ export const savePatientNoteSchema = z.object({
   patientId: z.string(),
   note: z.string().min(3, "Not en az 3 karakter olmalıdır."),
 })
+
+export const getPatientDoctorsSchema = z.object({
+  patientId: z.string().min(1, "Hasta ID'si gereklidir"),
+})
+
+export const addDoctorToPatientSchema = z.object({
+  patientId: z.string().min(1, "Hasta ID'si gereklidir"),
+  doctorId: z.string().min(1, "Doktor ID'si gereklidir"),
+})
+
+export const deleteDoctorFromPatientSchema = z.object({
+  patientId: z.string().min(1, "Hasta ID'si gereklidir"),
+  doctorId: z.string().min(1, "Doktor ID'si gereklidir"),
+})

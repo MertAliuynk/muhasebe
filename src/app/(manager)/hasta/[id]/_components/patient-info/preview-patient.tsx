@@ -9,6 +9,7 @@ import { formatPhoneNumberIntl } from "react-phone-number-input"
 import { calculateAge, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import EditPatientDoctorsDialog from "@/components/edit-patient-doctors-dialog"
 
 import CreatePaymentPlan from "../payment-plans/create-payment-plan"
 import PreviewPaymentPlans from "../payment-plans/preview-payment-plans"
@@ -29,23 +30,28 @@ export default function PreviewPatient({
         {/* Sol Taraf - Hasta Detayları */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div>
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <h2 className="text-4xl font-light">{patient?.name}</h2>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <CalendarDays className="size-3" />
-                {patient?.birthDate &&
-                  `${format(patient?.birthDate, "dd.MM.yyyy")} (${calculateAge(
-                    patient.birthDate
-                  )} yaşında)`}
+              <div className="flex items-center gap-5 text-muted-foreground text-sm">
+                {patient?.birthDate && (
+                  <div className="flex items-center gap-1">
+                    <CalendarDays className="size-3 text-primary" />
+                    {`${format(patient?.birthDate, "dd.MM.yyyy")} (${calculateAge(
+                      patient.birthDate
+                    )} yaşında)`}
+                  </div>
+                )}
+                <div className="flex items-center gap-1">
+                  <Phone className="size-3 text-primary" />
+                  <span>{formatPhoneNumberIntl(patient?.phone ?? "")}</span>
+                </div>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-4 text-sm flex-wrap">
             <div className="flex items-center gap-2">
-              <Phone className="size-4 text-primary" />
-              <span>{formatPhoneNumberIntl(patient?.phone ?? "")}</span>
               <SendSmsDialog patient={patient}>
                 <Button variant="outline" size="sm">
                   <MessageSquare className="size-4 text-muted-foreground mr-2" />
@@ -63,30 +69,33 @@ export default function PreviewPatient({
             patientId={patient?.id ?? ""}
             patientName={patient?.name ?? ""}
           />
-          <div className="flex items-center">
-            {patient?.doctors.map((doctor) => (
-              <Link
-                key={doctor.id}
-                href={`/hekim/${doctor.id}`}
-                className="flex items-center gap-2 hover:bg-muted-foreground/20 rounded-md p-2 px-4 transition-colors duration-300"
-              >
-                <Avatar className="ring ring-border">
-                  <AvatarImage src={getImageUrl(doctor.user.imagePath)} />
-                  <AvatarFallback>
-                    {doctor.user.name
-                      ?.split(" ")
-                      .map((name) => name.charAt(0))
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm">{doctor.user.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {doctor.specialty}
-                  </p>
-                </div>
-              </Link>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              {patient?.doctors.map((doctor) => (
+                <Link
+                  key={doctor.id}
+                  href={`/hekim/${doctor.id}`}
+                  className="flex items-center gap-2 hover:bg-muted-foreground/20 rounded-md p-2 px-4 transition-colors duration-300"
+                >
+                  <Avatar className="ring ring-border">
+                    <AvatarImage src={getImageUrl(doctor.user.imagePath)} />
+                    <AvatarFallback>
+                      {doctor.user.name
+                        ?.split(" ")
+                        .map((name) => name.charAt(0))
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm">{doctor.user.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {doctor.specialty}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <EditPatientDoctorsDialog patientId={patient!.id} />
           </div>
         </div>
       </div>

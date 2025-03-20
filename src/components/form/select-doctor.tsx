@@ -60,7 +60,12 @@ export default function SelectDoctor({ name, label, doctors }: Props) {
                             <AvatarImage
                               src={getImageUrl(doctor.user.imagePath)}
                             />
-                            <AvatarFallback>CN</AvatarFallback>
+                            <AvatarFallback>
+                              {doctor.user.name
+                                .split(" ")
+                                .map((name) => name[0])
+                                .join("")}
+                            </AvatarFallback>
                           </Avatar>
                           <div>
                             <p>{doctor.user.name}</p>

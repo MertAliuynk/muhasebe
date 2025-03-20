@@ -47,6 +47,7 @@ export const updatePaymentPlanSchema = z.object({
   interestRate: z.number().min(0, "Faiz oranı 0 veya daha büyük olmalıdır"),
   installments: z.array(installmentSchema),
   doctorShares: z.array(doctorShareSchema),
+  startDate: z.date(),
   note: z.string().optional(),
 })
 

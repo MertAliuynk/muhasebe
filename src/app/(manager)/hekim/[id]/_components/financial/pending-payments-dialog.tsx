@@ -104,13 +104,6 @@ export default function PendingPaymentsDialog({
             Doktorun hastalarına ait bekleyen ödemeler listesi
           </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center justify-between mb-4">
-          {/* <DatePickerWithRange
-            locale={tr}
-            className="w-[300px]"
-            placeholder="Tarih aralığı seçin"
-          /> */}
-        </div>
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Spinner />
@@ -123,8 +116,12 @@ export default function PendingPaymentsDialog({
                 {formatCurrencyWithSymbol(totalRemainingAmount)}
               </div>
             </div>
-            <DataTable columns={columns} data={pendingPayments || []} />
-
+            <DataTable
+              columns={columns}
+              data={pendingPayments || []}
+              pagination
+              paginationPageSize={3}
+            />
             <Card>
               <CardHeader>
                 <CardTitle>Aylık Ödemeler</CardTitle>
@@ -139,15 +136,17 @@ export default function PendingPaymentsDialog({
                       key={payment.month}
                       className="p-4 border rounded-lg bg-muted/50"
                     >
-                      <div className="font-medium">{payment.month}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">{payment.month}</div>
+                        {payment.count > 1 && (
+                          <div className="text-sm text-muted-foreground">
+                            {payment.count} taksit
+                          </div>
+                        )}
+                      </div>
                       <div className="text-lg font-semibold">
                         {formatCurrencyWithSymbol(payment.amount)}
                       </div>
-                      {payment.count > 1 && (
-                        <div className="text-sm text-muted-foreground">
-                          {payment.count} taksit
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>

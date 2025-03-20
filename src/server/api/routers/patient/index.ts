@@ -8,9 +8,12 @@ import { TRPCError } from "@trpc/server"
 import { capitalize } from "@/lib/utils"
 
 import {
+  addDoctorToPatientSchema,
+  deleteDoctorFromPatientSchema,
   deletePatientSchema,
   getFilteredPatientsSchema,
   getPatientByIdSchema,
+  getPatientDoctorsSchema,
   savePatientNoteSchema,
   savePatientSchema,
   savePaymentPlanSchema,
@@ -601,4 +604,164 @@ export const patientRouter = createTRPCRouter({
 
     return patients
   }),
+  getPatientDoctors: protectedProcedure
+    .input(getPatientDoctorsSchema)
+    .query(async ({ ctx, input }) => {
+      const { patientId } = input
+
+      // Hastayı ve doktorlarını getir
+      const patient = await ctx.db.patient.findUnique({
+        where: {
+          id: patientId,
+          isDeleted: false,
+        },
+        include: {
+          doctors: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  imagePath: true,
+                  username: true,
+                },
+              },
+            },
+          },
+        },
+      })
+
+      if (!patient) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Hasta bulunamadı",
+        })
+      }
+
+      // Onaylanmış ödeme planında doktorlara yapılmış ödemeleri kontrol et
+      const paymentPlan = await ctx.db.patientPaymentPlan.findFirst({
+        where: {
+          patientId,
+          isDeleted: false,
+          isApproved: true,
+        },
+        include: {
+          doctorShares: true,
+        },
+      })
+
+      // Doktorlara ödeme durumunu ekle
+      const doctorsWithPaymentStatus = patient.doctors.map((doctor) => {
+        const hasPaid =
+          paymentPlan?.doctorShares.some(
+            (share) => share.doctorId === doctor.id && share.paidAmount > 0
+          ) ?? false
+
+        return {
+          ...doctor,
+          hasPaid,
+        }
+      })
+
+      return doctorsWithPaymentStatus
+    }),
+  addDoctorToPatient: protectedProcedure
+    .input(addDoctorToPatientSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { patientId, doctorId } = input
+
+      // Hasta ve doktoru kontrol et
+      const patient = await ctx.db.patient.findUnique({
+        where: {
+          id: patientId,
+          isDeleted: false,
+        },
+        include: {
+          doctors: true,
+        },
+      })
+
+      if (!patient) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Hasta bulunamadı",
+        })
+      }
+
+      const doctor = await ctx.db.doctor.findUnique({
+        where: {
+          id: doctorId,
+          isDeleted: false,
+        },
+      })
+
+      if (!doctor) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Doktor bulunamadı",
+        })
+      }
+
+      // Doktor zaten bu hastaya eklenmişse hata fırlat
+      if (patient.doctors.some((doc) => doc.id === doctorId)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Bu doktor zaten hastaya eklenmiş",
+        })
+      }
+
+      // Doktoru hastaya ekle
+      const updatedPatient = await ctx.db.patient.update({
+        where: {
+          id: patientId,
+        },
+        data: {
+          doctors: {
+            connect: {
+              id: doctorId,
+            },
+          },
+        },
+      })
+
+      return updatedPatient
+    }),
+  deleteDoctorFromPatient: protectedProcedure
+    .input(deleteDoctorFromPatientSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { patientId, doctorId } = input
+
+      const patient = await ctx.db.patient.findUnique({
+        where: { id: patientId, isDeleted: false },
+      })
+
+      if (!patient) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Hasta bulunamadı",
+        })
+      }
+
+      const doctor = await ctx.db.doctor.findUnique({
+        where: { id: doctorId, isDeleted: false },
+      })
+
+      if (!doctor) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Doktor bulunamadı",
+        })
+      }
+
+      const updatedPatient = await ctx.db.patient.update({
+        where: { id: patientId },
+        data: {
+          doctors: {
+            disconnect: { id: doctorId },
+          },
+        },
+      })
+
+      return updatedPatient
+    }),
 })
