@@ -10,6 +10,8 @@ import { deleteBranchSchema, saveBranchSchema } from "./schema"
 
 export const branchRouter = createTRPCRouter({
   getBranch: protectedProcedure.query(async ({ ctx }) => {
+    console.log(ctx.session.user)
+
     const branch = await ctx.db.branch.findUnique({
       where: {
         id: ctx.session.user.branchId!,

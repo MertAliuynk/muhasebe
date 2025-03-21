@@ -153,3 +153,23 @@ export const sidebarDataDoctor: SidebarData = {
     },
   ],
 }
+
+export const sidebarDataSecretary: SidebarData = {
+  navGroups: [
+    {
+      title: "Genel",
+      items: [
+        {
+          title: "Günlük Kasa",
+          url: "/sekreter",
+          icon: Vault,
+        },
+        {
+          title: "Hastalar",
+          url: "/sekreter/hasta",
+          icon: Users,
+        },
+      ],
+    },
+  ],
+}

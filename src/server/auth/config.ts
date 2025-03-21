@@ -42,6 +42,7 @@ export const authConfig = {
               },
             },
             doctor: true,
+            secretary: true,
             branchManager: {
               select: {
                 id: true,
@@ -58,7 +59,8 @@ export const authConfig = {
         )
           return null
 
-        const isDoctor = user.doctor !== null
+        const isSecretary = user.role === UserRole.SECRETARY
+        const isDoctor = user.role === UserRole.DOCTOR
         const isBranchManager = user.branchManager !== null
 
         return {
@@ -68,7 +70,9 @@ export const authConfig = {
             ? (user.branchManager?.id ?? null)
             : isDoctor
               ? (user.doctor?.branchId ?? null)
-              : null,
+              : isSecretary
+                ? (user.secretary?.branchId ?? null)
+                : null,
           doctorId: user.doctor?.id ?? null,
         }
       },

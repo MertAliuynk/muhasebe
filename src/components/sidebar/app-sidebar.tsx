@@ -33,7 +33,7 @@ export function AppSidebar({
 }) {
   const { state } = useSidebar()
   const isManager = user.role === UserRole.MANAGER
-
+  const isSecretary = user.role === UserRole.SECRETARY
   return (
     <Sidebar collapsible="icon" {...props}>
       {branch && (
@@ -53,7 +53,7 @@ export function AppSidebar({
             </div>
           </SidebarMenuButton>
 
-          {isManager && (
+          {(isManager || isSecretary) && (
             <Link
               href="/hasta/ekle"
               className={cn("mt-5 px-4", state === "collapsed" && "px-0")}
