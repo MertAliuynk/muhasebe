@@ -5,19 +5,29 @@ const DEFAULT_REDIRECT = "/"
 const ROOT = "/login"
 const ADMIN_ROUTES = ["/ceo", "/ceo/.*"]
 const DOCTOR_ROUTES = ["/doktor", "/doktor/.*"]
+const SECRETARY_ROUTES = ["/sekreter", "/sekreter/.*"]
 
 export default auth(async (req) => {
   const { nextUrl } = req
   const isAuthenticated = !!req.auth
-  const isAdmin = req.auth?.user.role === "ADMIN"
+  const hasCompany = req.auth?.user.companyId
+
   const isPublicRoute = PUBLIC_ROUTES.includes(nextUrl.pathname)
+
+  const isAdmin = req.auth?.user.role === "ADMIN"
   const isAdminRoute = ADMIN_ROUTES.some((route) => {
     const regex = new RegExp(`^${route}$`)
     return regex.test(nextUrl.pathname)
   })
-  const hasCompany = req.auth?.user.companyId
+
   const isDoctor = req.auth?.user.role === "DOCTOR"
   const isDoctorRoute = DOCTOR_ROUTES.some((route) => {
+    const regex = new RegExp(`^${route}$`)
+    return regex.test(nextUrl.pathname)
+  })
+
+  const isSecretary = req.auth?.user.role === "SECRETARY"
+  const isSecretaryRoute = SECRETARY_ROUTES.some((route) => {
     const regex = new RegExp(`^${route}$`)
     return regex.test(nextUrl.pathname)
   })

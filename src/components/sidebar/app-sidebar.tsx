@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { type RouterOutputs } from "@/trpc/react"
+import { UserRole } from "@prisma/client"
 import { Hospital, UserPlus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -31,6 +32,7 @@ export function AppSidebar({
   user: RouterOutputs["user"]["getUserProfile"]
 }) {
   const { state } = useSidebar()
+  const isManager = user.role === UserRole.MANAGER
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -51,20 +53,22 @@ export function AppSidebar({
             </div>
           </SidebarMenuButton>
 
-          <Link
-            href="/hasta/ekle"
-            className={cn("mt-5 px-4", state === "collapsed" && "px-0")}
-          >
-            <Button
-              size={state === "collapsed" ? "icon" : "sm"}
-              className="w-full h-8"
+          {isManager && (
+            <Link
+              href="/hasta/ekle"
+              className={cn("mt-5 px-4", state === "collapsed" && "px-0")}
             >
-              <UserPlus
-                className={cn("size-4 mr-2", state === "collapsed" && "mr-0")}
-              />
-              {state !== "collapsed" && <p>Yeni Hasta Ekle</p>}
-            </Button>
-          </Link>
+              <Button
+                size={state === "collapsed" ? "icon" : "sm"}
+                className="w-full h-8"
+              >
+                <UserPlus
+                  className={cn("size-4 mr-2", state === "collapsed" && "mr-0")}
+                />
+                {state !== "collapsed" && <p>Yeni Hasta Ekle</p>}
+              </Button>
+            </Link>
+          )}
         </SidebarHeader>
       )}
       <SidebarContent>

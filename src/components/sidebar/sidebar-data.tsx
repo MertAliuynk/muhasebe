@@ -127,3 +127,23 @@ export const sidebarDataCeo: SidebarData = {
     },
   ],
 }
+
+export const sidebarDataDoctor: SidebarData = {
+  navGroups: [
+    {
+      title: "Genel",
+      items: [
+        {
+          title: "Anasayfa",
+          url: "/doktor",
+          icon: LayoutDashboard,
+        },
+        // {
+        //   title: "Raporlarım",
+        //   url: "/doktor/raporlar",
+        //   icon: FileText,
+        // },
+      ],
+    },
+  ],
+}

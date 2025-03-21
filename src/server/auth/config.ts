@@ -12,6 +12,7 @@ declare module "next-auth" {
       username: string
       companyId: string | null
       branchId: string | null
+      doctorId: string | null
     } & DefaultSession["user"]
   }
 
@@ -20,6 +21,7 @@ declare module "next-auth" {
     username: string
     companyId: string | null
     branchId: string | null
+    doctorId: string | null
   }
 }
 
@@ -39,6 +41,7 @@ export const authConfig = {
                 id: true,
               },
             },
+            doctor: true,
             branchManager: {
               select: {
                 id: true,
@@ -55,10 +58,18 @@ export const authConfig = {
         )
           return null
 
+        const isDoctor = user.doctor !== null
+        const isBranchManager = user.branchManager !== null
+
         return {
           ...user,
           companyId: user.company?.id ?? null,
-          branchId: user.branchManager?.id ?? null,
+          branchId: isBranchManager
+            ? (user.branchManager?.id ?? null)
+            : isDoctor
+              ? (user.doctor?.branchId ?? null)
+              : null,
+          doctorId: user.doctor?.id ?? null,
         }
       },
     }),
@@ -73,6 +84,9 @@ export const authConfig = {
         if (user.role === UserRole.ADMIN && user.companyId) {
           token.companyId = user.companyId
         }
+        if (user.role === UserRole.DOCTOR && user.doctorId) {
+          token.doctorId = user.doctorId
+        }
       }
       return token
     },
@@ -85,6 +99,7 @@ export const authConfig = {
         username: token.username as string,
         companyId: token.companyId as string | null,
         branchId: token.branchId as string | null,
+        doctorId: token.doctorId as string | null,
       },
     }),
   },
