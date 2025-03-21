@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
+import { DatePicker } from "./form/date-picker"
 import { SelectExpenseType } from "./form/select-expense-type"
 import {
   Select,
@@ -61,6 +62,7 @@ export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
       expenseTypeId: "",
       doctorId: undefined,
       paymentType: PaymentType.CASH,
+      createdAt: new Date(),
     },
   })
 
@@ -174,6 +176,7 @@ export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
                     </FormItem>
                   )}
                 />
+                <DatePicker name="createdAt" label="Gider Tarihi" />
                 <FormField
                   control={form.control}
                   name="paymentType"

@@ -15,6 +15,7 @@ export const saveExpenseSchema = z.object({
     .min(1, { message: "Gider kalem seçimi zorunludur" }),
   doctorId: z.string().optional(),
   paymentType: z.nativeEnum(PaymentType),
+  createdAt: z.date(),
 })
 
 export const softDeleteExpenseTypeSchema = z.object({

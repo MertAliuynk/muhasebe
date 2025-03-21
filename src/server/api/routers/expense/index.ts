@@ -1,8 +1,6 @@
-import {
-  adminProcedure,
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc"
+import { createCaller } from "@/server/api/root"
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
+import { isAfter, startOfDay } from "date-fns"
 
 import {
   deleteExpenseSchema,
@@ -86,7 +84,7 @@ export const expenseRouter = createTRPCRouter({
 
       return expenses
     }),
-  saveExpenseType: adminProcedure
+  saveExpenseType: protectedProcedure
     .input(saveExpenseTypeSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
@@ -107,18 +105,39 @@ export const expenseRouter = createTRPCRouter({
   saveExpense: protectedProcedure
     .input(saveExpenseSchema)
     .mutation(async ({ ctx, input }) => {
+      const caller = createCaller(ctx)
       const { branchId } = ctx.session.user
+
       if (input.doctorId) {
         await ctx.db.doctorExpense.create({
           data: {
             ...input,
             doctorId: input.doctorId,
             branchId: branchId!,
+            createdAt: input.createdAt,
           },
         })
       } else {
         await ctx.db.branchExpense.create({
-          data: { ...input, branchId: branchId! },
+          data: { ...input, branchId: branchId!, createdAt: input.createdAt },
+        })
+      }
+
+      // Gider tarihini kontrol et
+      const expenseDate = input.createdAt || new Date()
+
+      // Gider geçmiş tarihli mi kontrol et (bugünden önceki bir tarih mi?)
+      const today = startOfDay(new Date())
+      const isPastExpense = !isAfter(startOfDay(new Date(expenseDate)), today)
+
+      // Sadece geçmiş tarihli giderler için CashReport güncelle
+      if (isPastExpense) {
+        await caller.cashReport.updateCashReportFromDate({
+          date: expenseDate,
+          branchId: branchId!,
+          amount: input.amount,
+          paymentType: input.paymentType,
+          isAddition: false,
         })
       }
     }),
@@ -135,7 +154,7 @@ export const expenseRouter = createTRPCRouter({
         })
       }
     }),
-  softDeleteExpenseType: adminProcedure
+  softDeleteExpenseType: protectedProcedure
     .input(softDeleteExpenseTypeSchema)
     .mutation(async ({ ctx, input }) => {
       await ctx.db.expenseType.update({
