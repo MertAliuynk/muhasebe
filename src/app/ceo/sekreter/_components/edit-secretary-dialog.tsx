@@ -65,7 +65,6 @@ export function EditSecretaryDialog({
       setIsUpdating(false)
     },
   })
-  console.log(secretary)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

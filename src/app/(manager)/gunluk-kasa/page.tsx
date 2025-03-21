@@ -15,6 +15,7 @@ type PageProps = {
 
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams
+
   if (!params.date) {
     redirect(`/gunluk-kasa?date=${format(new Date(), "yyyy-MM-dd")}`)
   }

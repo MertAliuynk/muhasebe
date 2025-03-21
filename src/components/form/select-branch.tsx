@@ -16,7 +16,6 @@ interface SelectBranchProps
 
 export function SelectBranch({ onChange, value, ...props }: SelectBranchProps) {
   const { data: branches } = api.branch.getAll.useQuery()
-  console.log(value)
 
   return (
     <Select
