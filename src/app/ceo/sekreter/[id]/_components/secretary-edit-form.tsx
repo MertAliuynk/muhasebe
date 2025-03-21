@@ -45,7 +45,7 @@ export function SecretaryEditForm({ secretary }: SecretaryEditFormProps) {
 
   const { data: branches = [] } = api.branch.getAllBranches.useQuery()
 
-  const { mutate } = api.secretary.updateSecretary.useMutation({
+  const { mutateAsync } = api.secretary.updateSecretary.useMutation({
     onSuccess: () => {
       toast.success("Sekreter başarıyla güncellendi")
       router.refresh()
@@ -65,9 +65,9 @@ export function SecretaryEditForm({ secretary }: SecretaryEditFormProps) {
     },
   })
 
-  function onSubmit(data: FormValues) {
+  async function onSubmit(data: FormValues) {
     setIsUpdating(true)
-    void mutate({
+    await mutateAsync({
       id: secretary.id,
       name: secretary.user.name,
       username: secretary.user.username,
