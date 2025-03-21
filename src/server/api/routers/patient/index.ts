@@ -711,29 +711,58 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      // Doktoru hastaya ekle
-      const updatedPatient = await ctx.db.patient.update({
-        where: {
-          id: patientId,
-        },
-        data: {
-          doctors: {
-            connect: {
-              id: doctorId,
+      return await ctx.db.$transaction(async (tx) => {
+        // Doktoru hastaya ekle
+        const updatedPatient = await tx.patient.update({
+          where: {
+            id: patientId,
+          },
+          data: {
+            doctors: {
+              connect: {
+                id: doctorId,
+              },
             },
           },
-        },
-      })
+        })
 
-      return updatedPatient
+        // Onaylanmış ödeme planını bul
+        const approvedPaymentPlan = await tx.patientPaymentPlan.findFirst({
+          where: {
+            patientId,
+            isDeleted: false,
+            isApproved: true,
+          },
+        })
+
+        // Eğer onaylanmış ödeme planı varsa, doktor payı oluştur
+        if (approvedPaymentPlan) {
+          // Doktor payı oluştur (totalAmount 0 olarak)
+          await tx.doctorPaymentShare.create({
+            data: {
+              doctorId,
+              paymentPlanId: approvedPaymentPlan.id,
+              totalAmount: 0,
+              paidAmount: 0,
+              remainingAmount: 0,
+            },
+          })
+        }
+
+        return updatedPatient
+      })
     }),
   deleteDoctorFromPatient: protectedProcedure
     .input(deleteDoctorFromPatientSchema)
     .mutation(async ({ ctx, input }) => {
       const { patientId, doctorId } = input
 
+      // Hastayı kontrol et
       const patient = await ctx.db.patient.findUnique({
-        where: { id: patientId, isDeleted: false },
+        where: { id: patientId },
+        include: {
+          doctors: true,
+        },
       })
 
       if (!patient) {
@@ -743,8 +772,9 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
+      // Doktoru kontrol et
       const doctor = await ctx.db.doctor.findUnique({
-        where: { id: doctorId, isDeleted: false },
+        where: { id: doctorId },
       })
 
       if (!doctor) {
@@ -754,15 +784,81 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      const updatedPatient = await ctx.db.patient.update({
-        where: { id: patientId },
-        data: {
-          doctors: {
-            disconnect: { id: doctorId },
+      return await ctx.db.$transaction(async (tx) => {
+        // Doktoru hastadan sil
+        const updatedPatient = await tx.patient.update({
+          where: { id: patientId },
+          data: {
+            doctors: {
+              disconnect: { id: doctorId },
+            },
           },
-        },
-      })
+          include: {
+            doctors: true,
+          },
+        })
 
-      return updatedPatient
+        // Onaylanmış ödeme planını bul
+        const approvedPaymentPlan = await tx.patientPaymentPlan.findFirst({
+          where: {
+            patientId,
+            isDeleted: false,
+            isApproved: true,
+          },
+        })
+
+        if (!approvedPaymentPlan) {
+          return updatedPatient
+        }
+
+        // Silinecek doktorun payını bul ve sil
+        const deleteDoctorShare = await tx.doctorPaymentShare.findFirst({
+          where: {
+            paymentPlanId: approvedPaymentPlan.id,
+            doctorId,
+          },
+        })
+
+        if (deleteDoctorShare) {
+          await tx.doctorPaymentShare.delete({
+            where: {
+              id: deleteDoctorShare.id,
+            },
+          })
+        }
+
+        // Eğer geriye sadece 1 doktor kaldıysa
+        if (updatedPatient.doctors.length === 1) {
+          const remainingDoctor = updatedPatient.doctors[0]
+
+          // Kalan doktor tanımlı değilse işlemi sonlandır
+          if (!remainingDoctor) {
+            return updatedPatient
+          }
+
+          // Kalan doktorun ödeme payını bul
+          const remainingDoctorShare = await tx.doctorPaymentShare.findFirst({
+            where: {
+              paymentPlanId: approvedPaymentPlan.id,
+              doctorId: remainingDoctor.id,
+            },
+          })
+
+          // Kalan doktorun payını, ödeme planının toplam tutarı olarak güncelle
+          if (remainingDoctorShare) {
+            await tx.doctorPaymentShare.update({
+              where: {
+                id: remainingDoctorShare.id,
+              },
+              data: {
+                totalAmount: approvedPaymentPlan.totalAmount,
+                remainingAmount: approvedPaymentPlan.remainingAmount,
+              },
+            })
+          }
+        }
+
+        return updatedPatient
+      })
     }),
 })

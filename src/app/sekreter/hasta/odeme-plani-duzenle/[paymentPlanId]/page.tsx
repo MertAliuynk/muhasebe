@@ -18,6 +18,7 @@ export default async function page({ params }: PageProps) {
   if (!paymentPlan) {
     return notFound()
   }
+  console.log(paymentPlan)
 
   return (
     <div>
