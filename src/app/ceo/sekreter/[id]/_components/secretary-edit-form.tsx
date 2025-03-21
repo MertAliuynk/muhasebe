@@ -69,6 +69,8 @@ export function SecretaryEditForm({ secretary }: SecretaryEditFormProps) {
     setIsUpdating(true)
     void mutate({
       id: secretary.id,
+      name: secretary.user.name,
+      username: secretary.user.username,
       ...data,
     })
   }

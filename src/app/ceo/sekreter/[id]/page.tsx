@@ -5,15 +5,15 @@ import { SecretaryDetailHeader } from "./_components/secretary-detail-header"
 import { SecretaryEditForm } from "./_components/secretary-edit-form"
 
 interface SecretaryDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function SecretaryDetailsPage({
   params,
 }: SecretaryDetailsPageProps) {
-  const id = params.id
+  const id = (await params).id
 
   try {
     const secretary = await api.secretary.getSecretaryById({ id })
