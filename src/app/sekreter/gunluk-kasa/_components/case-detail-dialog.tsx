@@ -1,7 +1,9 @@
 "use client"
 
 import React from "react"
+import { useSearchParams } from "next/navigation"
 import { api } from "@/trpc/react"
+import { format } from "date-fns"
 import { CircleDollarSign } from "lucide-react"
 
 import { formatCurrencyWithSymbol } from "@/lib/utils"
@@ -17,8 +19,13 @@ import {
 } from "@/components/ui/dialog"
 
 export function CaseDetailDialog() {
+  const searchParams = useSearchParams()
+  const date = searchParams.get("date")
+
   const { data: cashReport, isFetching } =
-    api.cashReport.getTodayCashReport.useQuery()
+    api.cashReport.getTodayCashReport.useQuery({
+      endDate: date ?? "",
+    })
 
   return (
     <Dialog>
@@ -37,7 +44,7 @@ export function CaseDetailDialog() {
         <DialogHeader>
           <DialogTitle>Kasa Detayı</DialogTitle>
           <DialogDescription>
-            Kasa detayı için detaylı bilgiler
+            {format(new Date(date ?? ""), "PPP EEEE")}
           </DialogDescription>
         </DialogHeader>
         <div className="w-full grid grid-cols-[1fr_auto] gap-3 justify-between mt-4">

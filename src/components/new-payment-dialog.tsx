@@ -186,7 +186,7 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
                               <FormLabel>Doktor</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value ?? ""}
                               >
                                 <FormControl>
                                   <SelectTrigger>
