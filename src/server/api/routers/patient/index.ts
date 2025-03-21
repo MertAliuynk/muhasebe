@@ -431,6 +431,7 @@ export const patientRouter = createTRPCRouter({
             { name: { contains: input.query, mode: "insensitive" } },
             { tcNo: { contains: input.query, mode: "insensitive" } },
           ],
+          branchId: ctx.session.user.branchId!,
           isDeleted: false,
         },
         take: 10,
