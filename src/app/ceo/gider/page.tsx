@@ -19,7 +19,12 @@ export default async function page() {
         <SaveExpenseTypeDialog />
       </DashboardHeader>
 
-      <DataTable columns={columns} data={expenseTypes} />
+      <DataTable
+        columns={columns}
+        data={expenseTypes}
+        pagination
+        searchKey="name"
+      />
     </div>
   )
 }

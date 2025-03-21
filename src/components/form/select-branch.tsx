@@ -16,9 +16,15 @@ interface SelectBranchProps
 
 export function SelectBranch({ onChange, value, ...props }: SelectBranchProps) {
   const { data: branches } = api.branch.getAll.useQuery()
+  console.log(value)
 
   return (
-    <Select onValueChange={onChange} value={value} {...props}>
+    <Select
+      onValueChange={onChange}
+      value={value}
+      defaultValue={value}
+      {...props}
+    >
       <SelectTrigger className="bg-background">
         <SelectValue
           className="placeholder:text-muted-foreground"

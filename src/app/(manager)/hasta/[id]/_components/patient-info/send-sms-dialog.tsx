@@ -56,8 +56,8 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
     },
   })
 
-  const message = `Sayın ${patient?.name},
-  `
+  const message = `Sayın ${patient?.name},\n`
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

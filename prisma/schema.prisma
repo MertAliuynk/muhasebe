@@ -58,6 +58,7 @@ model User {
 
     // Relations
     doctor        Doctor?
+    secretary     Secretary?
     branchManager Branch?
     company       Company?
     auditLogs     AuditLog[]
@@ -115,6 +116,7 @@ model Branch {
     branchPayments  BranchPayment[]
     patientPayments PatientPayment[]
     cashReports     CashReport[]
+    Secretary       Secretary[]
 
     // Indexes
     @@index([companyId])
@@ -150,6 +152,26 @@ model Doctor {
     @@index([branchId])
     @@index([isDeleted])
     @@index([specialty])
+}
+
+model Secretary {
+    id          String    @id @default(cuid())
+    phoneNumber String?
+    isDeleted   Boolean   @default(false)
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    // Relations
+    userId   String @unique
+    user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    branchId String
+    branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([userId])
+    @@index([branchId])
+    @@index([isDeleted])
 }
 
 model Patient {

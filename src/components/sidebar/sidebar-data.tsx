@@ -9,6 +9,7 @@ import {
   Mails,
   NotebookPen,
   Settings,
+  SquareUserRound,
   UserCog,
   Users,
   Vault,
@@ -74,7 +75,7 @@ export const sidebarDataCeo: SidebarData = {
       items: [
         {
           title: "Anasayfa",
-          url: "/",
+          url: "/ceo",
           icon: LayoutDashboard,
         },
         {
@@ -86,6 +87,11 @@ export const sidebarDataCeo: SidebarData = {
           title: "Şubeler",
           url: "/ceo/sube",
           icon: Building,
+        },
+        {
+          title: "Sekreterler",
+          url: "/ceo/sekreter",
+          icon: SquareUserRound,
         },
         {
           title: "Hastalar",

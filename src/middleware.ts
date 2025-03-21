@@ -51,6 +51,10 @@ export default auth(async (req) => {
     return Response.redirect(new URL("/doktor", nextUrl.origin))
   }
 
+  if (isSecretary && isAuthenticated && !isSecretaryRoute) {
+    return Response.redirect(new URL("/sekreter", nextUrl.origin))
+  }
+
   if (isPublicRoute && isAuthenticated) {
     return Response.redirect(new URL(DEFAULT_REDIRECT, nextUrl.origin))
   }
