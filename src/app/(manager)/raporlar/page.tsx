@@ -40,20 +40,18 @@ export default async function page({
 		isSameMonth(startDate, currentMonthStart) &&
 		isSameMonth(endDate, currentMonthEnd);
 
-	console.log(incomeExpenseLineChart);
-
 	return (
-		<div className="container mx-auto">
+		<div>
 			<div className="space-y-8">
 				<section className="mb-8">
 					<h2 className="mb-4 text-xl font-semibold">Ödeme Özeti</h2>
 					<BranchPaymentSummary />
 				</section>
 
-				<div className="space-y-4 p-4">
-					<div className="flex items-center justify-between">
+				<div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<h2 className="text-xl font-semibold">Gelir-Gider Raporu</h2>
-						<div className="flex items-center gap-4">
+						<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
 							<PeriodSelect defaultValue={period} />
 							{!isCurrentMonth && (
 								<GoToCurrentMonthButton
@@ -65,7 +63,7 @@ export default async function page({
 							<DateRangePicker
 								startDate={startDate}
 								endDate={endDate}
-								className="w-[300px]"
+								className="w-full sm:w-[300px]"
 							/>
 						</div>
 					</div>

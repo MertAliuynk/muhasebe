@@ -33,38 +33,46 @@ export function CaseDetailDialog() {
 				<Button
 					variant="outline"
 					size="sm"
-					className="gap-2"
+					className="gap-2 text-xs sm:text-sm"
 					disabled={isFetching}
 				>
-					<CircleDollarSign className="h-4 w-4" />
+					<CircleDollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
 					Kasa Detayı
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-md">
+			<DialogContent className="max-w-[90vw] sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Kasa Detayı</DialogTitle>
+					<DialogTitle className="text-lg sm:text-xl">Kasa Detayı</DialogTitle>
 					<DialogDescription>
 						{format(new Date(date ?? ""), "PPP EEEE")}
 					</DialogDescription>
 				</DialogHeader>
-				<div className="w-full grid grid-cols-[1fr_auto] gap-3 justify-between mt-4">
-					<p className="text-muted-foreground font-medium">Nakit:</p>
-					<Badge variant="outline">
+				<div className="w-full grid grid-cols-[1fr_auto] gap-2 sm:gap-3 justify-between mt-4">
+					<p className="text-sm sm:text-base text-muted-foreground font-medium">
+						Nakit:
+					</p>
+					<Badge variant="outline" className="text-xs sm:text-sm">
 						{formatCurrencyWithSymbol(cashReport?.cash ?? 0)}
 					</Badge>
 
-					<p className="text-muted-foreground font-medium">Havale/EFT:</p>
-					<Badge variant="outline">
+					<p className="text-sm sm:text-base text-muted-foreground font-medium">
+						Havale/EFT:
+					</p>
+					<Badge variant="outline" className="text-xs sm:text-sm">
 						{formatCurrencyWithSymbol(cashReport?.transfer ?? 0)}
 					</Badge>
 
-					<p className="text-muted-foreground font-medium">Kredi Kartı:</p>
-					<Badge variant="outline">
+					<p className="text-sm sm:text-base text-muted-foreground font-medium">
+						Kredi Kartı:
+					</p>
+					<Badge variant="outline" className="text-xs sm:text-sm">
 						{formatCurrencyWithSymbol(cashReport?.card ?? 0)}
 					</Badge>
 
-					<p className="text-muted-foreground font-medium mt-2">Toplam:</p>
-					<Badge variant="default" className="mt-2">
+					<p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">
+						Toplam:
+					</p>
+					<Badge variant="default" className="mt-2 text-xs sm:text-sm">
 						{formatCurrencyWithSymbol(cashReport?.total ?? 0)}
 					</Badge>
 				</div>
