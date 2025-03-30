@@ -1,167 +1,190 @@
-import { createCaller } from "@/server/api/root"
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
-import { isAfter, startOfDay } from "date-fns"
+import { createCaller } from "@/server/api/root";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { addDays, isAfter, startOfDay } from "date-fns";
 
 import {
-  deleteExpenseSchema,
-  getExpensesByBranchIdSchema,
-  saveExpenseSchema,
-  saveExpenseTypeSchema,
-  softDeleteExpenseTypeSchema,
-} from "./schema"
+	deleteExpenseSchema,
+	getExpensesByBranchIdSchema,
+	saveExpenseSchema,
+	saveExpenseTypeSchema,
+	softDeleteExpenseTypeSchema,
+} from "./schema";
+import { TRPCError } from "@trpc/server";
 
 export const expenseRouter = createTRPCRouter({
-  getAllExpenseTypes: protectedProcedure.query(async ({ ctx }) => {
-    const expenseTypes = await ctx.db.expenseType.findMany({
-      where: {
-        isDeleted: false,
-      },
-      include: {
-        branchExpenses: {
-          select: {
-            amount: true,
-          },
-        },
-        doctorExpenses: {
-          select: {
-            amount: true,
-          },
-        },
-      },
-    })
+	getAllExpenseTypes: protectedProcedure.query(async ({ ctx }) => {
+		const expenseTypes = await ctx.db.expenseType.findMany({
+			where: {
+				isDeleted: false,
+			},
+			include: {
+				branchExpenses: {
+					select: {
+						amount: true,
+					},
+				},
+				doctorExpenses: {
+					select: {
+						amount: true,
+					},
+				},
+			},
+		});
 
-    return expenseTypes
-  }),
-  getExpensesByBranchId: protectedProcedure
-    .input(getExpensesByBranchIdSchema)
-    .query(async ({ ctx, input }) => {
-      const branchId = ctx.session.user.branchId!
+		return expenseTypes;
+	}),
+	getExpensesByBranchId: protectedProcedure
+		.input(getExpensesByBranchIdSchema)
+		.query(async ({ ctx, input }) => {
+			const branchId = ctx.session.user.branchId;
 
-      const expenses = await ctx.db.$transaction(async (tx) => {
-        const doctorExpenses = tx.doctorExpense.findMany({
-          where: {
-            branchId,
-            createdAt: {
-              gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
-              lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
-            },
-          },
-          include: {
-            expenseType: true,
-            doctor: {
-              include: {
-                user: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        })
+			if (!branchId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "Branch ID not found",
+				});
+			}
 
-        const branchExpenses = tx.branchExpense.findMany({
-          where: {
-            branchId,
-            createdAt: {
-              gte: new Date(new Date(input.date).setHours(0, 0, 0, 0)),
-              lte: new Date(new Date(input.date).setHours(23, 59, 59, 999)),
-            },
-          },
-          include: {
-            expenseType: true,
-          },
-        })
+			const targetDate = input.date ? new Date(input.date) : new Date();
+			const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+			const endOfDay = addDays(new Date(targetDate.setHours(0, 0, 0, 0)), 1);
 
-        const [a, b] = await Promise.all([doctorExpenses, branchExpenses])
+			const expenses = await ctx.db.$transaction(async (tx) => {
+				const doctorExpenses = tx.doctorExpense.findMany({
+					where: {
+						branchId,
+						createdAt: {
+							gte: startOfDay,
+							lte: endOfDay,
+						},
+					},
+					include: {
+						expenseType: true,
+						doctor: {
+							include: {
+								user: {
+									select: {
+										name: true,
+									},
+								},
+							},
+						},
+					},
+				});
 
-        const expenses = [...a, ...b].sort(
-          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-        )
+				const branchExpenses = tx.branchExpense.findMany({
+					where: {
+						branchId,
+						createdAt: {
+							gte: startOfDay,
+							lte: endOfDay,
+						},
+					},
+					include: {
+						expenseType: true,
+					},
+				});
 
-        return expenses
-      })
+				const [a, b] = await Promise.all([doctorExpenses, branchExpenses]);
 
-      return expenses
-    }),
-  saveExpenseType: protectedProcedure
-    .input(saveExpenseTypeSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...rest } = input
+				const expenses = [...a, ...b].sort(
+					(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+				);
 
-      if (id) {
-        await ctx.db.expenseType.update({
-          where: { id },
-          data: rest,
-        })
-        return
-      }
+				return expenses;
+			});
 
-      await ctx.db.expenseType.create({
-        data: rest,
-      })
-    }),
+			return expenses;
+		}),
+	saveExpenseType: protectedProcedure
+		.input(saveExpenseTypeSchema)
+		.mutation(async ({ ctx, input }) => {
+			const { id, ...rest } = input;
 
-  saveExpense: protectedProcedure
-    .input(saveExpenseSchema)
-    .mutation(async ({ ctx, input }) => {
-      const caller = createCaller(ctx)
-      const { branchId } = ctx.session.user
+			if (id) {
+				await ctx.db.expenseType.update({
+					where: { id },
+					data: rest,
+				});
+				return;
+			}
 
-      if (input.doctorId) {
-        await ctx.db.doctorExpense.create({
-          data: {
-            ...input,
-            doctorId: input.doctorId,
-            branchId: branchId!,
-            createdAt: input.createdAt,
-          },
-        })
-      } else {
-        await ctx.db.branchExpense.create({
-          data: { ...input, branchId: branchId!, createdAt: input.createdAt },
-        })
-      }
+			await ctx.db.expenseType.create({
+				data: rest,
+			});
+		}),
 
-      // Gider tarihini kontrol et
-      const expenseDate = input.createdAt || new Date()
+	saveExpense: protectedProcedure
+		.input(saveExpenseSchema)
+		.mutation(async ({ ctx, input }) => {
+			const caller = createCaller(ctx);
+			const { branchId } = ctx.session.user;
 
-      // Gider geçmiş tarihli mi kontrol et (bugünden önceki bir tarih mi?)
-      const today = startOfDay(new Date())
-      const isPastExpense = !isAfter(startOfDay(new Date(expenseDate)), today)
+			if (!branchId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "Branch ID not found",
+				});
+			}
 
-      // Sadece geçmiş tarihli giderler için CashReport güncelle
-      if (isPastExpense) {
-        await caller.cashReport.updateCashReportFromDate({
-          date: expenseDate,
-          branchId: branchId!,
-          amount: input.amount,
-          paymentType: input.paymentType,
-          isAddition: false,
-        })
-      }
-    }),
-  deleteExpense: protectedProcedure
-    .input(deleteExpenseSchema)
-    .mutation(async ({ ctx, input }) => {
-      if (input.doctorId) {
-        await ctx.db.doctorExpense.delete({
-          where: { id: input.id },
-        })
-      } else {
-        await ctx.db.branchExpense.delete({
-          where: { id: input.id },
-        })
-      }
-    }),
-  softDeleteExpenseType: protectedProcedure
-    .input(softDeleteExpenseTypeSchema)
-    .mutation(async ({ ctx, input }) => {
-      await ctx.db.expenseType.update({
-        where: { id: input.id },
-        data: {
-          isDeleted: true,
-        },
-      })
-    }),
-})
+			if (input.doctorId) {
+				await ctx.db.doctorExpense.create({
+					data: {
+						...input,
+						doctorId: input.doctorId,
+						branchId,
+						createdAt: input.createdAt,
+					},
+				});
+			} else {
+				await ctx.db.branchExpense.create({
+					data: {
+						...input,
+						branchId,
+						createdAt: input.createdAt,
+					},
+				});
+			}
+
+			// Gider tarihini kontrol et
+			const expenseDate = input.createdAt || new Date();
+
+			// Gider geçmiş tarihli mi kontrol et (bugünden önceki bir tarih mi?)
+			const today = startOfDay(new Date());
+			const isPastExpense = !isAfter(startOfDay(new Date(expenseDate)), today);
+
+			// Sadece geçmiş tarihli giderler için CashReport güncelle
+			if (isPastExpense) {
+				await caller.cashReport.updateCashReportFromDate({
+					date: expenseDate,
+					branchId,
+					amount: input.amount,
+					paymentType: input.paymentType,
+					isAddition: false,
+				});
+			}
+		}),
+	deleteExpense: protectedProcedure
+		.input(deleteExpenseSchema)
+		.mutation(async ({ ctx, input }) => {
+			if (input.doctorId) {
+				await ctx.db.doctorExpense.delete({
+					where: { id: input.id },
+				});
+			} else {
+				await ctx.db.branchExpense.delete({
+					where: { id: input.id },
+				});
+			}
+		}),
+	softDeleteExpenseType: protectedProcedure
+		.input(softDeleteExpenseTypeSchema)
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db.expenseType.update({
+				where: { id: input.id },
+				data: {
+					isDeleted: true,
+				},
+			});
+		}),
+});
