@@ -44,11 +44,11 @@ export default [
     },
   },
   {
-    accessorKey: "paymentDate",
+    accessorKey: "createdAt",
     header: "Ödeme Tarihi",
     cell: ({ row }) => {
       const payment = row.original
-      return <div>{format(payment.paymentDate, "PPP EEEE HH:mm")}</div>
+      return <div>{format(payment.createdAt, "PPP EEEE HH:mm")}</div>
     },
   },
   {
