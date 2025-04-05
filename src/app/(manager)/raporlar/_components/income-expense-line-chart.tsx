@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import type { RouterOutputs } from "@/trpc/react";
+import * as React from "react";
 import {
 	CartesianGrid,
 	Line,
@@ -10,7 +10,6 @@ import {
 	XAxis,
 } from "recharts";
 
-import { formatCurrencyWithSymbol } from "@/lib/utils";
 import {
 	Card,
 	CardContent,
@@ -19,11 +18,13 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import {
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	type ChartConfig,
 } from "@/components/ui/chart";
+import { formatCurrencyWithSymbol } from "@/lib/utils";
+import { format } from "date-fns";
 
 const chartConfig = {
 	views: {
@@ -122,15 +123,11 @@ export function IncomeExpenseLineChart({ chartData }: PageProps) {
 							<ChartTooltip
 								content={
 									<ChartTooltipContent
-										className="w-[150px]"
+										className="w-[180px]"
 										nameKey="views"
 										labelFormatter={(value) => {
 											const date = new Date(value);
-											return date.toLocaleDateString("tr-TR", {
-												day: "numeric",
-												month: "long",
-												year: "numeric",
-											});
+											return format(date, "PPP EEEE");
 										}}
 									/>
 								}
