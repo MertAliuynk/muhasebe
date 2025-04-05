@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { api, type RouterOutputs } from "@/trpc/react";
+import { type RouterOutputs, api } from "@/trpc/react";
 import { Trash2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -51,7 +51,7 @@ export default function DeleteDoctorDialog({ doctor }: Props) {
 				<DropdownMenuItem variant="destructive" modal>
 					Sil
 					<DropdownMenuShortcut>
-						<Trash2 size={12} className="sm:size-14" />
+						<Trash2 size={12} />
 					</DropdownMenuShortcut>
 				</DropdownMenuItem>
 			</AlertDialogTrigger>

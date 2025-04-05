@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { type RouterOutputs } from "@/trpc/react";
+import type { RouterOutputs } from "@/trpc/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { MoreVertical } from "lucide-react";
+import Link from "next/link";
 import { formatPhoneNumber } from "react-phone-number-input";
 
-import { getImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getImageUrl } from "@/lib/utils";
 
 import DeleteDoctorDialog from "./delete-doctor-dialog";
 import EditDoctorDialog from "./edit-doctor-dialog";
@@ -89,12 +89,7 @@ export default [
 
 			return (
 				<div className="flex justify-center">
-					<Badge
-						variant="outline"
-						className="text-xs sm:text-sm px-1.5 py-0.5 sm:px-2 sm:py-1"
-					>
-						{patients?.length}
-					</Badge>
+					<Badge variant="outline">{patients?.length}</Badge>
 				</div>
 			);
 		},
@@ -112,7 +107,7 @@ export default [
 							<MoreVertical className="size-3 sm:size-4" />
 						</Button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent className="text-xs sm:text-sm min-w-[8rem] sm:min-w-[10rem]">
+					<DropdownMenuContent className="text-xs sm:text-sm min-w-[8rem]">
 						<EditDoctorDialog doctor={data} />
 						<DeleteDoctorDialog doctor={data} />
 					</DropdownMenuContent>

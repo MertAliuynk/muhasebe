@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { updateDoctorSchema } from "@/server/api/routers/doctor/schema";
-import { api, type RouterOutputs } from "@/trpc/react";
+import { type RouterOutputs, api } from "@/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { DatePicker } from "@/components/form/date-picker";
+import UploadImage from "@/components/form/upload-image";
+import { PhoneInput } from "@/components/phone-input";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -33,9 +36,6 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/form/date-picker";
-import UploadImage from "@/components/form/upload-image";
-import { PhoneInput } from "@/components/phone-input";
 
 type Props = {
 	doctor: RouterOutputs["doctor"]["getDoctorsByBranch"][number];
@@ -128,7 +128,7 @@ export default function EditDoctorDialog({ doctor }: Props) {
 				<DropdownMenuItem modal>
 					Düzenle
 					<DropdownMenuShortcut>
-						<Pencil size={12} className="sm:size-14" />
+						<Pencil size={12} />
 					</DropdownMenuShortcut>
 				</DropdownMenuItem>
 			</DialogTrigger>
@@ -192,7 +192,7 @@ export default function EditDoctorDialog({ doctor }: Props) {
 													<PhoneInput
 														defaultCountry="TR"
 														international
-														className="text-xs sm:text-sm h-8 sm:h-10"
+														className="text-xs sm:text-sm"
 														{...field}
 													/>
 												</FormControl>

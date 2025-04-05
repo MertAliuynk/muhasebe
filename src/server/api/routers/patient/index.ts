@@ -73,11 +73,11 @@ export const patientRouter = createTRPCRouter({
     return patients
   }),
   getPatientsByBranch: protectedProcedure.query(async ({ ctx }) => {
-    const branchId = ctx.session.user.branchId
+    const branchId = ctx.session.user.branchId ?? ""
 
     const patients = await ctx.db.patient.findMany({
       where: {
-        branchId: branchId!,
+        branchId: branchId,
         isDeleted: false,
       },
       include: {
@@ -103,7 +103,7 @@ export const patientRouter = createTRPCRouter({
   getFilteredPatients: protectedProcedure
     .input(getFilteredPatientsSchema)
     .query(async ({ ctx, input }) => {
-      const branchId = ctx.session.user.branchId!
+      const branchId = ctx.session.user.branchId ?? ""
       const today = new Date()
 
       // Eğer "ALL" filtresi seçilmişse, diğer filtreleri yoksay
@@ -405,7 +405,7 @@ export const patientRouter = createTRPCRouter({
   savePatient: protectedProcedure
     .input(savePatientSchema)
     .mutation(async ({ ctx, input }) => {
-      const branchId = ctx.session.user.branchId!
+      const branchId = ctx.session.user.branchId ?? ""
 
       const patient = await ctx.db.patient.create({
         data: {
@@ -424,23 +424,53 @@ export const patientRouter = createTRPCRouter({
   searchPatient: protectedProcedure
     .input(searchPatientSchema)
     .query(async ({ ctx, input }) => {
-      const patients = await ctx.db.patient.findMany({
+      // Türkçe karakter normalizasyonu için yardımcı fonksiyon
+      const normalizeText = (text: string) => {
+        return text
+          .toLowerCase()
+          .replace(/ı/g, "i")
+          .replace(/i̇/g, "i")
+          .replace(/ç/g, "c")
+          .replace(/ş/g, "s")
+          .replace(/ğ/g, "g")
+          .replace(/ü/g, "u")
+          .replace(/ö/g, "o")
+      }
+
+      // Normalize arama terimi
+      const normalizedQuery = normalizeText(input.query)
+
+      // Veritabanında hasta adlarını önbelleğe alalım
+      const allPatients = await ctx.db.patient.findMany({
         where: {
-          OR: [
-            { phone: { contains: input.query, mode: "insensitive" } },
-            { name: { contains: input.query, mode: "insensitive" } },
-            { tcNo: { contains: input.query, mode: "insensitive" } },
-          ],
-          branchId: ctx.session.user.branchId!,
+          branchId: ctx.session.user.branchId ?? "",
           isDeleted: false,
         },
-        take: 10,
-        orderBy: {
-          createdAt: "desc",
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          tcNo: true,
         },
       })
 
-      return patients
+      // Manuel olarak hasta adlarını normalleştirip, sorguyla eşleşenleri bulalım
+      const matchedPatients = allPatients.filter((patient) => {
+        // Her hasta verisi için normalleştirme yapalım
+        const normalizedName = normalizeText(patient.name || "")
+        const normalizedPhone = normalizeText(patient.phone || "")
+        const normalizedTcNo = normalizeText(patient.tcNo || "")
+
+        // Sorgu ile hasta verilerini karşılaştıralım
+        return (
+          normalizedName.includes(normalizedQuery) ||
+          normalizedPhone.includes(normalizedQuery) ||
+          normalizedTcNo.includes(normalizedQuery)
+        )
+      })
+
+      // En fazla 10 sonuç döndürelim
+      return matchedPatients.slice(0, 10)
     }),
   savePaymentPlan: protectedProcedure
     .input(savePaymentPlanSchema)
