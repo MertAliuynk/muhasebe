@@ -4,18 +4,7 @@ export const getSecretaryByIdSchema = z.object({
   id: z.string(),
 })
 
-const passwordSchema = z
-  .string()
-  .min(6, "Şifre en az 6 karakter olmalıdır")
-  .refine((value) => /[A-Z]/.test(value), {
-    message: "Şifre en az bir büyük harf içermelidir",
-  })
-  .refine((value) => /[a-z]/.test(value), {
-    message: "Şifre en az bir küçük harf içermelidir",
-  })
-  .refine((value) => /[0-9]/.test(value), {
-    message: "Şifre en az bir rakam içermelidir",
-  })
+const passwordSchema = z.string().min(6, "Şifre en az 6 karakter olmalıdır")
 
 export const saveSecretarySchema = z.object({
   name: z.string().min(3),
