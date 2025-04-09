@@ -1,12 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import type { Doctor, User } from "@prisma/client";
 import { format } from "date-fns";
 import { Building, Clock, Stethoscope } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
-import { formatCurrency, paymentTypeLabels } from "@/lib/utils";
+import NewExpenseDialog from "@/components/new-expense-dialog";
+import Spinner from "@/components/spinner";
 import {
 	Card,
 	CardContent,
@@ -15,8 +16,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import NewExpenseDialog from "@/components/new-expense-dialog";
-import Spinner from "@/components/spinner";
+import { formatCurrency, paymentTypeLabels } from "@/lib/utils";
 
 import DeleteExpenseDialog from "./delete-expense-dialog";
 
@@ -31,7 +31,6 @@ export default function Expenses() {
 	const { data: doctors, isFetching: doctorsIsFetching } =
 		api.doctor.getDoctorsByBranch.useQuery();
 
-	const isToday = date === format(new Date(), "yyyy-MM-dd");
 	return (
 		<Card>
 			<CardHeader>
@@ -106,7 +105,7 @@ export default function Expenses() {
 												{format(item.createdAt, "HH:mm")}
 											</div>
 										</div>
-										{isToday && <DeleteExpenseDialog expense={item} />}
+										<DeleteExpenseDialog expense={item} />
 									</div>
 								</div>
 							))
