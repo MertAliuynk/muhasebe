@@ -56,21 +56,9 @@ type FormValues = z.infer<typeof formSchema>;
 export function AddSecretaryDialog({ trigger }: AddSecretaryDialogProps) {
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
-	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const { mutate } = api.secretary.saveSecretary.useMutation({
-		onSuccess: () => {
-			toast.success("Sekreter başarıyla eklendi");
-			router.refresh();
-			setIsSubmitting(false);
-			setOpen(false);
-			form.reset();
-		},
-		onError: (error) => {
-			toast.error(error.message);
-			setIsSubmitting(false);
-		},
-	});
+	const { mutateAsync: saveSecretary, isPending } =
+		api.secretary.saveSecretary.useMutation();
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -83,9 +71,19 @@ export function AddSecretaryDialog({ trigger }: AddSecretaryDialogProps) {
 		},
 	});
 
-	function onSubmit(data: FormValues) {
-		setIsSubmitting(true);
-		void mutate(data);
+	async function onSubmit(data: FormValues) {
+		toast.promise(
+			saveSecretary(data).then(() => {
+				router.refresh();
+				form.reset();
+				setOpen(false);
+			}),
+			{
+				loading: "Sekreter ekleniyor...",
+				success: "Sekreter başarıyla eklendi",
+				error: "Sekreter eklenirken bir hata oluştu",
+			},
+		);
 	}
 
 	return (
@@ -190,8 +188,8 @@ export function AddSecretaryDialog({ trigger }: AddSecretaryDialogProps) {
 							>
 								İptal
 							</Button>
-							<Button type="submit" disabled={isSubmitting}>
-								{isSubmitting ? "Ekleniyor..." : "Ekle"}
+							<Button type="submit" loading={isPending}>
+								Ekle
 							</Button>
 						</div>
 					</form>
