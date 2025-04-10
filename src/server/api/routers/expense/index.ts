@@ -231,7 +231,7 @@ export const expenseRouter = createTRPCRouter({
           branchId: expense.branchId,
           amount: expense.amount,
           paymentType: expense.paymentType,
-          isAddition: true,
+          isAddition: false,
         })
       }
 
