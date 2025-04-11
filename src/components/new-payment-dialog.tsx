@@ -83,8 +83,7 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
       createPayment(values).then(async () => {
         setIsOpen(false)
         form.reset()
-        await utils.payment.getAllPaymentsByDate.invalidate()
-        await utils.cashReport.getTodayCashReport.invalidate()
+        await utils.invalidate()
       }),
       {
         loading: "Gelir kaydediliyor...",

@@ -37,8 +37,7 @@ export default function DeletePatientDialog({ patient }: Props) {
     toast.promise(
       mutateAsync({ id: patient.id }).then(async () => {
         setIsOpen(false)
-        await utils.patient.getPatientsByBranch.invalidate()
-        await utils.patient.getFilteredPatients.invalidate()
+        await utils.invalidate()
       }),
       {
         loading: "Hasta siliniyor...",

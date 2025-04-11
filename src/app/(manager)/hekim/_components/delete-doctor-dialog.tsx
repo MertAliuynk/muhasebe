@@ -35,7 +35,7 @@ export default function DeleteDoctorDialog({ doctor }: Props) {
     toast.promise(
       mutateAsync({ id: doctor.id }).then(async () => {
         setIsOpen(false)
-        await utils.doctor.getDoctorsByBranch.invalidate()
+        await utils.invalidate()
       }),
       {
         loading: "Hekim siliniyor...",

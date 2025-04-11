@@ -69,9 +69,7 @@ export default function EditPatientDialog({ patient, onSuccess }: Props) {
   function onSubmit(values: z.infer<typeof updatePatientSchema>) {
     toast.promise(
       updatePatient(values).then(async () => {
-        await utils.patient.getPatientsByBranch.invalidate()
-        await utils.patient.getPatientById.invalidate({ id: patient.id })
-        await utils.patient.getFilteredPatients.invalidate()
+        await utils.invalidate()
         if (onSuccess) onSuccess()
       }),
       {

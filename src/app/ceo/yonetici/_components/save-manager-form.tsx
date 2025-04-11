@@ -66,7 +66,7 @@ export default function SaveManagerForm({ user }: SaveManagerFormProps) {
 
   const onSubmit = async (values: z.infer<typeof saveUserSchema>) => {
     await saveUser(values)
-    await utils.user.getUsers.invalidate()
+    await utils.invalidate()
     router.refresh()
     form.reset()
     toast.success(

@@ -30,6 +30,8 @@ type PageProps = {
 
 export default function DeletePatientPaymentDialog({ payment }: PageProps) {
   const router = useRouter()
+  const utils = api.useUtils()
+
   const { mutateAsync: deletePayment, isPending } =
     api.payment.deletePayment.useMutation()
 
@@ -44,6 +46,7 @@ export default function DeletePatientPaymentDialog({ payment }: PageProps) {
       }).then(async () => {
         setIsOpen(false)
         router.refresh()
+        await utils.invalidate()
       }),
       {
         loading: "Ödeme siliniyor...",

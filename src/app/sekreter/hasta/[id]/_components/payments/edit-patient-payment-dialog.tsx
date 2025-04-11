@@ -76,7 +76,7 @@ export default function EditPatientPaymentDialog({
       updatePayment(values).then(async () => {
         router.refresh()
         setIsOpen(false)
-        await utils.cashReport.getTodayCashReport.invalidate()
+        await utils.invalidate()
         if (onSuccess) onSuccess()
       }),
       {

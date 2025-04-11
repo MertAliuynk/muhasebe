@@ -71,8 +71,7 @@ export default function NewExpenseDialog({ doctors, isLoading }: PageProsp) {
       createExpense(values).then(async () => {
         setIsOpen(false)
         form.reset()
-        await utils.expense.getExpensesByBranchId.invalidate()
-        await utils.cashReport.getTodayCashReport.invalidate()
+        await utils.invalidate()
       }),
       {
         loading: "Gider kaydediliyor...",

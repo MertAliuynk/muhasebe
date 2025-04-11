@@ -56,7 +56,7 @@ export default function SavePatientForm({ doctors }: Props) {
   function onSubmit(values: z.infer<typeof savePatientSchema>) {
     toast.promise(
       savePatient(values).then(async (patient) => {
-        await utils.patient.searchPatient.invalidate()
+        await utils.invalidate()
         router.push(`/hasta/${patient.id}`)
       }),
       {

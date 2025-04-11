@@ -42,7 +42,7 @@ export default function EditPatientDoctorsDialog({
         doctorId,
       }).then(async () => {
         router.refresh()
-        await utils.patient.getPatientDoctors.invalidate()
+        await utils.invalidate()
       }),
       {
         loading: "Doktor siliniyor...",
@@ -134,7 +134,7 @@ function AddDoctorDialog({ patientId }: { patientId: string }) {
   const { mutate: addDoctorToPatient, isPending } =
     api.patient.addDoctorToPatient.useMutation({
       onSuccess: async () => {
-        await utils.patient.getPatientDoctors.invalidate()
+        await utils.invalidate()
         router.refresh()
         toast.success("Doktor başarıyla eklendi")
         setOpen(false)

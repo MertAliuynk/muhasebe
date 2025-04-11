@@ -40,8 +40,7 @@ export default function DeleteIncomeDialog({ payment }: PageProps) {
           "patient" in payment ? (payment.patient as Patient).id : undefined,
       }).then(async () => {
         setIsOpen(false)
-        await utils.payment.getAllPaymentsByDate.invalidate()
-        await utils.cashReport.getTodayCashReport.invalidate()
+        await utils.invalidate()
       }),
       {
         loading: "Gelir siliniyor...",
