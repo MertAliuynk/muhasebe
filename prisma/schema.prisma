@@ -35,10 +35,8 @@ model AuditLog {
     userId     String
     createdAt  DateTime    @default(now())
 
-    // Relations
     user User @relation(fields: [userId], references: [id])
 
-    // Indexes
     @@index([entityType, entityId])
     @@index([userId])
     @@index([createdAt])
@@ -56,14 +54,12 @@ model User {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    // Relations
     doctor        Doctor?
     secretary     Secretary?
     branchManager Branch?
     company       Company?
     auditLogs     AuditLog[]
 
-    // Indexes
     @@index([role])
     @@index([username])
     @@index([isDeleted])
@@ -80,12 +76,10 @@ model Company {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    // Relations
     branches Branch[]
     ceoId    String   @unique
     ceo      User     @relation(fields: [ceoId], references: [id])
 
-    // Indexes
     @@index([isDeleted])
     @@index([name])
 }
@@ -100,7 +94,6 @@ model Branch {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    // Relations
     companyId String
     company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -118,7 +111,6 @@ model Branch {
     cashReports     CashReport[]
     Secretary       Secretary[]
 
-    // Indexes
     @@index([companyId])
     @@index([managerId])
     @@index([isDeleted])
@@ -137,7 +129,6 @@ model Doctor {
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
-    // Relations
     userId        String               @unique
     user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
     branchId      String
@@ -147,7 +138,6 @@ model Doctor {
     incomes       DoctorIncome[]
     paymentShares DoctorPaymentShare[]
 
-    // Indexes
     @@index([userId])
     @@index([branchId])
     @@index([isDeleted])
@@ -162,13 +152,11 @@ model Secretary {
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
-    // Relations
     userId   String @unique
     user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     branchId String
     branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@index([userId])
     @@index([branchId])
     @@index([isDeleted])
@@ -186,7 +174,6 @@ model Patient {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    // Relations
     branchId     String
     branch       Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
     paymentPlans PatientPaymentPlan[]
@@ -194,7 +181,6 @@ model Patient {
     notes        String[]
     payments     PatientPayment[]
 
-    // Indexes
     @@index([branchId])
     @@index([isDeleted])
     @@index([name])
@@ -217,14 +203,12 @@ model PatientPaymentPlan {
     createdAt        DateTime  @default(now())
     updatedAt        DateTime  @updatedAt
 
-    // Relations
     patientId       String
     patient         Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
     installments    Installment[]
     doctorShares    DoctorPaymentShare[]
     patientPayments PatientPayment[]
 
-    // Indexes
     @@index([patientId])
     @@index([isDeleted])
     @@index([isApproved])
@@ -240,7 +224,6 @@ model PatientPayment {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
 
-    // Relations
     patient       Patient?            @relation(fields: [patientId], references: [id])
     patientId     String?
     branchId      String
@@ -249,7 +232,6 @@ model PatientPayment {
     paymentPlanId String?
     doctorIncomes DoctorIncome[]
 
-    // Indexes
     @@index([paymentDate])
 }
 
@@ -262,13 +244,11 @@ model DoctorIncome {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
 
-    // Relations
     doctorId  String
     doctor    Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
     payment   PatientPayment? @relation(fields: [paymentId], references: [id], onDelete: Cascade)
     paymentId String?
 
-    // Indexes
     @@index([paymentDate])
 }
 
@@ -280,13 +260,11 @@ model DoctorPaymentShare {
     createdAt       DateTime @default(now())
     updatedAt       DateTime @updatedAt
 
-    // Relations
     doctorId      String
     doctor        Doctor             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
     paymentPlanId String
     paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@index([doctorId])
     @@index([paymentPlanId])
 }
@@ -300,11 +278,9 @@ model BranchPayment {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
 
-    // Relations
     branchId String
     branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@index([paymentDate])
 }
 
@@ -320,11 +296,9 @@ model Installment {
     createdAt       DateTime  @default(now())
     updatedAt       DateTime  @updatedAt
 
-    //Relations
     paymentPlanId String
     paymentPlan   PatientPaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@index([paymentPlanId])
     @@index([number])
 }
@@ -338,11 +312,9 @@ model ExpenseType {
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
-    // Relations
     branchExpenses BranchExpense[]
     doctorExpenses DoctorExpense[]
 
-    // Indexes
     @@index([isDeleted])
     @@index([name])
 }
@@ -357,13 +329,11 @@ model BranchExpense {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
 
-    // Relations
     expenseTypeId String
     expenseType   ExpenseType @relation(fields: [expenseTypeId], references: [id], onDelete: Cascade)
     branchId      String
     branch        Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@index([expenseTypeId])
     @@index([branchId])
     @@index([isDeleted])
@@ -379,7 +349,6 @@ model DoctorExpense {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
 
-    // Relations
     expenseTypeId String
     expenseType   ExpenseType @relation(fields: [expenseTypeId], references: [id], onDelete: Cascade)
     doctorId      String
@@ -387,7 +356,6 @@ model DoctorExpense {
     branch        Branch      @relation(fields: [branchId], references: [id])
     branchId      String
 
-    // Indexes
     @@index([doctorId])
     @@index([isDeleted])
 }
@@ -416,6 +384,5 @@ model CashReport {
 
     createdAt DateTime @default(now())
 
-    // Indexes
     @@index([branchId])
 }

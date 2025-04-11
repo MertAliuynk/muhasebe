@@ -23,7 +23,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { DataTable } from "@/components/data-table"
-// import { DatePickerWithRange } from "@/components/date-picker-with-range"
 import Spinner from "@/components/spinner"
 
 import columns from "./pending-payments-columuns"
@@ -62,7 +61,6 @@ export default function PendingPaymentsDialog({
       0
     ) || 0
 
-  // Tüm aylık ödemeleri birleştir
   const allMonthlyPayments =
     pendingPayments?.reduce(
       (acc, payment) => {
@@ -86,9 +84,7 @@ export default function PendingPaymentsDialog({
       [] as { month: string; amount: number; count: number }[]
     ) || []
 
-  // Ayları sırala
   allMonthlyPayments.sort((a, b) => {
-    // "Mart 2024" formatındaki string'i Date objesine çevir
     const dateA = parse(a.month, "MMMM yyyy", new Date(), { locale: tr })
     const dateB = parse(b.month, "MMMM yyyy", new Date(), { locale: tr })
     return dateA.getTime() - dateB.getTime()

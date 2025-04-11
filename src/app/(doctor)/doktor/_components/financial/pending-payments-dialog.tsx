@@ -1,10 +1,8 @@
 "use client"
 
-import React from "react"
 import { useSearchParams } from "next/navigation"
 import { api } from "@/trpc/react"
 import { parse } from "date-fns"
-import { tr } from "date-fns/locale"
 
 import { formatCurrencyWithSymbol } from "@/lib/utils"
 import {
@@ -23,7 +21,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { DataTable } from "@/components/data-table"
-// import { DatePickerWithRange } from "@/components/date-picker-with-range"
 import Spinner from "@/components/spinner"
 
 import columns from "./pending-payments-columuns"
@@ -62,11 +59,10 @@ export default function PendingPaymentsDialog({
       0
     ) || 0
 
-  // Tüm aylık ödemeleri birleştir
   const allMonthlyPayments =
     pendingPayments?.reduce(
       (acc, payment) => {
-        payment.monthlyPayments.forEach((monthlyPayment) => {
+        for (const monthlyPayment of payment.monthlyPayments) {
           const existingMonth = acc.find(
             (m) => m.month === monthlyPayment.month
           )
@@ -80,17 +76,15 @@ export default function PendingPaymentsDialog({
               count: monthlyPayment.count,
             })
           }
-        })
+        }
         return acc
       },
       [] as { month: string; amount: number; count: number }[]
     ) || []
 
-  // Ayları sırala
   allMonthlyPayments.sort((a, b) => {
-    // "Mart 2024" formatındaki string'i Date objesine çevir
-    const dateA = parse(a.month, "MMMM yyyy", new Date(), { locale: tr })
-    const dateB = parse(b.month, "MMMM yyyy", new Date(), { locale: tr })
+    const dateA = parse(a.month, "MMMM yyyy", new Date())
+    const dateB = parse(b.month, "MMMM yyyy", new Date())
     return dateA.getTime() - dateB.getTime()
   })
 

@@ -118,7 +118,6 @@ export default function EditPaymentPlan({
   const onSubmit = (values: z.infer<typeof updatePaymentPlanSchema>) => {
     const calculatedTotal = calculateTotalAmount()
 
-    // Tek doktor varsa validasyon yapmaya gerek yok
     if (!hasMultipleDoctors) {
       toast.promise(updatePaymentPlan(values), {
         loading: "Ödeme planı düzenleniyor...",

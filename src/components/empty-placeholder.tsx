@@ -6,7 +6,11 @@ import { cn } from "@/lib/utils"
 
 type EmptyPlaceholderProps = React.HTMLAttributes<HTMLDivElement>
 
-export function EmptyPlaceholder({ className, children, ...props }: EmptyPlaceholderProps) {
+export function EmptyPlaceholder({
+  className,
+  children,
+  ...props
+}: EmptyPlaceholderProps) {
   return (
     <div
       className={cn(
@@ -15,7 +19,9 @@ export function EmptyPlaceholder({ className, children, ...props }: EmptyPlaceho
       )}
       {...props}
     >
-      <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">{children}</div>
+      <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+        {children}
+      </div>
     </div>
   )
 }
@@ -24,7 +30,11 @@ type EmptyPlaceholderIconProps = {
   name: keyof typeof LucideIcons
 } & Partial<React.SVGProps<SVGSVGElement>>
 
-EmptyPlaceholder.Icon = function EmptyPlaceHolderIcon({ name, className, ...props }: EmptyPlaceholderIconProps) {
+EmptyPlaceholder.Icon = function EmptyPlaceHolderIcon({
+  name,
+  className,
+  ...props
+}: EmptyPlaceholderIconProps) {
   const Icon = LucideIcons[name] as LucideIcon
 
   if (!Icon) {
@@ -40,11 +50,17 @@ EmptyPlaceholder.Icon = function EmptyPlaceHolderIcon({ name, className, ...prop
 
 type EmptyPlacholderTitleProps = React.HTMLAttributes<HTMLHeadingElement>
 
-EmptyPlaceholder.Title = function EmptyPlaceholderTitle({ className, ...props }: EmptyPlacholderTitleProps) {
-  return <h2 className={cn("mt-6 text-xl font-semibold", className)} {...props} />
+EmptyPlaceholder.Title = function EmptyPlaceholderTitle({
+  className,
+  ...props
+}: EmptyPlacholderTitleProps) {
+  return (
+    <h2 className={cn("mt-6 text-xl font-semibold", className)} {...props} />
+  )
 }
 
-type EmptyPlacholderDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>
+type EmptyPlacholderDescriptionProps =
+  React.HTMLAttributes<HTMLParagraphElement>
 
 EmptyPlaceholder.Description = function EmptyPlaceholderDescription({
   className,
@@ -52,7 +68,10 @@ EmptyPlaceholder.Description = function EmptyPlaceholderDescription({
 }: EmptyPlacholderDescriptionProps) {
   return (
     <p
-      className={cn("mb-8 mt-2 text-center text-sm font-normal leading-6 text-muted-foreground", className)}
+      className={cn(
+        "mb-8 mt-2 text-center text-sm font-normal leading-6 text-muted-foreground",
+        className
+      )}
       {...props}
     />
   )

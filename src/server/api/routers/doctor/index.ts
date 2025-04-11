@@ -4,10 +4,12 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc"
 import { TRPCError } from "@trpc/server"
+import { hash } from "bcryptjs"
 import { format } from "date-fns"
 import { tr } from "date-fns/locale"
 
 import {
+  changeDoctorPasswordSchema,
   deleteDoctorSchema,
   getDoctorByIdSchema,
   getDoctorExpensesSchema,
@@ -381,14 +383,11 @@ export const doctorRouter = createTRPCRouter({
           const remainingAmount = payment.remainingAmount
           const doctorCount = payment.paymentPlan.patient.doctors.length
 
-          // Kalan taksitleri al
           const remainingInstallments = payment.paymentPlan.installments
 
-          // Her taksit için doktorun alacağı tutarı hesapla
           const monthlyPayments = remainingInstallments.map((installment) => {
             const installmentAmount = installment.amount
 
-            // Eğer hastanın tek doktoru varsa, tüm ödemeyi o doktor alır
             if (doctorCount === 1) {
               return {
                 date: installment.dueDate,
@@ -396,7 +395,6 @@ export const doctorRouter = createTRPCRouter({
               }
             }
 
-            // Birden fazla doktor varsa, pay oranlarına göre hesapla
             const doctorSharePercentage =
               (payment.totalAmount / payment.paymentPlan.totalAmount) * 100
             const doctorShare = Math.ceil(
@@ -409,7 +407,6 @@ export const doctorRouter = createTRPCRouter({
             }
           })
 
-          // Aylık ödemeleri grupla
           const monthlyPaymentGroups = monthlyPayments.reduce(
             (acc, curr) => {
               const monthKey = format(new Date(curr.date), "MMMM yyyy", {
@@ -432,7 +429,6 @@ export const doctorRouter = createTRPCRouter({
             >
           )
 
-          // Aylık ortalama ödeme tutarını hesapla
           const averageMonthlyPayment =
             monthlyPayments.length > 0
               ? Math.ceil(
@@ -441,7 +437,6 @@ export const doctorRouter = createTRPCRouter({
                 )
               : 0
 
-          // Sonraki ödeme tarihini bul
           const nextPaymentDate = monthlyPayments[0]?.date || null
 
           return {
@@ -495,5 +490,38 @@ export const doctorRouter = createTRPCRouter({
       })
 
       return doctor
+    }),
+  changeDoctorPassword: adminProcedure
+    .input(changeDoctorPasswordSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, password } = input
+
+      const doctor = await ctx.db.doctor.findUnique({
+        where: { id },
+        include: {
+          user: true,
+        },
+      })
+
+      if (!doctor) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Hekim bulunamadı",
+        })
+      }
+
+      const hashedPassword = await hash(password, 10)
+
+      await ctx.db.user.update({
+        where: { id: doctor.userId },
+        data: {
+          password: hashedPassword,
+        },
+      })
+
+      return {
+        success: true,
+        message: "Şifre başarıyla değiştirildi",
+      }
     }),
 })

@@ -1,5 +1,13 @@
 import * as React from "react"
-import { format, getDaysInMonth, setDate, setMonth, setYear, setHours, setMinutes } from "date-fns"
+import {
+  format,
+  getDaysInMonth,
+  setDate,
+  setHours,
+  setMinutes,
+  setMonth,
+  setYear,
+} from "date-fns"
 import { tr } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { useFormContext } from "react-hook-form"
@@ -64,7 +72,6 @@ export function DatePicker({ name, label }: Props) {
     return Array.from({ length: daysInMonth }, (_, i) => i + 1)
   }, [])
 
-  // Saati 12:00 olarak ayarlama yardımcı fonksiyonu
   const setNoonTime = React.useCallback((date: Date): Date => {
     return setMinutes(setHours(date, 15), 0)
   }, [])
@@ -115,7 +122,9 @@ export function DatePicker({ name, label }: Props) {
                   <Select
                     value={selectedDate.getDate().toString()}
                     onValueChange={(value) => {
-                      const newDate = setNoonTime(setDate(selectedDate, parseInt(value)))
+                      const newDate = setNoonTime(
+                        setDate(selectedDate, parseInt(value))
+                      )
                       field.onChange(newDate)
                       setCurrentMonth(newDate)
                     }}
@@ -135,7 +144,9 @@ export function DatePicker({ name, label }: Props) {
                   <Select
                     value={selectedDate.getMonth().toString()}
                     onValueChange={(value) => {
-                      const newDate = setNoonTime(setMonth(selectedDate, parseInt(value)))
+                      const newDate = setNoonTime(
+                        setMonth(selectedDate, parseInt(value))
+                      )
                       field.onChange(newDate)
                       setCurrentMonth(newDate)
                     }}
@@ -158,7 +169,9 @@ export function DatePicker({ name, label }: Props) {
                   <Select
                     value={selectedDate.getFullYear().toString()}
                     onValueChange={(value) => {
-                      const newDate = setNoonTime(setYear(selectedDate, parseInt(value)))
+                      const newDate = setNoonTime(
+                        setYear(selectedDate, parseInt(value))
+                      )
                       field.onChange(newDate)
                       setCurrentMonth(newDate)
                     }}

@@ -21,7 +21,6 @@ import { Combobox } from "@/components/combobox"
 
 type Branch = RouterOutputs["branch"]["getAllBranches"][number]
 
-// Form şeması
 export const branchSmsSchema = z.object({
   branchId: z.string({
     required_error: "Şube seçimi zorunludur",

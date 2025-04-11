@@ -106,7 +106,6 @@ export const patientRouter = createTRPCRouter({
       const branchId = ctx.session.user.branchId ?? ""
       const today = new Date()
 
-      // Eğer "ALL" filtresi seçilmişse, diğer filtreleri yoksay
       if (input.filters.includes("ALL")) {
         const patients = await ctx.db.patient.findMany({
           where: {
@@ -207,12 +206,10 @@ export const patientRouter = createTRPCRouter({
             .filter((installment) => !installment.isCompleted)
             .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
 
-          // Geçmiş ve bugünkü taksitlerden kalan tutarları topla
           const pastDueAmount = sortedInstallments
             .filter((installment) => installment.dueDate < today)
             .reduce((sum, installment) => sum + installment.remainingAmount, 0)
 
-          // Bu ay içindeki taksitlerden kalan tutarları topla
           const currentMonthDueAmount = sortedInstallments
             .filter((installment) => {
               const installmentDate = new Date(installment.dueDate)
@@ -224,7 +221,6 @@ export const patientRouter = createTRPCRouter({
             })
             .reduce((sum, installment) => sum + installment.remainingAmount, 0)
 
-          // Sonraki ödeme tutarı: Geçmiş taksitlerden kalan + bu ayın taksitleri
           const nextPaymentAmount = pastDueAmount + currentMonthDueAmount
 
           return {
@@ -238,7 +234,6 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      // Çoklu filtre için koşulları hazırla
       const conditions = []
 
       if (input.filters.includes("PENDING_PAYMENT")) {
@@ -309,12 +304,10 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      // Hiçbir filtre seçilmediyse boş dizi döndür
       if (conditions.length === 0) {
         return []
       }
 
-      // Seçilen filtrelere göre hastaları getir
       const patients = await ctx.db.patient.findMany({
         where: {
           branchId: branchId,
@@ -372,12 +365,10 @@ export const patientRouter = createTRPCRouter({
           .filter((installment) => !installment.isCompleted)
           .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
 
-        // Geçmiş ve bugünkü taksitlerden kalan tutarları topla
         const pastDueAmount = sortedInstallments
           .filter((installment) => installment.dueDate < today)
           .reduce((sum, installment) => sum + installment.remainingAmount, 0)
 
-        // Bu ay içindeki taksitlerden kalan tutarları topla
         const currentMonthDueAmount = sortedInstallments
           .filter((installment) => {
             const installmentDate = new Date(installment.dueDate)
@@ -389,7 +380,6 @@ export const patientRouter = createTRPCRouter({
           })
           .reduce((sum, installment) => sum + installment.remainingAmount, 0)
 
-        // Sonraki ödeme tutarı: Geçmiş taksitlerden kalan + bu ayın taksitleri
         const nextPaymentAmount = pastDueAmount + currentMonthDueAmount
 
         return {
@@ -424,7 +414,6 @@ export const patientRouter = createTRPCRouter({
   searchPatient: protectedProcedure
     .input(searchPatientSchema)
     .query(async ({ ctx, input }) => {
-      // Türkçe karakter normalizasyonu için yardımcı fonksiyon
       const normalizeText = (text: string) => {
         return text
           .toLowerCase()
@@ -437,10 +426,8 @@ export const patientRouter = createTRPCRouter({
           .replace(/ö/g, "o")
       }
 
-      // Normalize arama terimi
       const normalizedQuery = normalizeText(input.query)
 
-      // Veritabanında hasta adlarını önbelleğe alalım
       const allPatients = await ctx.db.patient.findMany({
         where: {
           branchId: ctx.session.user.branchId ?? "",
@@ -454,14 +441,11 @@ export const patientRouter = createTRPCRouter({
         },
       })
 
-      // Manuel olarak hasta adlarını normalleştirip, sorguyla eşleşenleri bulalım
       const matchedPatients = allPatients.filter((patient) => {
-        // Her hasta verisi için normalleştirme yapalım
         const normalizedName = normalizeText(patient.name || "")
         const normalizedPhone = normalizeText(patient.phone || "")
         const normalizedTcNo = normalizeText(patient.tcNo || "")
 
-        // Sorgu ile hasta verilerini karşılaştıralım
         return (
           normalizedName.includes(normalizedQuery) ||
           normalizedPhone.includes(normalizedQuery) ||
@@ -469,7 +453,6 @@ export const patientRouter = createTRPCRouter({
         )
       })
 
-      // En fazla 10 sonuç döndürelim
       return matchedPatients.slice(0, 10)
     }),
   savePaymentPlan: protectedProcedure
@@ -640,7 +623,6 @@ export const patientRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { patientId } = input
 
-      // Hastayı ve doktorlarını getir
       const patient = await ctx.db.patient.findUnique({
         where: {
           id: patientId,
@@ -669,7 +651,6 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      // Onaylanmış ödeme planında doktorlara yapılmış ödemeleri kontrol et
       const paymentPlan = await ctx.db.patientPaymentPlan.findFirst({
         where: {
           patientId,
@@ -681,7 +662,6 @@ export const patientRouter = createTRPCRouter({
         },
       })
 
-      // Doktorlara ödeme durumunu ekle
       const doctorsWithPaymentStatus = patient.doctors.map((doctor) => {
         const hasPaid =
           paymentPlan?.doctorShares.some(
@@ -701,7 +681,6 @@ export const patientRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { patientId, doctorId } = input
 
-      // Hasta ve doktoru kontrol et
       const patient = await ctx.db.patient.findUnique({
         where: {
           id: patientId,
@@ -733,7 +712,6 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      // Doktor zaten bu hastaya eklenmişse hata fırlat
       if (patient.doctors.some((doc) => doc.id === doctorId)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -742,7 +720,6 @@ export const patientRouter = createTRPCRouter({
       }
 
       return await ctx.db.$transaction(async (tx) => {
-        // Doktoru hastaya ekle
         const updatedPatient = await tx.patient.update({
           where: {
             id: patientId,
@@ -756,7 +733,6 @@ export const patientRouter = createTRPCRouter({
           },
         })
 
-        // Onaylanmış ödeme planını bul
         const approvedPaymentPlan = await tx.patientPaymentPlan.findFirst({
           where: {
             patientId,
@@ -765,9 +741,7 @@ export const patientRouter = createTRPCRouter({
           },
         })
 
-        // Eğer onaylanmış ödeme planı varsa, doktor payı oluştur
         if (approvedPaymentPlan) {
-          // Doktor payı oluştur (totalAmount 0 olarak)
           await tx.doctorPaymentShare.create({
             data: {
               doctorId,
@@ -787,7 +761,6 @@ export const patientRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { patientId, doctorId } = input
 
-      // Hastayı kontrol et
       const patient = await ctx.db.patient.findUnique({
         where: { id: patientId },
         include: {
@@ -802,7 +775,6 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      // Doktoru kontrol et
       const doctor = await ctx.db.doctor.findUnique({
         where: { id: doctorId },
       })
@@ -815,7 +787,6 @@ export const patientRouter = createTRPCRouter({
       }
 
       return await ctx.db.$transaction(async (tx) => {
-        // Doktoru hastadan sil
         const updatedPatient = await tx.patient.update({
           where: { id: patientId },
           data: {
@@ -828,7 +799,6 @@ export const patientRouter = createTRPCRouter({
           },
         })
 
-        // Onaylanmış ödeme planını bul
         const approvedPaymentPlan = await tx.patientPaymentPlan.findFirst({
           where: {
             patientId,
@@ -841,7 +811,6 @@ export const patientRouter = createTRPCRouter({
           return updatedPatient
         }
 
-        // Silinecek doktorun payını bul ve sil
         const deleteDoctorShare = await tx.doctorPaymentShare.findFirst({
           where: {
             paymentPlanId: approvedPaymentPlan.id,
@@ -857,16 +826,13 @@ export const patientRouter = createTRPCRouter({
           })
         }
 
-        // Eğer geriye sadece 1 doktor kaldıysa
         if (updatedPatient.doctors.length === 1) {
           const remainingDoctor = updatedPatient.doctors[0]
 
-          // Kalan doktor tanımlı değilse işlemi sonlandır
           if (!remainingDoctor) {
             return updatedPatient
           }
 
-          // Kalan doktorun ödeme payını bul
           const remainingDoctorShare = await tx.doctorPaymentShare.findFirst({
             where: {
               paymentPlanId: approvedPaymentPlan.id,
@@ -874,7 +840,6 @@ export const patientRouter = createTRPCRouter({
             },
           })
 
-          // Kalan doktorun payını, ödeme planının toplam tutarı olarak güncelle
           if (remainingDoctorShare) {
             await tx.doctorPaymentShare.update({
               where: {

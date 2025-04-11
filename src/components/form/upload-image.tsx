@@ -131,7 +131,7 @@ export default function UploadImage({ ...field }: ControllerRenderProps) {
     if (!field.value) {
       handleImageRemove()
     }
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [field.value])
 
   return (

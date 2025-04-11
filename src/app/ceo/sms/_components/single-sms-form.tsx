@@ -22,7 +22,6 @@ import { Combobox } from "@/components/combobox"
 
 type Patient = RouterOutputs["patient"]["getAllPatients"][number]
 
-// Form şeması
 export const singleSmsSchema = z.object({
   patientId: z.string({
     required_error: "Hasta seçimi zorunludur",

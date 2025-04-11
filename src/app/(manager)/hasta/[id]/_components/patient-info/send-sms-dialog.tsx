@@ -73,7 +73,6 @@ export default function SendSmsDialog({ patient, children }: PageProps) {
 
     setIsLoading(true)
 
-    // Telefon numarasından uluslararası format öneki (+90) kaldırılıyor
     const phoneNumber = patient.phone.replace("+90", "")
 
     sendSmsMutation.mutate({

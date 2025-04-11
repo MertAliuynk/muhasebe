@@ -83,7 +83,6 @@ export const paymentPlanRouter = createTRPCRouter({
       const { id } = input
 
       return await ctx.db.$transaction(async (tx) => {
-        // Ödeme planını ve ilişkili verileri bulalım
         const paymentPlan = await tx.patientPaymentPlan.findUnique({
           where: { id },
           include: {
@@ -102,8 +101,6 @@ export const paymentPlanRouter = createTRPCRouter({
           })
         }
 
-        // Doktor gelirlerini silelim - onDelete: Cascade özelliği sayesinde otomatik silinecek
-        // ancak açıkça silmek daha güvenli olabilir
         if (paymentPlan.patientPayments.length > 0) {
           for (const payment of paymentPlan.patientPayments) {
             if (payment.doctorIncomes.length > 0) {
@@ -118,7 +115,6 @@ export const paymentPlanRouter = createTRPCRouter({
           }
         }
 
-        // Hasta ödemelerini silelim
         if (paymentPlan.patientPayments.length > 0) {
           await tx.patientPayment.deleteMany({
             where: {
@@ -127,17 +123,14 @@ export const paymentPlanRouter = createTRPCRouter({
           })
         }
 
-        // Doktor paylaşımlarını silelim
         await tx.doctorPaymentShare.deleteMany({
           where: { paymentPlanId: id },
         })
 
-        // Taksitleri silelim
         await tx.installment.deleteMany({
           where: { paymentPlanId: id },
         })
 
-        // Son olarak ödeme planını silelim
         await tx.patientPaymentPlan.delete({
           where: { id },
         })
@@ -186,7 +179,6 @@ export const paymentPlanRouter = createTRPCRouter({
       const { id, installments, doctorShares, ...updateData } = input
 
       return await ctx.db.$transaction(async (tx) => {
-        // Ödeme planını kontrol et
         const existingPlan = await tx.patientPaymentPlan.findUnique({
           where: { id },
           include: {
@@ -207,24 +199,20 @@ export const paymentPlanRouter = createTRPCRouter({
           })
         }
 
-        // Ödenmiş tutarları hesapla
         const totalPaidAmount = existingPlan.patientPayments.reduce(
           (acc, payment) => acc + payment.amount,
           0
         )
 
-        // Yeni taksit tutarlarını hesapla
         const newTotalAmount = installments.reduce(
           (acc, installment) => acc + installment.amount,
           0
         )
 
-        // Mevcut taksitleri sil
         await tx.installment.deleteMany({
           where: { paymentPlanId: id },
         })
 
-        // Yeni taksitleri ekle
         await tx.installment.createMany({
           data: installments.map((installment, index) => ({
             paymentPlanId: id,
@@ -237,7 +225,6 @@ export const paymentPlanRouter = createTRPCRouter({
           })),
         })
 
-        // Ödenmiş tutarları yeni taksitlere dağıt
         if (totalPaidAmount > 0) {
           let remainingPaidAmount = totalPaidAmount
           const updatedInstallments = await tx.installment.findMany({
@@ -249,7 +236,6 @@ export const paymentPlanRouter = createTRPCRouter({
             if (remainingPaidAmount <= 0) break
 
             if (remainingPaidAmount >= installment.amount) {
-              // Taksit tamamen ödenmiş
               await tx.installment.update({
                 where: { id: installment.id },
                 data: {
@@ -260,7 +246,6 @@ export const paymentPlanRouter = createTRPCRouter({
               })
               remainingPaidAmount -= installment.amount
             } else {
-              // Taksit kısmen ödenmiş
               await tx.installment.update({
                 where: { id: installment.id },
                 data: {
@@ -274,7 +259,6 @@ export const paymentPlanRouter = createTRPCRouter({
           }
         }
 
-        // Doktor paylaşımlarını güncelle
         for (const share of doctorShares) {
           const existingShare = existingPlan.doctorShares.find(
             (s) => s.id === share.id
@@ -287,7 +271,6 @@ export const paymentPlanRouter = createTRPCRouter({
             })
           }
 
-          // Doktorun ödenmiş tutarını hesapla
           const paidAmount = existingShare.paidAmount
 
           await tx.doctorPaymentShare.update({
@@ -299,7 +282,6 @@ export const paymentPlanRouter = createTRPCRouter({
           })
         }
 
-        // Ödeme planını güncelle
         const updatedPlan = await tx.patientPaymentPlan.update({
           where: { id },
           data: {

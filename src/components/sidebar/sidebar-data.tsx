@@ -144,11 +144,6 @@ export const sidebarDataDoctor: SidebarData = {
           url: "/doktor",
           icon: LayoutDashboard,
         },
-        // {
-        //   title: "Raporlarım",
-        //   url: "/doktor/raporlar",
-        //   icon: FileText,
-        // },
       ],
     },
   ],

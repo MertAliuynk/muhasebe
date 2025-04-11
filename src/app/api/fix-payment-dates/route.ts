@@ -6,7 +6,6 @@ export const revalidate = 0
 
 export async function GET() {
   try {
-    // Sonuçları takip etmek için bir obje oluşturuyoruz
     const updateResults = {
       patientPayment: { paymentDate: 0, createdAt: 0 },
       doctorIncome: { paymentDate: 0, createdAt: 0 },
@@ -15,7 +14,6 @@ export async function GET() {
       doctorExpense: { createdAt: 0 },
     }
 
-    // 1. PatientPayment modelinde paymentDate güncellemesi
     const patientPaymentsPaymentDate = await db.$queryRaw`
         SELECT id, "paymentDate" 
         FROM "PatientPayment" 
@@ -37,7 +35,6 @@ export async function GET() {
       updateResults.patientPayment.paymentDate++
     }
 
-    // 2. PatientPayment modelinde createdAt güncellemesi
     const patientPaymentsCreatedAt = await db.$queryRaw`
       SELECT id, "createdAt" 
       FROM "PatientPayment" 
@@ -59,7 +56,6 @@ export async function GET() {
       updateResults.patientPayment.createdAt++
     }
 
-    // 3. DoctorIncome modelinde paymentDate güncellemesi
     const doctorIncomesPaymentDate = await db.$queryRaw`
         SELECT id, "paymentDate" 
         FROM "DoctorIncome" 
@@ -81,7 +77,6 @@ export async function GET() {
       updateResults.doctorIncome.paymentDate++
     }
 
-    // 4. DoctorIncome modelinde createdAt güncellemesi
     const doctorIncomesCreatedAt = await db.$queryRaw`
       SELECT id, "createdAt" 
       FROM "DoctorIncome" 
@@ -103,7 +98,6 @@ export async function GET() {
       updateResults.doctorIncome.createdAt++
     }
 
-    // 5. BranchPayment modelinde paymentDate güncellemesi
     const branchPaymentsPaymentDate = await db.$queryRaw`
         SELECT id, "paymentDate" 
         FROM "BranchPayment" 
@@ -125,7 +119,6 @@ export async function GET() {
       updateResults.branchPayment.paymentDate++
     }
 
-    // 6. BranchPayment modelinde createdAt güncellemesi
     const branchPaymentsCreatedAt = await db.$queryRaw`
       SELECT id, "createdAt" 
       FROM "BranchPayment" 
@@ -147,7 +140,6 @@ export async function GET() {
       updateResults.branchPayment.createdAt++
     }
 
-    // 7. BranchExpense modelinde createdAt güncellemesi
     const branchExpensesCreatedAt = await db.$queryRaw`
       SELECT id, "createdAt" 
       FROM "BranchExpense" 
@@ -169,7 +161,6 @@ export async function GET() {
       updateResults.branchExpense.createdAt++
     }
 
-    // 8. DoctorExpense modelinde createdAt güncellemesi
     const doctorExpensesCreatedAt = await db.$queryRaw`
       SELECT id, "createdAt" 
       FROM "DoctorExpense" 
@@ -191,7 +182,6 @@ export async function GET() {
       updateResults.doctorExpense.createdAt++
     }
 
-    // Tüm güncellenen kayıt sayılarını hesapla
     const totalUpdated =
       updateResults.patientPayment.paymentDate +
       updateResults.patientPayment.createdAt +

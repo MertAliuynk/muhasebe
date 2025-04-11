@@ -152,7 +152,6 @@ export const secretaryRouter = createTRPCRouter({
         })
       }
 
-      // Kullanıcı adı kontrolü (eğer değiştiyse)
       if (username && username !== secretary.user.username) {
         const existingUser = await ctx.db.user.findFirst({
           where: {
@@ -169,9 +168,7 @@ export const secretaryRouter = createTRPCRouter({
         }
       }
 
-      // İşlemleri transaction ile yapalım
       await ctx.db.$transaction(async (tx) => {
-        // Önce sekreter bilgilerini güncelle
         await tx.secretary.update({
           where: { id },
           data: {
@@ -180,7 +177,6 @@ export const secretaryRouter = createTRPCRouter({
           },
         })
 
-        // Sonra kullanıcı bilgilerini güncelle
         const userData: {
           name?: string
           username?: string
@@ -190,7 +186,6 @@ export const secretaryRouter = createTRPCRouter({
         if (name) userData.name = name
         if (username) userData.username = username
 
-        // Eğer şifre değiştirilecekse
         if (password) {
           userData.password = await hash(password, 10)
         }
@@ -226,7 +221,6 @@ export const secretaryRouter = createTRPCRouter({
         })
       }
 
-      // Hard delete - sekreterin kendisini ve kullanıcısını tamamen siliyoruz
       await ctx.db.$transaction([
         ctx.db.secretary.delete({
           where: { id },

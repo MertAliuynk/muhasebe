@@ -36,7 +36,6 @@ export const reportRouter = createTRPCRouter({
       const today = new Date()
       const period = input?.period ?? "daily"
 
-      // Eğer startDate ve endDate verilmişse onları kullan, yoksa son 30 günü veya 12 ayı hesapla
       const startDate =
         input?.startDate ??
         (period === "daily"
@@ -46,13 +45,11 @@ export const reportRouter = createTRPCRouter({
         input?.endDate ??
         (period === "daily" ? endOfDay(new Date()) : endOfMonth(today))
 
-      // Tarih aralığındaki tüm günleri veya ayları oluştur
       const intervals =
         period === "daily"
           ? eachDayOfInterval({ start: startDate, end: endDate })
           : eachMonthOfInterval({ start: startDate, end: endDate })
 
-      // Gelir verileri
       const patientPayments = await ctx.db.patientPayment.findMany({
         where: {
           branchId,
@@ -81,7 +78,6 @@ export const reportRouter = createTRPCRouter({
         },
       })
 
-      // Gider verileri
       const branchExpenses = await ctx.db.branchExpense.findMany({
         where: {
           branchId,
@@ -112,7 +108,6 @@ export const reportRouter = createTRPCRouter({
         },
       })
 
-      // Gelir ve gider verilerini hesapla
       const chartData = intervals.map((interval) => {
         const dateStr =
           period === "daily"
@@ -123,7 +118,6 @@ export const reportRouter = createTRPCRouter({
             ? format(interval, "d MMMM yyyy")
             : format(interval, "MMMM yyyy")
 
-        // O periyot için gelirler
         const periodPatientPayments = patientPayments.filter((payment) =>
           period === "daily"
             ? isSameDay(payment.paymentDate, interval)
@@ -135,7 +129,6 @@ export const reportRouter = createTRPCRouter({
             : isSameMonth(payment.paymentDate, interval)
         )
 
-        // O periyot için giderler
         const periodBranchExpenses = branchExpenses.filter((expense) =>
           period === "daily"
             ? isSameDay(expense.createdAt, interval)
@@ -147,7 +140,6 @@ export const reportRouter = createTRPCRouter({
             : isSameMonth(expense.createdAt, interval)
         )
 
-        // Toplam gelir
         const income =
           periodPatientPayments.reduce(
             (sum, payment) => sum + payment.amount,
@@ -155,7 +147,6 @@ export const reportRouter = createTRPCRouter({
           ) +
           periodBranchPayments.reduce((sum, payment) => sum + payment.amount, 0)
 
-        // Toplam gider
         const expense =
           periodBranchExpenses.reduce(
             (sum, expense) => sum + expense.amount,
@@ -185,7 +176,6 @@ export const reportRouter = createTRPCRouter({
 
     const today = new Date()
 
-    // Onaylanmış ve tamamlanmamış ödeme planlarını al
     const paymentPlans = await ctx.db.patientPaymentPlan.findMany({
       where: {
         patient: {
@@ -203,14 +193,11 @@ export const reportRouter = createTRPCRouter({
     let totalPendingAmount = 0
     let totalOverdueAmount = 0
 
-    // Her ödeme planı için bekleyen ve gecikmiş tutarları hesapla
     for (const plan of paymentPlans) {
       for (const installment of plan.installments) {
         if (!installment.isCompleted) {
-          // Bekleyen tutar
           totalPendingAmount += installment.remainingAmount
 
-          // Gecikmiş tutar (vadesi geçmiş)
           if (new Date(installment.dueDate) < today) {
             totalOverdueAmount += installment.remainingAmount
           }

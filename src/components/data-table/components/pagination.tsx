@@ -25,7 +25,6 @@ export function DataTablePagination<TData>({
   table,
   paginationPageSize,
 }: DataTablePaginationProps<TData>) {
-  // Sayfa boyutunu başlangıçta ayarla
   useEffect(() => {
     table.setPageSize(paginationPageSize)
   }, [paginationPageSize, table])

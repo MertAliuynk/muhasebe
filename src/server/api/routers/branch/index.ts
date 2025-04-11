@@ -68,7 +68,6 @@ export const branchRouter = createTRPCRouter({
           throw new Error("Güncellenecek şube bulunamadı.")
         }
 
-        // Sadece şube bilgilerini güncelle
         await ctx.db.branch.update({
           where: {
             id,

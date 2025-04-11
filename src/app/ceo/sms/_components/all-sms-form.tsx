@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 
-// Form şeması
 export const allSmsSchema = z.object({
   message: z.string().min(5, {
     message: "Mesaj en az 5 karakter olmalıdır",

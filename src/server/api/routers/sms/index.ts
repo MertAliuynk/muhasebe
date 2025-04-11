@@ -10,7 +10,6 @@ const sendSmsRequest = async (messages: Array<{ msg: string; no: string }>) => {
     const apiUrl =
       process.env.NETGSM_API_URL || "https://api.netgsm.com.tr/sms/send/rest/v1"
 
-    // API isteği için gerekli veri - tüm mesajları tek bir istekte gönder
     const data = {
       msgheader: "KARADENZDiS",
       encoding: "TR",

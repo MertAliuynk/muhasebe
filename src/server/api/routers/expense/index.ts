@@ -1,4 +1,3 @@
-import { createCaller } from "@/server/api/root"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import type { PaymentType } from "@prisma/client"
 import { TRPCError } from "@trpc/server"
@@ -118,7 +117,6 @@ export const expenseRouter = createTRPCRouter({
   saveExpense: protectedProcedure
     .input(saveExpenseSchema)
     .mutation(async ({ ctx, input }) => {
-      const caller = createCaller(ctx)
       const { branchId } = ctx.session.user
 
       if (!branchId) {
@@ -147,95 +145,83 @@ export const expenseRouter = createTRPCRouter({
         })
       }
 
-      // Gider tarihini kontrol et
       const expenseDate = input.createdAt || new Date()
 
-      // Gider geçmiş tarihli mi kontrol et (bugünden önceki bir tarih mi?)
       const today = startOfDay(new Date())
       const isPastExpense = !isAfter(startOfDay(new Date(expenseDate)), today)
 
-      // Sadece geçmiş tarihli giderler için CashReport güncelle
       if (isPastExpense) {
-        await caller.cashReport.updateCashReportFromDate({
-          date: expenseDate,
-          branchId,
-          amount: input.amount,
-          paymentType: input.paymentType,
-          isAddition: false,
-        })
+        await fetch(
+          `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${branchId}`
+        )
       }
     }),
   deleteExpense: protectedProcedure
     .input(deleteExpenseSchema)
     .mutation(async ({ ctx, input }) => {
-      const caller = createCaller(ctx)
+      return ctx.db.$transaction(
+        async (tx) => {
+          let expense: {
+            amount: number
+            paymentType: PaymentType
+            createdAt: Date
+            branchId: string
+          } | null = null
 
-      let expense: {
-        amount: number
-        paymentType: PaymentType
-        createdAt: Date
-        branchId: string
-      } | null = null
+          if (input.doctorId) {
+            expense = await tx.doctorExpense.findUnique({
+              where: { id: input.id },
+              select: {
+                amount: true,
+                paymentType: true,
+                createdAt: true,
+                branchId: true,
+              },
+            })
 
-      if (input.doctorId) {
-        expense = await ctx.db.doctorExpense.findUnique({
-          where: { id: input.id },
-          select: {
-            amount: true,
-            paymentType: true,
-            createdAt: true,
-            branchId: true,
-          },
-        })
+            if (!expense) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Doktor gider kaydı bulunamadı",
+              })
+            }
 
-        if (!expense) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Doktor gider kaydı bulunamadı",
-          })
+            await tx.doctorExpense.delete({
+              where: { id: input.id },
+            })
+          } else {
+            expense = await tx.branchExpense.findUnique({
+              where: { id: input.id },
+              select: {
+                amount: true,
+                paymentType: true,
+                createdAt: true,
+                branchId: true,
+              },
+            })
+
+            if (!expense) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Şube gider kaydı bulunamadı",
+              })
+            }
+
+            await tx.branchExpense.delete({
+              where: { id: input.id },
+            })
+          }
+
+          await fetch(
+            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${expense.branchId}`
+          )
+
+          return { success: true }
+        },
+        {
+          timeout: 20000,
         }
-
-        await ctx.db.doctorExpense.delete({
-          where: { id: input.id },
-        })
-      } else {
-        expense = await ctx.db.branchExpense.findUnique({
-          where: { id: input.id },
-          select: {
-            amount: true,
-            paymentType: true,
-            createdAt: true,
-            branchId: true,
-          },
-        })
-
-        if (!expense) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Şube gider kaydı bulunamadı",
-          })
-        }
-
-        await ctx.db.branchExpense.delete({
-          where: { id: input.id },
-        })
-      }
-
-      const expenseDate = expense.createdAt
-      const today = startOfDay(new Date())
-      const isPastExpense = !isAfter(startOfDay(new Date(expenseDate)), today)
-
-      if (isPastExpense) {
-        await caller.cashReport.reverseCashReportUpdate({
-          date: expenseDate,
-          branchId: expense.branchId,
-          amount: expense.amount,
-          paymentType: expense.paymentType,
-          isAddition: false,
-        })
-      }
-
-      return { success: true }
+      )
     }),
   softDeleteExpenseType: protectedProcedure
     .input(softDeleteExpenseTypeSchema)

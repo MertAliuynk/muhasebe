@@ -34,14 +34,12 @@ export function DateRangePicker({
     to: endDate,
   })
 
-  // URL parametreleri değiştiğinde date state'ini güncelle
   React.useEffect(() => {
     const currentStartDate = format(date?.from ?? startDate, "yyyy-MM-dd")
     const currentEndDate = format(date?.to ?? endDate, "yyyy-MM-dd")
     const newStartDate = format(startDate, "yyyy-MM-dd")
     const newEndDate = format(endDate, "yyyy-MM-dd")
 
-    // Sadece tarihler değiştiyse state'i güncelle
     if (currentStartDate !== newStartDate || currentEndDate !== newEndDate) {
       setDate({
         from: startDate,
@@ -51,7 +49,6 @@ export function DateRangePicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate])
 
-  // Date state'i değiştiğinde URL'i güncelle
   React.useEffect(() => {
     if (date?.from && date?.to) {
       const params = new URLSearchParams(searchParams.toString())
@@ -60,7 +57,6 @@ export function DateRangePicker({
       const currentStartDate = searchParams.get("startDate")
       const currentEndDate = searchParams.get("endDate")
 
-      // Sadece URL parametreleri farklıysa güncelle
       if (currentStartDate !== newStartDate || currentEndDate !== newEndDate) {
         params.set("startDate", newStartDate)
         params.set("endDate", newEndDate)

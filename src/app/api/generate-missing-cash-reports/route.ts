@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
   try {
     const branchId = request.nextUrl.searchParams.get("branchId")
 
-    // Şube kontrolü
     let branchQuery: Prisma.BranchWhereInput = {}
     if (branchId) {
       const branch = await db.branch.findUnique({
@@ -32,7 +31,6 @@ export async function GET(request: NextRequest) {
       branchQuery = { isDeleted: false }
     }
 
-    // Tüm şubeleri al
     const branches = await db.branch.findMany({
       where: branchQuery,
       select: { id: true, name: true },
@@ -47,14 +45,11 @@ export async function GET(request: NextRequest) {
 
     const results = []
 
-    // Her şube için işlem yap
     for (const branch of branches) {
-      // Bu şube için mevcut tüm kasa raporlarını sil
       const deletedRecords = await db.cashReport.deleteMany({
         where: { branchId: branch.id },
       })
 
-      // Bu şube için en eski işlem tarihini bul
       const [
         oldestPatientPayment,
         oldestBranchPayment,
@@ -83,7 +78,6 @@ export async function GET(request: NextRequest) {
         }),
       ])
 
-      // En eski tarihi bul
       const allDates = [
         oldestPatientPayment?.createdAt,
         oldestBranchPayment?.createdAt,
@@ -109,23 +103,19 @@ export async function GET(request: NextRequest) {
       )
       const endDate = startOfDay(new Date())
 
-      // Tarih aralığındaki her günü oluştur
       const allDateRange = eachDayOfInterval({
         start: startDate,
         end: endDate,
       })
 
-      // Bu şube için oluşturulan rapor sonuçlarını tut
       const branchResults = []
       let currentCashBalance = 0
       let currentCardBalance = 0
       let currentTransferBalance = 0
 
-      // Her gün için rapor oluştur
       for (const date of allDateRange.sort(
         (a, b) => a.getTime() - b.getTime()
       )) {
-        // Günlük gelir ve giderleri hesapla
         const [
           cashPatientIncomes,
           cashBranchIncomes,
@@ -280,7 +270,6 @@ export async function GET(request: NextRequest) {
           }),
         ])
 
-        // Bakiyeleri hesapla
         const cashIncome =
           (cashPatientIncomes._sum.amount || 0) +
           (cashBranchIncomes._sum.amount || 0)
@@ -316,7 +305,6 @@ export async function GET(request: NextRequest) {
         const totalExpense = cashExpense + cardExpense + transferExpense
         const totalBalance = cashBalance + cardBalance + transferBalance
 
-        // Raporu oluştur
         const createdReport = await db.cashReport.create({
           data: {
             branchId: branch.id,
@@ -332,7 +320,7 @@ export async function GET(request: NextRequest) {
             totalIncome,
             totalExpense,
             totalBalance,
-            createdAt: setHours(date, 18), // Günü saat 18:00 olarak ayarla
+            createdAt: setHours(date, 18),
           },
         })
 
@@ -360,7 +348,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Kasa raporları yeniden oluşturuldu.",
-      results,
     })
   } catch (error) {
     console.error("Kasa raporlarını yeniden oluşturma hatası:", error)
