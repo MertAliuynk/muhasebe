@@ -476,36 +476,6 @@ export const paymentRouter = createTRPCRouter({
 
         const amountDifference = input.amount - existingPayment.amount
 
-        const oldPaymentDate =
-          existingPayment.createdAt || existingPayment.paymentDate
-        const newPaymentDate = input.editedAt || existingPayment.paymentDate
-
-        const dateChanged =
-          oldPaymentDate.getTime() !== newPaymentDate.getTime()
-
-        const today = startOfDay(new Date())
-
-        const isOldPastPayment = !isAfter(
-          startOfDay(new Date(oldPaymentDate)),
-          today
-        )
-        const isNewPastPayment = !isAfter(
-          startOfDay(new Date(newPaymentDate)),
-          today
-        )
-
-        if (isOldPastPayment && (dateChanged || amountDifference !== 0)) {
-          await fetch(
-            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${existingPayment.branchId}`
-          )
-        }
-
-        if (isNewPastPayment && (dateChanged || amountDifference !== 0)) {
-          await fetch(
-            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${existingPayment.branchId}`
-          )
-        }
-
         if (existingPayment.paymentPlan) {
           if (
             amountDifference > 0 &&
@@ -642,17 +612,27 @@ export const paymentRouter = createTRPCRouter({
                 },
               })
             }
+
+            await fetch(
+              `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${existingPayment.branchId}`
+            )
           })
         } else {
-          await ctx.db.patientPayment.update({
-            where: { id: input.id },
-            data: {
-              amount: input.amount,
-              paymentType: input.paymentType,
-              note: input.note,
-              paymentDate: input.editedAt || existingPayment.paymentDate,
-              createdAt: input.editedAt || existingPayment.createdAt,
-            },
+          await ctx.db.$transaction(async (tx) => {
+            await tx.patientPayment.update({
+              where: { id: input.id },
+              data: {
+                amount: input.amount,
+                paymentType: input.paymentType,
+                note: input.note,
+                paymentDate: input.editedAt || existingPayment.paymentDate,
+                createdAt: input.editedAt || existingPayment.createdAt,
+              },
+            })
+
+            await fetch(
+              `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${existingPayment.branchId}`
+            )
           })
         }
       } else {
@@ -667,48 +647,21 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
-        const oldPaymentDate =
-          existingBranchPayment.createdAt || existingBranchPayment.paymentDate
-        const newPaymentDate =
-          input.editedAt || existingBranchPayment.paymentDate
+        await ctx.db.$transaction(async (tx) => {
+          await tx.branchPayment.update({
+            where: { id: input.id },
+            data: {
+              amount: input.amount,
+              paymentType: input.paymentType,
+              note: input.note,
+              paymentDate: input.editedAt || existingBranchPayment.paymentDate,
+              createdAt: input.editedAt || existingBranchPayment.createdAt,
+            },
+          })
 
-        const dateChanged =
-          oldPaymentDate.getTime() !== newPaymentDate.getTime()
-
-        const amountDifference = input.amount - existingBranchPayment.amount
-
-        const today = startOfDay(new Date())
-
-        const isOldPastPayment = !isAfter(
-          startOfDay(new Date(oldPaymentDate)),
-          today
-        )
-        const isNewPastPayment = !isAfter(
-          startOfDay(new Date(newPaymentDate)),
-          today
-        )
-
-        if (isOldPastPayment && (dateChanged || amountDifference !== 0)) {
           await fetch(
             `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
           )
-        }
-
-        if (isNewPastPayment && (dateChanged || amountDifference !== 0)) {
-          await fetch(
-            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
-          )
-        }
-
-        await ctx.db.branchPayment.update({
-          where: { id: input.id },
-          data: {
-            amount: input.amount,
-            paymentType: input.paymentType,
-            note: input.note,
-            paymentDate: input.editedAt || existingBranchPayment.paymentDate,
-            createdAt: input.editedAt || existingBranchPayment.createdAt,
-          },
         })
       }
     }),
