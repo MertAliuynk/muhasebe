@@ -220,7 +220,7 @@ export const expenseRouter = createTRPCRouter({
       )
 
       await fetch(
-        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports`
+        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
       )
       return { success: true }
     }),
