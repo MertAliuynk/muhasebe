@@ -332,18 +332,7 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
-        const paymentDate = payment.createdAt || payment.paymentDate
-
-        const today = startOfDay(new Date())
-        const isPastPayment = !isAfter(startOfDay(new Date(paymentDate)), today)
-
-        if (isPastPayment) {
-          await fetch(
-            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${payment.branchId}`
-          )
-        }
-
-        return await ctx.db.$transaction(async (tx) => {
+        await ctx.db.$transaction(async (tx) => {
           const paymentPlan = payment.patient?.paymentPlans[0]
           if (!paymentPlan) {
             throw new TRPCError({
@@ -437,31 +426,26 @@ export const paymentRouter = createTRPCRouter({
         })
       }
 
-      const payment = await ctx.db.branchPayment.findUnique({
-        where: { id: input.id },
-      })
+      if (input.whereToPay === "branch") {
+        const payment = await ctx.db.branchPayment.findUnique({
+          where: { id: input.id },
+        })
 
-      if (!payment) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Ödeme bulunamadı.",
+        if (!payment) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Ödeme bulunamadı.",
+          })
+        }
+
+        await ctx.db.branchPayment.delete({
+          where: { id: input.id },
         })
       }
 
-      const paymentDate = payment.createdAt || payment.paymentDate
-
-      const today = startOfDay(new Date())
-      const isPastPayment = !isAfter(startOfDay(new Date(paymentDate)), today)
-
-      if (isPastPayment) {
-        await fetch(
-          `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${payment.branchId}`
-        )
-      }
-
-      await ctx.db.branchPayment.delete({
-        where: { id: input.id },
-      })
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
+      )
     }),
   updatePayment: protectedProcedure
     .input(updatePaymentSchema)
@@ -498,164 +482,145 @@ export const paymentRouter = createTRPCRouter({
             })
           }
 
-          await ctx.db.$transaction(
-            async (tx) => {
-              await tx.patientPayment.update({
-                where: { id: input.id },
-                data: {
-                  amount: input.amount,
-                  paymentType: input.paymentType,
-                  note: input.note,
-                  paymentDate: input.editedAt || existingPayment.paymentDate,
-                  createdAt: input.editedAt || existingPayment.createdAt,
-                },
+          await ctx.db.$transaction(async (tx) => {
+            await tx.patientPayment.update({
+              where: { id: input.id },
+              data: {
+                amount: input.amount,
+                paymentType: input.paymentType,
+                note: input.note,
+                paymentDate: input.editedAt || existingPayment.paymentDate,
+                createdAt: input.editedAt || existingPayment.createdAt,
+              },
+            })
+
+            if (amountDifference !== 0) {
+              const installments = await tx.installment.findMany({
+                where: { paymentPlanId: existingPayment.paymentPlan?.id },
+                orderBy: { number: "asc" },
               })
 
-              if (amountDifference !== 0) {
-                const installments = await tx.installment.findMany({
-                  where: { paymentPlanId: existingPayment.paymentPlan?.id },
-                  orderBy: { number: "asc" },
-                })
+              if (amountDifference < 0) {
+                const absAmountDifference = Math.abs(amountDifference)
+                let remainingToRevert = absAmountDifference
 
-                if (amountDifference < 0) {
-                  const absAmountDifference = Math.abs(amountDifference)
-                  let remainingToRevert = absAmountDifference
+                for (const installment of [...installments].reverse()) {
+                  if (remainingToRevert <= 0) break
 
-                  for (const installment of [...installments].reverse()) {
-                    if (remainingToRevert <= 0) break
+                  const amountToRevert = Math.min(
+                    remainingToRevert,
+                    installment.paidAmount
+                  )
 
-                    const amountToRevert = Math.min(
-                      remainingToRevert,
-                      installment.paidAmount
-                    )
+                  if (amountToRevert > 0) {
+                    const newLastPaymentDate =
+                      amountToRevert >= installment.paidAmount
+                        ? null
+                        : input.editedAt
 
-                    if (amountToRevert > 0) {
-                      const newLastPaymentDate =
-                        amountToRevert >= installment.paidAmount
-                          ? null
-                          : input.editedAt
-
-                      await tx.installment.update({
-                        where: { id: installment.id },
-                        data: {
-                          paidAmount: {
-                            decrement: amountToRevert,
-                          },
-                          remainingAmount: {
-                            increment: amountToRevert,
-                          },
-                          lastPaymentDate: newLastPaymentDate,
-                          isCompleted:
-                            installment.paidAmount - amountToRevert >=
-                            installment.amount,
+                    await tx.installment.update({
+                      where: { id: installment.id },
+                      data: {
+                        paidAmount: {
+                          decrement: amountToRevert,
                         },
-                      })
+                        remainingAmount: {
+                          increment: amountToRevert,
+                        },
+                        lastPaymentDate: newLastPaymentDate,
+                        isCompleted:
+                          installment.paidAmount - amountToRevert >=
+                          installment.amount,
+                      },
+                    })
 
-                      remainingToRevert -= amountToRevert
-                    }
+                    remainingToRevert -= amountToRevert
                   }
-                } else if (amountDifference > 0) {
-                  let remainingToAdd = amountDifference
+                }
+              } else if (amountDifference > 0) {
+                let remainingToAdd = amountDifference
 
-                  for (const installment of installments) {
-                    if (remainingToAdd <= 0) break
+                for (const installment of installments) {
+                  if (remainingToAdd <= 0) break
 
-                    const amountToAdd = Math.min(
-                      remainingToAdd,
-                      installment.remainingAmount
-                    )
+                  const amountToAdd = Math.min(
+                    remainingToAdd,
+                    installment.remainingAmount
+                  )
 
-                    if (amountToAdd > 0) {
-                      const shouldUpdateLastPaymentDate =
-                        installment.paidAmount === 0 ||
-                        amountToAdd >= installment.remainingAmount
+                  if (amountToAdd > 0) {
+                    const shouldUpdateLastPaymentDate =
+                      installment.paidAmount === 0 ||
+                      amountToAdd >= installment.remainingAmount
 
-                      const newLastPaymentDate = shouldUpdateLastPaymentDate
-                        ? input.editedAt || new Date()
-                        : installment.lastPaymentDate
+                    const newLastPaymentDate = shouldUpdateLastPaymentDate
+                      ? input.editedAt || new Date()
+                      : installment.lastPaymentDate
 
-                      await tx.installment.update({
-                        where: { id: installment.id },
-                        data: {
-                          paidAmount: {
-                            increment: amountToAdd,
-                          },
-                          remainingAmount: {
-                            decrement: amountToAdd,
-                          },
-                          isCompleted:
-                            installment.remainingAmount <= amountToAdd,
-                          lastPaymentDate: newLastPaymentDate,
+                    await tx.installment.update({
+                      where: { id: installment.id },
+                      data: {
+                        paidAmount: {
+                          increment: amountToAdd,
                         },
-                      })
+                        remainingAmount: {
+                          decrement: amountToAdd,
+                        },
+                        isCompleted: installment.remainingAmount <= amountToAdd,
+                        lastPaymentDate: newLastPaymentDate,
+                      },
+                    })
 
-                      remainingToAdd -= amountToAdd
-                    }
+                    remainingToAdd -= amountToAdd
                   }
                 }
               }
-
-              await tx.patientPaymentPlan.update({
-                where: { id: existingPayment.paymentPlan?.id ?? "" },
-                data: {
-                  paidAmount: {
-                    increment: amountDifference,
-                  },
-                  remainingAmount: {
-                    decrement: amountDifference,
-                  },
-                  isCompleted:
-                    (existingPayment.paymentPlan?.remainingAmount ?? 0) <=
-                    amountDifference,
-                },
-              })
-
-              const doctorIncome = await tx.doctorIncome.findFirst({
-                where: { paymentId: input.id },
-              })
-
-              if (doctorIncome) {
-                await tx.doctorIncome.update({
-                  where: { id: doctorIncome.id },
-                  data: {
-                    amount: input.amount,
-                    paymentType: input.paymentType,
-                    paymentDate: input.editedAt || doctorIncome.paymentDate,
-                    createdAt: input.editedAt || doctorIncome.createdAt,
-                  },
-                })
-              }
-
-              await fetch(
-                `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${existingPayment.branchId}`
-              )
-            },
-            {
-              timeout: 20000,
             }
-          )
-        } else {
-          await ctx.db.$transaction(
-            async (tx) => {
-              await tx.patientPayment.update({
-                where: { id: input.id },
+
+            await tx.patientPaymentPlan.update({
+              where: { id: existingPayment.paymentPlan?.id ?? "" },
+              data: {
+                paidAmount: {
+                  increment: amountDifference,
+                },
+                remainingAmount: {
+                  decrement: amountDifference,
+                },
+                isCompleted:
+                  (existingPayment.paymentPlan?.remainingAmount ?? 0) <=
+                  amountDifference,
+              },
+            })
+
+            const doctorIncome = await tx.doctorIncome.findFirst({
+              where: { paymentId: input.id },
+            })
+
+            if (doctorIncome) {
+              await tx.doctorIncome.update({
+                where: { id: doctorIncome.id },
                 data: {
                   amount: input.amount,
                   paymentType: input.paymentType,
-                  note: input.note,
-                  paymentDate: input.editedAt || existingPayment.paymentDate,
-                  createdAt: input.editedAt || existingPayment.createdAt,
+                  paymentDate: input.editedAt || doctorIncome.paymentDate,
+                  createdAt: input.editedAt || doctorIncome.createdAt,
                 },
               })
-
-              await fetch(
-                `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${existingPayment.branchId}`
-              )
-            },
-            {
-              timeout: 20000,
             }
-          )
+          })
+        } else {
+          await ctx.db.$transaction(async (tx) => {
+            await tx.patientPayment.update({
+              where: { id: input.id },
+              data: {
+                amount: input.amount,
+                paymentType: input.paymentType,
+                note: input.note,
+                paymentDate: input.editedAt || existingPayment.paymentDate,
+                createdAt: input.editedAt || existingPayment.createdAt,
+              },
+            })
+          })
         }
       } else {
         const existingBranchPayment = await ctx.db.branchPayment.findUnique({
@@ -669,28 +634,24 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
-        await ctx.db.$transaction(
-          async (tx) => {
-            await tx.branchPayment.update({
-              where: { id: input.id },
-              data: {
-                amount: input.amount,
-                paymentType: input.paymentType,
-                note: input.note,
-                paymentDate:
-                  input.editedAt || existingBranchPayment.paymentDate,
-                createdAt: input.editedAt || existingBranchPayment.createdAt,
-              },
-            })
-
-            await fetch(
-              `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
-            )
-          },
-          {
-            timeout: 20000,
-          }
-        )
+        await ctx.db.$transaction(async (tx) => {
+          await tx.branchPayment.update({
+            where: { id: input.id },
+            data: {
+              amount: input.amount,
+              paymentType: input.paymentType,
+              note: input.note,
+              paymentDate: input.editedAt || existingBranchPayment.paymentDate,
+              createdAt: input.editedAt || existingBranchPayment.createdAt,
+            },
+          })
+        })
       }
+
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
+      )
+      console.log("tamamlandı")
+      return { success: true }
     }),
 })

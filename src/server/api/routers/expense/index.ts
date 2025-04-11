@@ -159,7 +159,7 @@ export const expenseRouter = createTRPCRouter({
   deleteExpense: protectedProcedure
     .input(deleteExpenseSchema)
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.$transaction(
+      await ctx.db.$transaction(
         async (tx) => {
           let expense: {
             amount: number
@@ -212,16 +212,17 @@ export const expenseRouter = createTRPCRouter({
             })
           }
 
-          await fetch(
-            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${expense.branchId}`
-          )
-
           return { success: true }
         },
         {
           timeout: 20000,
         }
       )
+
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports`
+      )
+      return { success: true }
     }),
   softDeleteExpenseType: protectedProcedure
     .input(softDeleteExpenseTypeSchema)
