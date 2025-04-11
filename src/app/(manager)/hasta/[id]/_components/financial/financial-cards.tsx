@@ -7,7 +7,9 @@ import { formatCurrencyWithSymbol } from "@/lib/utils"
 export default function FinancialCards({
   approvedPaymentPlan,
 }: {
-  approvedPaymentPlan: RouterOutputs["paymentPlan"]["getPatientPaymentPlanById"][number]
+  approvedPaymentPlan:
+    | RouterOutputs["paymentPlan"]["getPatientPaymentPlanById"][number]
+    | null
 }) {
   if (!approvedPaymentPlan) return null
 

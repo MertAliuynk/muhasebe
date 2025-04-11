@@ -19,13 +19,15 @@ type PageProps = {
 export default async function page({ params }: PageProps) {
   const { id } = await params
 
-  const patient = await api.patient.getPatientById({ id })
-  const paymentPlans = await api.paymentPlan.getPatientPaymentPlanById({
-    patientId: id,
-  })
-  const payments = await api.payment.getAllPaymentsByPatientId({
-    patientId: id,
-  })
+  const [patient, paymentPlans, payments] = await Promise.all([
+    api.patient.getPatientById({ id }),
+    api.paymentPlan.getPatientPaymentPlanById({
+      patientId: id,
+    }),
+    api.payment.getAllPaymentsByPatientId({
+      patientId: id,
+    }),
+  ])
 
   const approvedPaymentPlan = paymentPlans.find((plan) => plan.isApproved)
 
@@ -37,7 +39,7 @@ export default async function page({ params }: PageProps) {
     <div className="space-y-8">
       <div className="relative">
         <PreviewPatient patient={patient} paymentPlans={paymentPlans} />
-        <FinancialCards approvedPaymentPlan={approvedPaymentPlan!} />
+        <FinancialCards approvedPaymentPlan={approvedPaymentPlan ?? null} />
       </div>
       <Separator />
       {approvedPaymentPlan && <PaymentDetailDialog payments={payments} />}

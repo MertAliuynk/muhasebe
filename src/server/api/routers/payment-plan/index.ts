@@ -273,6 +273,14 @@ export const paymentPlanRouter = createTRPCRouter({
 
           const paidAmount = existingShare.paidAmount
 
+          // Doktorun toplam payı, daha önce ödenen miktardan az olamaz
+          if (share.totalAmount < paidAmount) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Doktor paylaşımı toplam tutarı (${share.totalAmount}), daha önce yapılan ödeme miktarından (${paidAmount}) az olamaz.`,
+            })
+          }
+
           await tx.doctorPaymentShare.update({
             where: { id: share.id },
             data: {

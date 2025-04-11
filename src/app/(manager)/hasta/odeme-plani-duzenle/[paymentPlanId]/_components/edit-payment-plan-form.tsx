@@ -6,7 +6,7 @@ import { updatePaymentPlanSchema } from "@/server/api/routers/payment-plan/schem
 import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { type TRPCError } from "@trpc/server"
-import { Eraser } from "lucide-react"
+import { Undo2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
@@ -64,7 +64,7 @@ export default function EditPaymentPlan({
       originalAmount: paymentPlan.originalAmount,
       installmentCount: paymentPlan.installmentCount,
       interestRate: paymentPlan.interestRate,
-      startDate: paymentPlan.startDate,
+      startDate: paymentPlan.installments[0]?.dueDate ?? undefined,
       installments: paymentPlan.installments.map((installment) => ({
         date: installment.dueDate ?? undefined,
         amount: installment.amount ?? undefined,
@@ -89,6 +89,42 @@ export default function EditPaymentPlan({
       ) || 0
     )
   }, [installments])
+
+  useEffect(() => {
+    const interestAmount = originalAmount * (interestRate / 100)
+    const newTotalAmount = originalAmount + interestAmount
+    form.setValue("totalAmount", newTotalAmount, { shouldDirty: true })
+  }, [originalAmount, interestRate, form])
+
+  useEffect(() => {
+    if (installmentCount <= 0) return
+
+    const interestAmount = originalAmount * (interestRate / 100)
+    const totalWithInterest = originalAmount + interestAmount
+    const installmentAmount = totalWithInterest / installmentCount
+
+    const startDate = form.getValues("startDate") || new Date()
+
+    const newInstallments = Array.from({ length: installmentCount }, (_, i) => {
+      const installmentDate = new Date(startDate)
+      installmentDate.setMonth(startDate.getMonth() + i)
+
+      const existingDate = form.getValues(`installments.${i}.date`)
+      if (existingDate) {
+        return {
+          date: existingDate,
+          amount: installmentAmount,
+        }
+      }
+
+      return {
+        date: installmentDate,
+        amount: installmentAmount,
+      }
+    })
+
+    form.setValue("installments", newInstallments, { shouldDirty: true })
+  }, [installmentCount, originalAmount, interestRate, form])
 
   const handleInstallmentAmountChange = (index: number, newAmount: number) => {
     const currentInstallments = [...installments]
@@ -117,6 +153,19 @@ export default function EditPaymentPlan({
 
   const onSubmit = (values: z.infer<typeof updatePaymentPlanSchema>) => {
     const calculatedTotal = calculateTotalAmount()
+
+    // Doktor paylaşımlarını kontrol et - önceki ödemelerden az olmamalı
+    const hasInvalidDoctorShare = values.doctorShares.some(
+      (share, index) =>
+        share.totalAmount < (paymentPlan.doctorShares[index]?.paidAmount ?? 0)
+    )
+
+    if (hasInvalidDoctorShare) {
+      toast.error(
+        "Bir veya daha fazla doktor için daha önce yapılan ödemeden daha az miktar girilmiş!"
+      )
+      return
+    }
 
     if (!hasMultipleDoctors) {
       toast.promise(updatePaymentPlan(values), {
@@ -155,39 +204,40 @@ export default function EditPaymentPlan({
 
   useEffect(() => {
     if (!hasMultipleDoctors && paymentPlan.doctorShares.length === 1) {
-      const calculatedTotal = calculateTotalAmount()
-      form.setValue(`doctorShares.0.totalAmount`, calculatedTotal)
+      const totalAmount = form.getValues("totalAmount")
+      form.setValue(`doctorShares.0.totalAmount`, totalAmount, {
+        shouldDirty: true,
+      })
     }
   }, [
-    calculateTotalAmount,
     form,
     hasMultipleDoctors,
     paymentPlan.doctorShares.length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    form.watch("totalAmount"),
   ])
 
   return (
     <div>
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center space-y-10">
         <div>
           <h1 className="text-2xl font-bold">Ödeme Planı Düzenle</h1>
           <p className="text-sm text-muted-foreground">
             Lütfen ödeme planı detaylarını giriniz.
           </p>
         </div>
-        <div className="flex gap-2">
-          {form.formState.dirtyFields && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                form.reset()
-              }}
-            >
-              <Eraser className="mr-2" size={16} />
-              Formu Temizle
-            </Button>
-          )}
-        </div>
+        {form.formState.dirtyFields && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              form.reset()
+            }}
+          >
+            <Undo2 className="mr-2" size={16} />
+            Tüm Değişiklikleri Geri Al
+          </Button>
+        )}
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
@@ -284,15 +334,6 @@ export default function EditPaymentPlan({
 
           {installmentCount > 0 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-10">
-                <div className="col-span-2">
-                  <DatePicker
-                    name="startDate"
-                    label="Taksit Başlangıç Tarihi"
-                  />
-                </div>
-              </div>
-
               <div className="mt-4 space-y-2">
                 <h3 className="text-lg font-medium">Taksit Tarihleri</h3>
                 <ScrollArea className="pr-4 max-h-[40vh] overflow-y-auto">

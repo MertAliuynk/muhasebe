@@ -5,10 +5,24 @@ const installmentSchema = z.object({
   amount: z.number().min(0, "Taksit tutarı 0'dan büyük olmalıdır"),
 })
 
-const doctorShareSchema = z.object({
-  id: z.string(),
-  totalAmount: z.number().min(0, "Tutar 0'dan büyük olmalıdır"),
-})
+const doctorShareSchema = z
+  .object({
+    id: z.string(),
+    totalAmount: z.number().min(0, "Tutar 0'dan büyük olmalıdır"),
+    paidAmount: z.number().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.paidAmount !== undefined && data.totalAmount < data.paidAmount) {
+        return false
+      }
+      return true
+    },
+    {
+      message: "Toplam tutar, doktora yapılan ödemeden daha az olamaz!",
+      path: ["totalAmount"],
+    }
+  )
 
 export const deletePaymentPlanSchema = z.object({
   id: z.string(),
