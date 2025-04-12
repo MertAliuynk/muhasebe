@@ -1,5 +1,5 @@
 import React from "react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { api } from "@/trpc/server"
 
 import { Separator } from "@/components/ui/separator"
@@ -11,9 +11,20 @@ import DoctorIncomes from "./_components/incomes"
 
 type PageProps = {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ date: string }>
 }
-export default async function page({ params }: PageProps) {
+export default async function page({ params, searchParams }: PageProps) {
   const { id } = await params
+  const { date } = await searchParams
+
+  if (!date) {
+    const today = new Date()
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), 1)
+
+    return redirect(
+      `/hekim/${id}?date=${startOfDay.toISOString()},${today.toISOString()}`
+    )
+  }
 
   const doctor = await api.doctor.getDoctorById({
     id,

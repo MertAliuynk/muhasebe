@@ -33,9 +33,15 @@ export function DateRangePicker({
 
   const defaultDate = React.useMemo(() => {
     const today = new Date()
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const lastDayOfMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0
+    )
     return {
-      from: today,
-      to: undefined,
+      from: firstDayOfMonth,
+      to: lastDayOfMonth,
     } as DateRange
   }, [])
 

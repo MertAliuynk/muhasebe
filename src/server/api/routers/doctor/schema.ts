@@ -44,5 +44,5 @@ export const getDoctorPendingPaymentsSchema = z.object({
 
 export const changeDoctorPasswordSchema = z.object({
   id: z.string().min(1, "Hekim ID giriniz."),
-  password: z.string().min(8, "Şifre en az 8 karakter olmalıdır."),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır."),
 })
