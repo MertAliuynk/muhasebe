@@ -162,8 +162,6 @@ export const reportRouter = createTRPCRouter({
         }
       })
 
-      console.log(chartData)
-
       return chartData
     }),
 

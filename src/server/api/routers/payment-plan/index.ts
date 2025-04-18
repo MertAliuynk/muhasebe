@@ -249,10 +249,6 @@ export const paymentPlanRouter = createTRPCRouter({
             let paidForThisInstallment = 0
             let lastPaymentDate = null
 
-            console.log(
-              `Taksit ${installment.number} işleniyor (${installment.amount} TL)`
-            )
-
             // Bu taksit için hangi ödemelerin kullanıldığını bul
             for (
               let i = 0;
@@ -280,10 +276,6 @@ export const paymentPlanRouter = createTRPCRouter({
 
             // Taksiti güncelle
             if (paidForThisInstallment > 0) {
-              console.log(
-                `  => Taksit ${installment.number} için son ödeme tarihi: ${lastPaymentDate ? lastPaymentDate.toISOString() : "null"}`
-              )
-
               await tx.installment.update({
                 where: { id: installment.id },
                 data: {
@@ -293,10 +285,6 @@ export const paymentPlanRouter = createTRPCRouter({
                   lastPaymentDate: lastPaymentDate,
                 },
               })
-            } else {
-              console.log(
-                `  => Taksit ${installment.number} için ödeme yapılmadı`
-              )
             }
           }
         }

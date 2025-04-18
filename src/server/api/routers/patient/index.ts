@@ -43,10 +43,39 @@ export const patientRouter = createTRPCRouter({
               },
             },
           },
+          paymentPlans: {
+            include: {
+              doctorShares: {
+                include: {
+                  doctor: {
+                    select: {
+                      id: true,
+                      specialty: true,
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          imagePath: true,
+                          username: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       })
 
-      return patient
+      const patientWithApprovedPaymentPlan = {
+        ...patient,
+        doctorShares: patient?.paymentPlans.find(
+          (plan) => plan.isApproved === true
+        )?.doctorShares,
+      }
+
+      return patientWithApprovedPaymentPlan
     }),
   getPatientsAdmin: adminProcedure.query(async ({ ctx }) => {
     const patients = await ctx.db.patient.findMany({
@@ -81,16 +110,22 @@ export const patientRouter = createTRPCRouter({
         isDeleted: false,
       },
       include: {
-        doctors: {
+        paymentPlans: {
           select: {
-            id: true,
-            specialty: true,
-            user: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-                imagePath: true,
+            isApproved: true,
+            doctorShares: {
+              include: {
+                doctor: {
+                  select: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        username: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -98,7 +133,16 @@ export const patientRouter = createTRPCRouter({
       },
     })
 
-    return patients
+    const patientsWithApprovedPaymentPlan = patients.map((patient) => {
+      return {
+        ...patient,
+        doctorShares: patient.paymentPlans.find(
+          (plan) => plan.isApproved === true
+        )?.doctorShares,
+      }
+    })
+
+    return patientsWithApprovedPaymentPlan
   }),
   getFilteredPatients: protectedProcedure
     .input(getFilteredPatientsSchema)

@@ -308,10 +308,6 @@ export const cashReportRouter = createTRPCRouter({
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0))
       const endOfDay = addDays(new Date(targetDate.setHours(0, 0, 0, 0)), 1)
 
-      console.log("targetDate", targetDate)
-      console.log("startOfDay", startOfDay)
-      console.log("endOfDay", endOfDay)
-
       const [
         cashPatientIncomes,
         cashBranchIncomes,

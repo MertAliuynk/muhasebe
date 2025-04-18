@@ -854,7 +854,6 @@ export const paymentRouter = createTRPCRouter({
       await fetch(
         `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
       )
-      console.log("tamamlandı")
       return { success: true }
     }),
 })

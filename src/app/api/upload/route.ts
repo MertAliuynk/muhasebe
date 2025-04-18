@@ -42,7 +42,6 @@ async function uploadToMinio(file: File): Promise<UploadResult> {
       url: `/${process.env.MINIO_BUCKET}/${fileName}`,
     }
   } catch (error: unknown) {
-    console.log("Yükleme hatası:", error)
     throw new Error(error instanceof Error ? error.message : "Bilinmeyen hata")
   }
 }

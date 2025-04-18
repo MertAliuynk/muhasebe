@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
 
-import { cn, paymentTypeLabels } from "@/lib/utils"
+import { cn, formatCurrency, paymentTypeLabels } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -192,7 +192,7 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
                         render={({ field }) => {
                           const doctors = patients?.find(
                             (patient) => patient.id === form.watch("patientId")
-                          )?.doctors
+                          )?.doctorShares
 
                           return (
                             <FormItem>
@@ -215,7 +215,16 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
                                       value={doctor.id}
                                       className="text-xs sm:text-sm"
                                     >
-                                      {doctor.user.name}
+                                      {doctor.doctor.user.name}{" "}
+                                      <span className="text-xs text-muted-foreground">
+                                        ( Kalan Ödeme Tutarı:{" "}
+                                        <span className="text-foreground">
+                                          {formatCurrency(
+                                            doctor.remainingAmount
+                                          )}
+                                        </span>
+                                        )
+                                      </span>
                                     </SelectItem>
                                   ))}
                                 </SelectContent>

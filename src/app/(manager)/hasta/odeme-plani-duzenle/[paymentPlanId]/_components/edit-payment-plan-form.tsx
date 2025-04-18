@@ -217,8 +217,6 @@ export default function EditPaymentPlan({
     form.watch("totalAmount"),
   ])
 
-  console.log(form.formState.errors)
-
   return (
     <div>
       <div className="flex justify-between items-center space-y-10">

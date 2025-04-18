@@ -6,7 +6,7 @@ import { format } from "date-fns"
 import { CalendarDays, MessageSquare, Phone } from "lucide-react"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
-import { calculateAge, getImageUrl } from "@/lib/utils"
+import { calculateAge, formatCurrency, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import EditPatientDoctorsDialog from "@/components/edit-patient-doctors-dialog"
@@ -71,31 +71,68 @@ export default function PreviewPatient({
           />
           <div className="flex items-center gap-2">
             <div className="flex items-center">
-              {patient?.doctors.map((doctor) => (
-                <Link
-                  key={doctor.id}
-                  href={`/sekreter/hekim/${doctor.id}`}
-                  className="flex items-center gap-2 hover:bg-muted-foreground/20 rounded-md p-2 px-4 transition-colors duration-300"
-                >
-                  <Avatar className="ring ring-border">
-                    <AvatarImage src={getImageUrl(doctor.user.imagePath)} />
-                    <AvatarFallback>
-                      {doctor.user.name
-                        ?.split(" ")
-                        .map((name) => name.charAt(0))
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm">{doctor.user.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {doctor.specialty}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+              {patient.doctorShares && patient.doctorShares.length > 0
+                ? patient.doctorShares.map(({ doctor, remainingAmount }) => (
+                    <Link
+                      key={doctor.id}
+                      href={`/hekim/${doctor.id}`}
+                      className="flex items-center gap-2 hover:bg-muted-foreground/20 rounded-md p-2 px-4 transition-colors duration-300"
+                    >
+                      <Avatar className="ring ring-border">
+                        <AvatarImage src={getImageUrl(doctor.user.imagePath)} />
+                        <AvatarFallback>
+                          {doctor.user.name
+                            ?.split(" ")
+                            .map((name) => name.charAt(0))
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm">{doctor.user.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {doctor.specialty}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Kalan Tutar:{" "}
+                          {remainingAmount
+                            ? formatCurrency(remainingAmount)
+                            : "Ödeme Planı Yok"}
+                        </p>
+                      </div>
+                    </Link>
+                  ))
+                : patient.doctors && patient.doctors.length > 0
+                  ? patient.doctors.map((doctor) => (
+                      <Link
+                        key={doctor.id}
+                        href={`/hekim/${doctor.id}`}
+                        className="flex items-center gap-2 hover:bg-muted-foreground/20 rounded-md p-2 px-4 transition-colors duration-300"
+                      >
+                        <Avatar className="ring ring-border">
+                          <AvatarImage
+                            src={getImageUrl(doctor.user.imagePath)}
+                          />
+                          <AvatarFallback>
+                            {doctor.user.name
+                              ?.split(" ")
+                              .map((name) => name.charAt(0))
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm">{doctor.user.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {doctor.specialty}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Ödeme Planı Yok
+                          </p>
+                        </div>
+                      </Link>
+                    ))
+                  : null}
             </div>
-            <EditPatientDoctorsDialog patientId={patient!.id} />
+            <EditPatientDoctorsDialog patientId={patient.id || ""} />
           </div>
         </div>
       </div>
