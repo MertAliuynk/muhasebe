@@ -24,7 +24,7 @@ export default function PatientNotesDialog({ patient }: PageProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <FileText className="size-4 text-muted-foreground" />
-          Hasta Notları ({patient?.notes[0] ? patient?.notes.length : 0})
+          Hasta Notları ({patient?.notes?.length ?? 0})
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
@@ -37,12 +37,12 @@ export default function PatientNotesDialog({ patient }: PageProps) {
           </div>
           <SavePatientNoteDialog patientId={patient?.id} />
         </DialogHeader>
-        {patient?.notes[0]?.length === 0 ? (
+        {patient?.notes?.length === 0 ? (
           <p className="text-center text-muted-foreground underline my-20 text-sm">
             Hasta için herangi bir not yok.
           </p>
         ) : (
-          patient?.notes.map((note, index) => (
+          patient?.notes?.map((note, index) => (
             <div
               key={index}
               className="border border-dashed py-5 px-3 relative"

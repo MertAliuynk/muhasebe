@@ -35,10 +35,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { DatePicker } from "@/components/form/date-picker"
 import { PhoneInput } from "@/components/phone-input"
 
-type Patient = RouterOutputs["patient"]["getPatientsByBranch"][number]
-
 type Props = {
-  patient: Patient
+  patient: RouterOutputs["patient"]["getFilteredPatients"][number]
   onSuccess?: () => void
 }
 

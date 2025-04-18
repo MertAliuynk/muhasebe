@@ -22,7 +22,7 @@ import {
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu"
 
-type Patient = RouterOutputs["patient"]["getPatientsByBranch"][number]
+type Patient = RouterOutputs["patient"]["getFilteredPatients"][number]
 
 type Props = {
   patient: Patient

@@ -9,7 +9,7 @@ import { getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
-type Item = RouterOutputs["patient"]["getPatientsByBranch"][number]
+type Item = RouterOutputs["patient"]["getPatientsAdmin"][number]
 
 export default [
   {
