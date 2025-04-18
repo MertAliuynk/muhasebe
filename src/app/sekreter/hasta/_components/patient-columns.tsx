@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import SendSmsDialog from "../[id]/_components/patient-info/send-sms-dialog"
-import DeletePatientDialog from "./delete-patient-dialog"
 import EditPatientDialog from "./edit-patient-dialog"
 
 type Item = RouterOutputs["patient"]["getFilteredPatients"][number]
@@ -141,7 +140,6 @@ export default [
               </DropdownMenuItem>
             </SendSmsDialog>
             <EditPatientDialog patient={data} />
-            <DeletePatientDialog patient={data} />
           </DropdownMenuContent>
         </DropdownMenu>
       )

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { api, type RouterOutputs } from "@/trpc/react"
+import type { TRPCError } from "@trpc/server"
 import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -42,7 +43,8 @@ export default function DeletePatientDialog({ patient }: Props) {
       {
         loading: "Hasta siliniyor...",
         success: "Hasta başarıyla silindi.",
-        error: "Hasta silinirken bir hata oluştu.",
+        error: (err: TRPCError) =>
+          err.message || "Hasta silinirken bir hata oluştu.",
       }
     )
   }

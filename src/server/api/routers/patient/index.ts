@@ -533,6 +533,7 @@ export const patientRouter = createTRPCRouter({
               doctorShares: true,
             },
           },
+          payments: true,
         },
       })
 
@@ -543,6 +544,13 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
+      if (patientData.payments.length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Hasta ödemesi var, silinemez. Bu Hastayı silebilmek için önce hastanın ödemelerini silmelisiniz.",
+        })
+      }
       const patient = await ctx.db.patient.update({
         where: { id: input.id },
         data: {
