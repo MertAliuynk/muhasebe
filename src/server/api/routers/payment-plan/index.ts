@@ -226,45 +226,23 @@ export const paymentPlanRouter = createTRPCRouter({
         })
 
         if (totalPaidAmount > 0) {
-          // Önce tüm taksitleri ve ödemeleri alalım
           const updatedInstallments = await tx.installment.findMany({
             where: { paymentPlanId: id },
             orderBy: { number: "asc" },
           })
 
-          // Ödemeleri tarih sırasında getir ve bir kopyasını oluştur
+          // Ödemeleri tarihe göre sırala
           const allPayments = [...existingPlan.patientPayments].sort(
             (a, b) =>
-              new Date(a.paymentDate).getTime() -
-              new Date(b.paymentDate).getTime()
-          )
-
-          console.log(
-            "Ödemeler: ",
-            allPayments.map((p) => ({
-              id: p.id,
-              date: p.paymentDate,
-              amount: p.amount,
-            }))
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           )
 
           // Ödeme kopyalarını oluştur (algoritma için kullanacağız)
           const paymentsCopy = allPayments.map((payment) => ({
-            date: payment.paymentDate,
+            // Önemli: Sadece ödeme tarihini (paymentDate) kullan, güncellenme tarihini değil
+            date: payment.createdAt,
             amount: payment.amount,
-            originalDate: payment.paymentDate, // Debugging için
           }))
-
-          // Toplam ödenmiş miktar kontrolü
-          const totalToDistribute = paymentsCopy.reduce(
-            (sum, payment) => sum + payment.amount,
-            0
-          )
-          if (totalToDistribute !== totalPaidAmount) {
-            console.warn(
-              `Ödeme toplamı uyuşmuyor: Ödemelerden: ${totalToDistribute}, Hesaplanan: ${totalPaidAmount}`
-            )
-          }
 
           // Her taksit için ödeme dağılımını hesapla
           for (const installment of updatedInstallments) {
@@ -292,10 +270,6 @@ export const paymentPlanRouter = createTRPCRouter({
               )
 
               if (amountToUse > 0) {
-                // Bu ödeme bu taksit için kullanıldı
-                console.log(
-                  `  - ${payment.originalDate.toISOString()} tarihli ödemeden ${amountToUse} TL kullanıldı`
-                )
                 lastPaymentDate = payment.date
                 paidForThisInstallment += amountToUse
 

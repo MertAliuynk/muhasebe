@@ -272,7 +272,7 @@ export const paymentRouter = createTRPCRouter({
 
             // Her taksit için son ödeme tarihini doğru şekilde hesapla
             const paymentsCopy = allPayments.map((p) => ({
-              date: p.paymentDate,
+              date: p.paymentDate, // Ödeme tarihi olarak paymentDate kullan, createdAt değil
               amount: p.amount,
             }))
 
@@ -497,7 +497,7 @@ export const paymentRouter = createTRPCRouter({
           if (allPayments.length > 0) {
             // Her taksit için son ödeme tarihini doğru şekilde hesapla
             const paymentsCopy = allPayments.map((p) => ({
-              date: p.paymentDate,
+              date: p.paymentDate, // Ödeme tarihi olarak paymentDate kullan
               amount: p.amount,
             }))
 
@@ -614,7 +614,7 @@ export const paymentRouter = createTRPCRouter({
                 amount: input.amount,
                 paymentType: input.paymentType,
                 note: input.note,
-                paymentDate: input.editedAt || existingPayment.paymentDate,
+                paymentDate: input.editedAt || existingPayment.createdAt,
                 createdAt: input.editedAt || existingPayment.createdAt,
               },
             })
@@ -748,7 +748,7 @@ export const paymentRouter = createTRPCRouter({
                 data: {
                   amount: input.amount,
                   paymentType: input.paymentType,
-                  paymentDate: input.editedAt || doctorIncome.paymentDate,
+                  paymentDate: input.editedAt || doctorIncome.createdAt,
                   createdAt: input.editedAt || doctorIncome.createdAt,
                 },
               })
@@ -770,9 +770,9 @@ export const paymentRouter = createTRPCRouter({
                 orderBy: { number: "asc" },
               })
 
-              // Her taksit için son ödeme tarihini doğru şekilde hesapla
+              // Ödemeleri tarih sırasında getir ve tarihlerine göre sırala
               const paymentsCopy = allPayments.map((p) => ({
-                date: p.paymentDate,
+                date: p.paymentDate, // Burada paymentDate kullan, ödeme düzenlendiğinde tarih değişmesin
                 amount: p.amount,
               }))
 
