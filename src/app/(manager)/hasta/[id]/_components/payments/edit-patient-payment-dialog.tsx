@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { updatePaymentSchema } from "@/server/api/routers/payment/schema"
 import { api, type RouterOutputs } from "@/trpc/react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { TRPCError } from "@trpc/server"
 import { Pencil } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -82,7 +83,7 @@ export default function EditPatientPaymentDialog({
       {
         loading: "Ödeme güncelleniyor...",
         success: "Ödeme başarıyla güncellendi.",
-        error: "Ödeme güncellenirken bir hata oluştu.",
+        error: (err: TRPCError) => err.message,
       }
     )
   }

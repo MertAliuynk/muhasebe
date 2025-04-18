@@ -226,35 +226,103 @@ export const paymentPlanRouter = createTRPCRouter({
         })
 
         if (totalPaidAmount > 0) {
-          let remainingPaidAmount = totalPaidAmount
+          // Önce tüm taksitleri ve ödemeleri alalım
           const updatedInstallments = await tx.installment.findMany({
             where: { paymentPlanId: id },
             orderBy: { number: "asc" },
           })
 
-          for (const installment of updatedInstallments) {
-            if (remainingPaidAmount <= 0) break
+          // Ödemeleri tarih sırasında getir ve bir kopyasını oluştur
+          const allPayments = [...existingPlan.patientPayments].sort(
+            (a, b) =>
+              new Date(a.paymentDate).getTime() -
+              new Date(b.paymentDate).getTime()
+          )
 
-            if (remainingPaidAmount >= installment.amount) {
+          console.log(
+            "Ödemeler: ",
+            allPayments.map((p) => ({
+              id: p.id,
+              date: p.paymentDate,
+              amount: p.amount,
+            }))
+          )
+
+          // Ödeme kopyalarını oluştur (algoritma için kullanacağız)
+          const paymentsCopy = allPayments.map((payment) => ({
+            date: payment.paymentDate,
+            amount: payment.amount,
+            originalDate: payment.paymentDate, // Debugging için
+          }))
+
+          // Toplam ödenmiş miktar kontrolü
+          const totalToDistribute = paymentsCopy.reduce(
+            (sum, payment) => sum + payment.amount,
+            0
+          )
+          if (totalToDistribute !== totalPaidAmount) {
+            console.warn(
+              `Ödeme toplamı uyuşmuyor: Ödemelerden: ${totalToDistribute}, Hesaplanan: ${totalPaidAmount}`
+            )
+          }
+
+          // Her taksit için ödeme dağılımını hesapla
+          for (const installment of updatedInstallments) {
+            let paidForThisInstallment = 0
+            let lastPaymentDate = null
+
+            console.log(
+              `Taksit ${installment.number} işleniyor (${installment.amount} TL)`
+            )
+
+            // Bu taksit için hangi ödemelerin kullanıldığını bul
+            for (
+              let i = 0;
+              i < paymentsCopy.length &&
+              paidForThisInstallment < installment.amount;
+              i++
+            ) {
+              const payment = paymentsCopy[i]
+              if (!payment || payment.amount <= 0) continue
+
+              // Bu taksit için kullanılacak miktar
+              const amountToUse = Math.min(
+                payment.amount,
+                installment.amount - paidForThisInstallment
+              )
+
+              if (amountToUse > 0) {
+                // Bu ödeme bu taksit için kullanıldı
+                console.log(
+                  `  - ${payment.originalDate.toISOString()} tarihli ödemeden ${amountToUse} TL kullanıldı`
+                )
+                lastPaymentDate = payment.date
+                paidForThisInstallment += amountToUse
+
+                // Kullanılan miktarı ödemeden düş
+                payment.amount -= amountToUse
+              }
+            }
+
+            // Taksiti güncelle
+            if (paidForThisInstallment > 0) {
+              console.log(
+                `  => Taksit ${installment.number} için son ödeme tarihi: ${lastPaymentDate ? lastPaymentDate.toISOString() : "null"}`
+              )
+
               await tx.installment.update({
                 where: { id: installment.id },
                 data: {
-                  paidAmount: installment.amount,
-                  remainingAmount: 0,
-                  isCompleted: true,
+                  paidAmount: paidForThisInstallment,
+                  remainingAmount: installment.amount - paidForThisInstallment,
+                  isCompleted: paidForThisInstallment >= installment.amount,
+                  lastPaymentDate: lastPaymentDate,
                 },
               })
-              remainingPaidAmount -= installment.amount
             } else {
-              await tx.installment.update({
-                where: { id: installment.id },
-                data: {
-                  paidAmount: remainingPaidAmount,
-                  remainingAmount: installment.amount - remainingPaidAmount,
-                  isCompleted: false,
-                },
-              })
-              remainingPaidAmount = 0
+              console.log(
+                `  => Taksit ${installment.number} için ödeme yapılmadı`
+              )
             }
           }
         }

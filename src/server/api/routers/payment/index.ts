@@ -178,7 +178,7 @@ export const paymentRouter = createTRPCRouter({
                       isCompleted:
                         installment.remainingAmount <=
                         paymentForThisInstallment,
-                      lastPaymentDate: new Date(),
+                      // lastPaymentDate'i sonradan toplu şekilde güncelleyeceğiz
                     },
                   })
                 )
@@ -254,6 +254,61 @@ export const paymentRouter = createTRPCRouter({
                 createdAt: input.createdAt,
               },
             })
+
+            // Ödeme eklendikten sonra tüm taksitlerin son ödeme tarihlerini yeniden hesapla
+            // İlgili tüm ödemeleri getir ve tarihlerine göre sırala
+            const allPayments = await tx.patientPayment.findMany({
+              where: {
+                paymentPlanId: approvedPatientPaymentPlan.id,
+              },
+              orderBy: { paymentDate: "asc" },
+            })
+
+            // Tüm taksitleri getir
+            const allInstallments = await tx.installment.findMany({
+              where: { paymentPlanId: approvedPatientPaymentPlan.id },
+              orderBy: { number: "asc" },
+            })
+
+            // Her taksit için son ödeme tarihini doğru şekilde hesapla
+            const paymentsCopy = allPayments.map((p) => ({
+              date: p.paymentDate,
+              amount: p.amount,
+            }))
+
+            for (const installment of allInstallments) {
+              let paidAmount = 0
+              let lastPaymentDate = null
+
+              // Bu taksit için kullanılan ödeme tarihlerini bul
+              for (
+                let i = 0;
+                i < paymentsCopy.length && paidAmount < installment.amount;
+                i++
+              ) {
+                const payment = paymentsCopy[i]
+                if (!payment) continue
+
+                const usedAmount = Math.min(
+                  payment.amount,
+                  installment.amount - paidAmount
+                )
+
+                if (usedAmount > 0) {
+                  lastPaymentDate = payment.date
+                  paidAmount += usedAmount
+                  payment.amount -= usedAmount
+                }
+              }
+
+              // Eğer bu taksit için ödeme yapıldıysa, son ödeme tarihini güncelle
+              if (paidAmount > 0 && lastPaymentDate) {
+                await tx.installment.update({
+                  where: { id: installment.id },
+                  data: { lastPaymentDate },
+                })
+              }
+            }
           },
           {
             timeout: 20000,
@@ -423,6 +478,76 @@ export const paymentRouter = createTRPCRouter({
           })
 
           await Promise.all(installmentUpdates)
+
+          // Ödeme silindikten sonra tüm taksitlerin son ödeme tarihlerini yeniden hesapla
+          // İlgili tüm ödemeleri getir ve tarihlerine göre sırala
+          const allPayments = await tx.patientPayment.findMany({
+            where: {
+              paymentPlanId: paymentPlan.id,
+            },
+            orderBy: { paymentDate: "asc" },
+          })
+
+          // Tüm taksitleri getir
+          const allInstallments = await tx.installment.findMany({
+            where: { paymentPlanId: paymentPlan.id },
+            orderBy: { number: "asc" },
+          })
+
+          if (allPayments.length > 0) {
+            // Her taksit için son ödeme tarihini doğru şekilde hesapla
+            const paymentsCopy = allPayments.map((p) => ({
+              date: p.paymentDate,
+              amount: p.amount,
+            }))
+
+            for (const installment of allInstallments) {
+              let paidAmount = 0
+              let lastPaymentDate = null
+
+              // Bu taksit için kullanılan ödeme tarihlerini bul
+              for (
+                let i = 0;
+                i < paymentsCopy.length && paidAmount < installment.amount;
+                i++
+              ) {
+                const payment = paymentsCopy[i]
+                if (!payment) continue
+
+                const usedAmount = Math.min(
+                  payment.amount,
+                  installment.amount - paidAmount
+                )
+
+                if (usedAmount > 0) {
+                  lastPaymentDate = payment.date
+                  paidAmount += usedAmount
+                  payment.amount -= usedAmount
+                }
+              }
+
+              // Taksiti güncelle (ödemesi varsa veya yoksa)
+              await tx.installment.update({
+                where: { id: installment.id },
+                data: {
+                  lastPaymentDate,
+                  // Eğer lastPaymentDate null ise, ödeme yapılmamış demektir
+                  isCompleted: paidAmount >= installment.amount,
+                },
+              })
+            }
+          } else {
+            // Hiç ödeme kalmadıysa tüm taksitlerin son ödeme tarihlerini null yap
+            for (const installment of allInstallments) {
+              await tx.installment.update({
+                where: { id: installment.id },
+                data: {
+                  lastPaymentDate: null,
+                  isCompleted: false,
+                },
+              })
+            }
+          }
         })
       }
 
@@ -597,6 +722,27 @@ export const paymentRouter = createTRPCRouter({
             })
 
             if (doctorIncome) {
+              if (existingPayment.paymentPlan?.doctorShares) {
+                const doctorShare =
+                  existingPayment.paymentPlan.doctorShares.find(
+                    (share) => share.doctorId === doctorIncome.doctorId
+                  )
+
+                if (doctorShare && amountDifference !== 0) {
+                  await tx.doctorPaymentShare.update({
+                    where: { id: doctorShare.id },
+                    data: {
+                      paidAmount: {
+                        increment: amountDifference,
+                      },
+                      remainingAmount: {
+                        decrement: amountDifference,
+                      },
+                    },
+                  })
+                }
+              }
+
               await tx.doctorIncome.update({
                 where: { id: doctorIncome.id },
                 data: {
@@ -606,6 +752,63 @@ export const paymentRouter = createTRPCRouter({
                   createdAt: input.editedAt || doctorIncome.createdAt,
                 },
               })
+            }
+
+            // Ödeme güncellendikten sonra tüm taksitleri ve son ödeme tarihlerini yeniden hesapla
+            if (existingPayment.paymentPlan) {
+              // İlgili tüm ödemeleri getir ve tarihlerine göre sırala
+              const allPayments = await tx.patientPayment.findMany({
+                where: {
+                  paymentPlanId: existingPayment.paymentPlan.id,
+                },
+                orderBy: { paymentDate: "asc" },
+              })
+
+              // Tüm taksitleri getir
+              const allInstallments = await tx.installment.findMany({
+                where: { paymentPlanId: existingPayment.paymentPlan.id },
+                orderBy: { number: "asc" },
+              })
+
+              // Her taksit için son ödeme tarihini doğru şekilde hesapla
+              const paymentsCopy = allPayments.map((p) => ({
+                date: p.paymentDate,
+                amount: p.amount,
+              }))
+
+              for (const installment of allInstallments) {
+                let paidAmount = 0
+                let lastPaymentDate = null
+
+                // Bu taksit için kullanılan ödeme tarihlerini bul
+                for (
+                  let i = 0;
+                  i < paymentsCopy.length && paidAmount < installment.amount;
+                  i++
+                ) {
+                  const payment = paymentsCopy[i]
+                  if (!payment) continue
+
+                  const usedAmount = Math.min(
+                    payment.amount,
+                    installment.amount - paidAmount
+                  )
+
+                  if (usedAmount > 0) {
+                    lastPaymentDate = payment.date
+                    paidAmount += usedAmount
+                    payment.amount -= usedAmount
+                  }
+                }
+
+                // Eğer bu taksit için ödeme yapıldıysa, son ödeme tarihini güncelle
+                if (paidAmount > 0 && lastPaymentDate) {
+                  await tx.installment.update({
+                    where: { id: installment.id },
+                    data: { lastPaymentDate },
+                  })
+                }
+              }
             }
           })
         } else {

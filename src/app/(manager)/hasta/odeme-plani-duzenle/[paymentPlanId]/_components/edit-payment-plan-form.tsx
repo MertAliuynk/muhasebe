@@ -217,6 +217,8 @@ export default function EditPaymentPlan({
     form.watch("totalAmount"),
   ])
 
+  console.log(form.formState.errors)
+
   return (
     <div>
       <div className="flex justify-between items-center space-y-10">
@@ -388,72 +390,68 @@ export default function EditPaymentPlan({
             </div>
           )}
 
-          {hasMultipleDoctors && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Doktor Paylaşımları</h3>
-                <div className="flex flex-col items-end gap-1">
-                  <p className="text-sm text-muted-foreground">
-                    Paylaşılabilir Tutar:{" "}
-                    <span
-                      className={`font-medium ${!isSharesValid(calculateTotalAmount(), form.watch("doctorShares")) && "text-red-500"}`}
-                    >
-                      {formatCurrencyWithSymbol(
-                        calculateRemainingAmount(
-                          calculateTotalAmount(),
-                          form.watch("doctorShares")
-                        )
-                      )}
-                    </span>
-                  </p>
-                </div>
-              </div>
-              {paymentPlan.doctorShares.map((share, index) => (
-                <div key={share.id} className="flex items-center gap-4">
-                  <p className="w-48 line-clamp-1">{share.doctor.user.name}</p>
-                  <FormField
-                    control={form.control}
-                    name={`doctorShares.${index}.totalAmount`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            prefix="₺"
-                            {...field}
-                            value={
-                              field.value === 0
-                                ? ""
-                                : field.value.toLocaleString("tr-TR")
-                            }
-                            onChange={(e) => {
-                              const value = e.target.value.replace(
-                                /[^0-9]/g,
-                                ""
-                              )
-                              field.onChange(Number(value))
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Doktor Paylaşımları</h3>
+              <div className="flex flex-col items-end gap-1">
+                <p className="text-sm text-muted-foreground">
+                  Paylaşılabilir Tutar:{" "}
+                  <span
+                    className={`font-medium ${!isSharesValid(calculateTotalAmount(), form.watch("doctorShares")) && "text-red-500"}`}
+                  >
+                    {formatCurrencyWithSymbol(
+                      calculateRemainingAmount(
+                        calculateTotalAmount(),
+                        form.watch("doctorShares")
+                      )
                     )}
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    Daha önce bu doktora{" "}
-                    <span className="font-bold">
-                      {formatCurrencyWithSymbol(share.paidAmount)}
-                    </span>{" "}
-                    ödeme yapılmış.
-                  </p>
-                  <input
-                    type="hidden"
-                    {...form.register(`doctorShares.${index}.id`)}
-                    value={share.id}
-                  />
-                </div>
-              ))}
+                  </span>
+                </p>
+              </div>
             </div>
-          )}
+            {paymentPlan.doctorShares.map((share, index) => (
+              <div key={share.id} className="flex items-center gap-4">
+                <p className="w-48 line-clamp-1">{share.doctor.user.name}</p>
+                <FormField
+                  control={form.control}
+                  name={`doctorShares.${index}.totalAmount`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          disabled={!hasMultipleDoctors}
+                          prefix="₺"
+                          {...field}
+                          value={
+                            field.value === 0
+                              ? ""
+                              : field.value.toLocaleString("tr-TR")
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, "")
+                            field.onChange(Number(value))
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Daha önce bu doktora{" "}
+                  <span className="font-bold">
+                    {formatCurrencyWithSymbol(share.paidAmount)}
+                  </span>{" "}
+                  ödeme yapılmış.
+                </p>
+                <input
+                  type="hidden"
+                  {...form.register(`doctorShares.${index}.id`)}
+                  value={share.id}
+                />
+              </div>
+            ))}
+          </div>
 
           <div className="flex justify-between">
             <div>
