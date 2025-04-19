@@ -190,9 +190,13 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
                         control={form.control}
                         name="doctorId"
                         render={({ field }) => {
-                          const doctors = patients?.find(
+                          const selectedPatient = patients?.find(
                             (patient) => patient.id === form.watch("patientId")
-                          )?.doctorShares
+                          )
+
+                          const hasDoctorShares =
+                            selectedPatient?.doctorShares &&
+                            selectedPatient.doctorShares.length > 0
 
                           return (
                             <FormItem>
@@ -209,24 +213,40 @@ export default function NewPaymentDialog({ patients, isLoading }: PageProps) {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {doctors?.map((doctor) => (
-                                    <SelectItem
-                                      key={doctor.id}
-                                      value={doctor.id}
-                                      className="text-xs sm:text-sm"
-                                    >
-                                      {doctor.doctor.user.name}{" "}
-                                      <span className="text-xs text-muted-foreground">
-                                        ( Kalan Ödeme Tutarı:{" "}
-                                        <span className="text-foreground">
-                                          {formatCurrency(
-                                            doctor.remainingAmount
-                                          )}
-                                        </span>
+                                  {hasDoctorShares
+                                    ? // DoctorShares varsa
+                                      selectedPatient?.doctorShares?.map(
+                                        (doctor) => (
+                                          <SelectItem
+                                            key={doctor.doctorId}
+                                            value={doctor.doctorId}
+                                            className="text-xs sm:text-sm"
+                                          >
+                                            {doctor.doctor.user.name}{" "}
+                                            <span className="text-xs text-muted-foreground">
+                                              ( Kalan Ödeme Tutarı:{" "}
+                                              <span className="text-foreground">
+                                                {formatCurrency(
+                                                  doctor.remainingAmount
+                                                )}
+                                              </span>
+                                              )
+                                            </span>
+                                          </SelectItem>
                                         )
-                                      </span>
-                                    </SelectItem>
-                                  ))}
+                                      )
+                                    : // DoctorShares yoksa doctors kullan
+                                      selectedPatient?.doctors?.map(
+                                        (doctor) => (
+                                          <SelectItem
+                                            key={doctor.id}
+                                            value={doctor.id}
+                                            className="text-xs sm:text-sm"
+                                          >
+                                            {doctor.user.name}
+                                          </SelectItem>
+                                        )
+                                      )}
                                 </SelectContent>
                               </Select>
                               <FormMessage className="text-xs" />

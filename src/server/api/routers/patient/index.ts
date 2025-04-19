@@ -130,6 +130,18 @@ export const patientRouter = createTRPCRouter({
             },
           },
         },
+        doctors: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+              },
+            },
+          },
+        },
       },
     })
 
