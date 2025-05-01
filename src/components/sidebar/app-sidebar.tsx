@@ -54,7 +54,7 @@ export function AppSidebar({
 
           {(isManager || isSecretary) && (
             <Link
-              href="hasta/ekle"
+              href="/hasta/ekle"
               className={cn("mt-5 px-4", state === "collapsed" && "px-0")}
             >
               <Button
