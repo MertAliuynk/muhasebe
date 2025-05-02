@@ -96,7 +96,7 @@ export default function PreviewPatient({
                           Kalan Tutar:{" "}
                           {remainingAmount
                             ? formatCurrency(remainingAmount)
-                            : "Ödeme Planı Yok"}
+                            : "Pay Belirtilmemiş"}
                         </p>
                       </div>
                     </Link>
