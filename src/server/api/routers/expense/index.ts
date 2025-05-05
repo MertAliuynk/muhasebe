@@ -154,6 +154,7 @@ export const expenseRouter = createTRPCRouter({
         await fetch(
           `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${branchId}`
         )
+        await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
       }
     }),
   deleteExpense: protectedProcedure
@@ -222,6 +223,7 @@ export const expenseRouter = createTRPCRouter({
       await fetch(
         `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
       )
+      await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
       return { success: true }
     }),
   softDeleteExpenseType: protectedProcedure

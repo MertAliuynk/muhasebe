@@ -324,6 +324,7 @@ export const paymentRouter = createTRPCRouter({
           await fetch(
             `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
           )
+          await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
         }
       } else {
         await ctx.db.branchPayment.create({
@@ -346,6 +347,7 @@ export const paymentRouter = createTRPCRouter({
           await fetch(
             `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
           )
+          await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
         }
       }
     }),
@@ -571,6 +573,7 @@ export const paymentRouter = createTRPCRouter({
       await fetch(
         `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
       )
+      await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
     }),
   updatePayment: protectedProcedure
     .input(updatePaymentSchema)
@@ -854,6 +857,7 @@ export const paymentRouter = createTRPCRouter({
       await fetch(
         `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
       )
+      await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
       return { success: true }
     }),
 })
