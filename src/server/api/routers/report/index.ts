@@ -37,12 +37,12 @@ export const reportRouter = createTRPCRouter({
       const period = input?.period ?? "daily"
 
       const startDate =
-        input?.startDate ??
+        input?.startDate?.toISOString() ??
         (period === "daily"
           ? startOfDay(new Date(today.setDate(today.getDate() - 30)))
           : startOfMonth(subMonths(today, 11)))
       const endDate =
-        input?.endDate ??
+        input?.endDate?.toISOString() ??
         (period === "daily" ? endOfDay(new Date()) : endOfMonth(today))
 
       const intervals =
@@ -53,28 +53,28 @@ export const reportRouter = createTRPCRouter({
       const patientPayments = await ctx.db.patientPayment.findMany({
         where: {
           branchId,
-          paymentDate: {
+          createdAt: {
             gte: startDate,
             lte: endDate,
           },
         },
         select: {
           amount: true,
-          paymentDate: true,
+          createdAt: true,
         },
       })
 
       const branchPayments = await ctx.db.branchPayment.findMany({
         where: {
           branchId,
-          paymentDate: {
+          createdAt: {
             gte: startDate,
             lte: endDate,
           },
         },
         select: {
           amount: true,
-          paymentDate: true,
+          createdAt: true,
         },
       })
 
@@ -120,13 +120,13 @@ export const reportRouter = createTRPCRouter({
 
         const periodPatientPayments = patientPayments.filter((payment) =>
           period === "daily"
-            ? isSameDay(payment.paymentDate, interval)
-            : isSameMonth(payment.paymentDate, interval)
+            ? isSameDay(payment.createdAt, interval)
+            : isSameMonth(payment.createdAt, interval)
         )
         const periodBranchPayments = branchPayments.filter((payment) =>
           period === "daily"
-            ? isSameDay(payment.paymentDate, interval)
-            : isSameMonth(payment.paymentDate, interval)
+            ? isSameDay(payment.createdAt, interval)
+            : isSameMonth(payment.createdAt, interval)
         )
 
         const periodBranchExpenses = branchExpenses.filter((expense) =>
