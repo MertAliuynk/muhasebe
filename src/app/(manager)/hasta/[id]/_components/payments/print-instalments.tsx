@@ -12,12 +12,17 @@ export default function PrintInstalments({
   payments,
   patientName,
   instalments,
+  allInstalmentsCompleted,
 }: {
   payments: RouterOutputs["payment"]["getAllPaymentsByPatientId"]
   patientName: string
   instalments: RouterOutputs["paymentPlan"]["getPatientPaymentPlanById"][number]["installments"]
+  allInstalmentsCompleted?: boolean
 }) {
   const printRef = useRef<HTMLDivElement>(null)
+
+  // Tüm taksitlerin tamamlanıp tamamlanmadığını kontrol et
+  const isAllCompleted = allInstalmentsCompleted ?? instalments.every(instalment => instalment.isCompleted)
 
   const handlePrint = () => {
     if (!printRef.current) return
@@ -151,7 +156,9 @@ export default function PrintInstalments({
           </table>
 
           {/* Ödemeler Tablosu */}
-          <h2 className="text-xl font-semibold mb-4">Ödemeler</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            Ödemeler{isAllCompleted && " (Tüm Ödemeler Tamamlanmış)"}
+          </h2>
           <table className="w-full border-collapse">
             <thead>
               <tr>

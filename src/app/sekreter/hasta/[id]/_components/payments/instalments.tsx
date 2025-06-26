@@ -29,6 +29,9 @@ export default function Instalments({
       </p>
     )
 
+  // Tüm taksitlerin tamamlanıp tamamlanmadığını kontrol et
+  const allInstalmentsCompleted = approvedPaymentPlan.installments.every(instalment => instalment.isCompleted)
+
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between">
@@ -44,6 +47,7 @@ export default function Instalments({
           payments={payments}
           patientName={approvedPaymentPlan.patient.name}
           instalments={approvedPaymentPlan.installments}
+          allInstalmentsCompleted={allInstalmentsCompleted}
         />
       </CardHeader>
       <CardContent>
