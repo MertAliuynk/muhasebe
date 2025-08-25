@@ -5,6 +5,7 @@ import { branchRouter } from "./routers/branch"
 import { cashReportRouter } from "./routers/cash-report"
 import { doctorRouter } from "./routers/doctor"
 import { expenseRouter } from "./routers/expense"
+import { incomeRouter } from "./routers/income"
 import { patientRouter } from "./routers/patient"
 import { paymentRouter } from "./routers/payment"
 import { paymentPlanRouter } from "./routers/payment-plan"
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   cashReport: cashReportRouter,
   sms: smsRouter,
   secretary: secretaryRouter,
+  income: incomeRouter,
 })
 
 export type AppRouter = typeof appRouter

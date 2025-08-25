@@ -17,7 +17,7 @@ import DeleteByIdDiaglog from "@/components/delete-by-id-diaglog"
 
 import SaveBranchDialog from "./save-branch-dialog"
 
-type Item = RouterOutputs["branch"]["getAll"][number]
+type Item = RouterOutputs["branch"]["getAll"]["branches"][number]
 
 export default [
   {

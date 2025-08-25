@@ -15,7 +15,8 @@ interface SelectBranchProps
 }
 
 export function SelectBranch({ onChange, value, ...props }: SelectBranchProps) {
-  const { data: branches } = api.branch.getAll.useQuery()
+  const { data } = api.branch.getAll.useQuery()
+  const branches = data?.branches
 
   return (
     <Select
@@ -32,7 +33,7 @@ export function SelectBranch({ onChange, value, ...props }: SelectBranchProps) {
       </SelectTrigger>
       <SelectContent>
         {branches?.length ? (
-          branches?.map((branch) => (
+          branches.map((branch) => (
             <SelectItem key={branch.id} value={branch.id}>
               {branch.name}
             </SelectItem>

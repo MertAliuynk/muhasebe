@@ -20,6 +20,29 @@ import {
 } from "./schema"
 
 export const doctorRouter = createTRPCRouter({
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    const doctors = await ctx.db.doctor.findMany({
+      where: {
+        isDeleted: false,
+      },
+      include: {
+        branch: {
+          select: {
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+      },
+    })
+
+    return doctors
+  }),
   getDoctorsAdmin: adminProcedure.query(async ({ ctx }) => {
     const doctors = await ctx.db.doctor.findMany({
       include: {

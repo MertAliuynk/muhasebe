@@ -8,7 +8,8 @@ import columns from "./_components/branch-columns"
 import SaveBranchDialog from "./_components/save-branch-dialog"
 
 export default async function page() {
-  const branches = await api.branch.getAll()
+  const result = await api.branch.getAll()
+  const branches = result.branches
 
   return (
     <div className="space-y-5">

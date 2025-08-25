@@ -25,7 +25,7 @@ export const branchRouter = createTRPCRouter({
     })
     return branch
   }),
-  getAll: adminProcedure.query(async ({ ctx }) => {
+  getAll: protectedProcedure.query(async ({ ctx }) => {
     const branches = await ctx.db.branch.findMany({
       where: {
         isDeleted: false,
@@ -37,7 +37,7 @@ export const branchRouter = createTRPCRouter({
       },
     })
 
-    return branches
+    return { branches }
   }),
   getAllBranches: protectedProcedure.query(async ({ ctx }) => {
     const branches = await ctx.db.branch.findMany({

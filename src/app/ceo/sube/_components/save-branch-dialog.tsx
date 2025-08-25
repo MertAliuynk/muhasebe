@@ -16,7 +16,7 @@ import {
 
 import SaveBranchForm from "./save-branch-form"
 
-type Branch = RouterOutputs["branch"]["getAll"][number]
+type Branch = RouterOutputs["branch"]["getAll"]["branches"][number]
 
 interface SaveBranchDialogProps {
   branch?: Branch

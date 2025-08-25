@@ -113,6 +113,11 @@ export const sidebarDataCeo: SidebarData = {
           url: "/ceo/sms",
           icon: Mails,
         },
+        {
+          title: "İncele",
+          url: "/ceo/incele",
+          icon: FileText,
+        },
       ],
     },
     {

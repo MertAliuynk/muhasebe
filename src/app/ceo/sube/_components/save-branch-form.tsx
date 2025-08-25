@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { SelectManager } from "@/components/form/select-manager"
 import { PhoneInput } from "@/components/phone-input"
 
-type Branch = RouterOutputs["branch"]["getAll"][number]
+type Branch = RouterOutputs["branch"]["getAll"]["branches"][number]
 
 type PageProps = {
   setIsOpen: (isOpen: boolean) => void
