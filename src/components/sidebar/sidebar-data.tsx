@@ -47,6 +47,11 @@ export const sidebarData: SidebarData = {
           icon: BriefcaseMedical,
           url: "/hekim",
         },
+        {
+          title: "ödeme listeleri",
+          icon: BriefcaseMedical,
+          url: "/odeme-listesi",
+        }
       ],
     },
     {
