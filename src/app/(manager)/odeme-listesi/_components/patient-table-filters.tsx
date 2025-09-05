@@ -63,49 +63,7 @@ export default function PatientTableFilters({
           />
         </div>
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="border-dashed">
-              <span className="flex items-center">
-                <PlusCircle className="size-4 mr-2" />
-                Filtrele
-              </span>
-              {selectedFilters.length > 0 && (
-                <>
-                  <Separator orientation="vertical" className="mx-2 h-4" />
-                  <Badge
-                    variant="secondary"
-                    className="rounded-sm px-1 font-normal lg:hidden"
-                  >
-                    {selectedFilters.length}
-                  </Badge>
-                  <div className="hidden space-x-1 lg:flex">
-                    {selectedFilters.length > 2 ? (
-                      <Badge
-                        variant="secondary"
-                        className="rounded-sm px-1 font-normal"
-                      >
-                        {selectedFilters.length} selected
-                      </Badge>
-                    ) : (
-                      filterOptions
-                        .filter((option) =>
-                          selectedFilters.includes(option.value)
-                        )
-                        .map((option) => (
-                          <Badge
-                            variant="secondary"
-                            key={option.value}
-                            className="rounded-sm px-1 font-normal"
-                          >
-                            {option.label}
-                          </Badge>
-                        ))
-                    )}
-                  </div>
-                </>
-              )}
-            </Button>
-          </PopoverTrigger>
+          {/*filtreleme kısmı buradan kaldırıldı sonradan ekleme ihtimali olabilir onun için kalan hiçbirşeye dokunmadım*/}
           <PopoverContent className="w-[12.5rem] p-0" align="start">
             <Command>
               <CommandList>

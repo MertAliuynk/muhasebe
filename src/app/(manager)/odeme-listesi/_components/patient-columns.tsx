@@ -24,7 +24,7 @@ import EditPatientDialog from "./edit-patient-dialog"
 
 type Item = RouterOutputs["patient"]["getFilteredPatients"][number]
 
-function getLastPaidInstallment(plan?: { installments?: { paidAmount: number; lastPaymentDate?: Date | string | null }[] }) {
+export function getLastPaidInstallment(plan?: { installments?: { paidAmount: number; lastPaymentDate?: Date | string | null }[] }) {
   return plan?.installments?.filter((i) => i.paidAmount > 0)
     .sort((a, b) => {
       const dateA = a.lastPaymentDate ? new Date(a.lastPaymentDate).getTime() : 0
