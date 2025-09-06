@@ -120,7 +120,7 @@ export default function Page() {
         <select
           className="border border-input bg-background rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           value={sortKey}
-          onChange={e => setSortKey(e.target.value as any)}
+          onChange={e => setSortKey(e.target.value as "name" | "totalRemainingAmount" | "lastPaymentDate")}
         >
           <option value="name">İsme Göre</option>
           <option value="totalRemainingAmount">Toplam Kalan Tutar</option>
@@ -129,7 +129,7 @@ export default function Page() {
         <select
           className="border border-input bg-background rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           value={sortOrder}
-          onChange={e => setSortOrder(e.target.value as any)}
+          onChange={e => setSortOrder(e.target.value as "asc" | "desc")}
         >
           <option value="asc">Artan (A-Z / Küçükten Büyüğe)</option>
           <option value="desc">Azalan (Z-A / Büyükten Küçüğe)</option>
