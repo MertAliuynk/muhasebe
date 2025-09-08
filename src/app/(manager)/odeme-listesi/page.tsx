@@ -66,30 +66,29 @@ export default function Page() {
 
 {/*sıralamalar için ekledim*/}
   const sortedPatients = useMemo(() => {
-    return [...filteredPatients].sort((a, b) => {
-      let aValue: string | number = "";
-      let bValue: string | number = "";
-
-      if (sortKey === "name") {
-        aValue = a.name?.toLowerCase() || "";
-        bValue = b.name?.toLowerCase() || "";
-      } else if (sortKey === "totalRemainingAmount") {
-        aValue = a.totalRemainingAmount ?? 0;
-        bValue = b.totalRemainingAmount ?? 0;
-      } else if (sortKey === "lastPaymentDate") {
-        const aPlan = a.paymentPlans?.find(plan => plan.isApproved) || a.paymentPlans?.[0];
-        const bPlan = b.paymentPlans?.find(plan => plan.isApproved) || b.paymentPlans?.[0];
-        const aLast = getLastPaidInstallment(aPlan)?.lastPaymentDate;
-        const bLast = getLastPaidInstallment(bPlan)?.lastPaymentDate;
-        aValue = aLast ? new Date(aLast).getTime() : 0;
-        bValue = bLast ? new Date(bLast).getTime() : 0;
-      }
-
-      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [filteredPatients, sortKey, sortOrder]);
+  return [...filteredPatients].sort((a, b) => {
+    if (sortKey === "name") {
+      const aName = (a.name || "").trim();
+      const bName = (b.name || "").trim();
+      return sortOrder === "asc"
+        ? aName.localeCompare(bName, "tr", { sensitivity: "base" })
+        : bName.localeCompare(aName, "tr", { sensitivity: "base" });
+    } else if (sortKey === "totalRemainingAmount") {
+      const aValue = a.totalRemainingAmount ?? 0;
+      const bValue = b.totalRemainingAmount ?? 0;
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+    } else if (sortKey === "lastPaymentDate") {
+      const aPlan = a.paymentPlans?.find(plan => plan.isApproved) || a.paymentPlans?.[0];
+      const bPlan = b.paymentPlans?.find(plan => plan.isApproved) || b.paymentPlans?.[0];
+      const aLast = getLastPaidInstallment(aPlan)?.lastPaymentDate;
+      const bLast = getLastPaidInstallment(bPlan)?.lastPaymentDate;
+      const aValue = aLast ? new Date(aLast).getTime() : 0;
+      const bValue = bLast ? new Date(bLast).getTime() : 0;
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+    }
+    return 0;
+  });
+}, [filteredPatients, sortKey, sortOrder]);
 
   return (
     <div className="space-y-5">
@@ -114,6 +113,7 @@ export default function Page() {
         toggleFilter={toggleFilter}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        patientsForPrint={sortedPatients}
       />
       <div className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md shadow-sm mb-4">
         <label className="text-sm font-medium text-muted-foreground">Sırala:</label>

@@ -30,6 +30,7 @@ interface PatientTableFiltersProps {
   searchTerm: string
   setSearchTerm: (value: string) => void
   filteredPatients: RouterOutputs["patient"]["getFilteredPatients"]
+  patientsForPrint: RouterOutputs["patient"]["getFilteredPatients"]
 }
 
 const filterOptions = [
@@ -49,6 +50,7 @@ export default function PatientTableFilters({
   toggleFilter,
   searchTerm,
   setSearchTerm,
+  patientsForPrint,
 }: PatientTableFiltersProps) {
   return (
     <div className="flex items-center justify-between">
@@ -94,7 +96,7 @@ export default function PatientTableFilters({
       </div>
       <div className="flex items-center gap-2">
         <DateRangePicker variant="outline" />
-        <PrintPatients patients={filteredPatients} />
+        <PrintPatients patients={patientsForPrint} />
       </div>
     </div>
   )
