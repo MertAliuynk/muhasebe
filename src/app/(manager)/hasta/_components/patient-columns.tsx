@@ -24,6 +24,15 @@ import EditPatientDialog from "./edit-patient-dialog"
 
 type Item = RouterOutputs["patient"]["getFilteredPatients"][number]
 
+export function getLastPaidInstallment(plan?: { installments?: { paidAmount: number; lastPaymentDate?: Date | string | null }[] }) {
+  return plan?.installments?.filter((i) => i.paidAmount > 0)
+    .sort((a, b) => {
+      const dateA = a.lastPaymentDate ? new Date(a.lastPaymentDate).getTime() : 0
+      const dateB = b.lastPaymentDate ? new Date(b.lastPaymentDate).getTime() : 0
+      return dateB - dateA
+    })[0]
+}
+
 export default [
   {
     accessorKey: "name",
@@ -95,20 +104,17 @@ export default [
     },
   },
   {
-    accessorKey: "remainingInstallmentCount",
-    header: "Kalan Taksit Sayısı",
+    accessorKey: "lastPaymentDate",
+    header: "Son Ödeme Tarihi",
     cell: ({ row }) => {
-      const remainingInstallmentCount =
-        row.original.remainingInstallmentCount || 0
-
-      return (
-        <div className="flex items-center gap-2">
-          <CalendarSync className="size-4 text-muted-foreground" />
-          {remainingInstallmentCount}
-        </div>
-      )
+      const patient = row.original
+      const plan = patient.paymentPlans?.find(plan => plan.isApproved) || patient.paymentPlans?.[0]
+      const lastPaidInstallment = getLastPaidInstallment(plan)
+      return lastPaidInstallment?.lastPaymentDate
+        ? new Date(lastPaidInstallment.lastPaymentDate).toLocaleDateString()
+        : "-"
+    }
     },
-  },
   {
     accessorKey: "nextPaymentAmount",
     header: "Sonraki Ödeme Tutarı",

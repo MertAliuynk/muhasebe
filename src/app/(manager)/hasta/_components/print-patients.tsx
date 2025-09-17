@@ -5,6 +5,15 @@ import { Printer } from "lucide-react"
 import { formatCurrencyWithSymbol } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
+export function getLastPaidInstallment(plan?: { installments?: { paidAmount: number; lastPaymentDate?: Date | string | null }[] }) {
+  return plan?.installments?.filter((i) => i.paidAmount > 0)
+    .sort((a, b) => {
+      const dateA = a.lastPaymentDate ? new Date(a.lastPaymentDate).getTime() : 0
+      const dateB = b.lastPaymentDate ? new Date(b.lastPaymentDate).getTime() : 0
+      return dateB - dateA
+    })[0]
+}
+
 export default function PrintPatients({
   patients,
 }: {
@@ -74,7 +83,7 @@ export default function PrintPatients({
                   Kalan Tutar
                 </th>
                 <th className="border border-gray-300 p-2 text-left bg-gray-100">
-                  Kalan Taksit Sayısı
+                  Son Ödeme Tarihi
                 </th>
               </tr>
             </thead>
@@ -90,8 +99,13 @@ export default function PrintPatients({
                       patient.totalRemainingAmount || 0
                     )}
                   </td>
-                  <td className="border border-gray-300 p-2">
-                    {patient.remainingInstallmentCount || "-"}
+                  <td className="border border-gray-300 p-2">{(() => {
+                    const plan = patient.paymentPlans?.find(plan => plan.isApproved) || patient.paymentPlans?.[0];
+                    const lastPaidInstallment = getLastPaidInstallment(plan);
+                    return lastPaidInstallment?.lastPaymentDate
+                      ? new Date(lastPaidInstallment.lastPaymentDate).toLocaleDateString("tr-TR")
+                      : "-";
+                  })()}
                   </td>
                 </tr>
               ))}
