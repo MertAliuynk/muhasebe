@@ -25,7 +25,6 @@ export default async function Page({ searchParams }: PageProps) {
         <div className="flex items-center gap-3">
           <h1 className="text-xl sm:text-2xl font-bold">Günlük Kasa Akış</h1>
         </div>
-        <DatePicker />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Incomes />
