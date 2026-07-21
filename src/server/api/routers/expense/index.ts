@@ -1,4 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
+import { scheduleCashReportSync } from "@/server/lib/cash-report-sync"
 import type { PaymentType } from "@prisma/client"
 import { TRPCError } from "@trpc/server"
 import { addDays, isAfter, startOfDay } from "date-fns"
@@ -151,24 +152,21 @@ export const expenseRouter = createTRPCRouter({
       const isPastExpense = !isAfter(startOfDay(new Date(expenseDate)), today)
 
       if (isPastExpense) {
-        await fetch(
-          `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${branchId}`
-        )
-        await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
+        scheduleCashReportSync(branchId, expenseDate)
       }
     }),
   deleteExpense: protectedProcedure
     .input(deleteExpenseSchema)
     .mutation(async ({ ctx, input }) => {
+      let expense: {
+        amount: number
+        paymentType: PaymentType
+        createdAt: Date
+        branchId: string
+      } | null = null
+
       await ctx.db.$transaction(
         async (tx) => {
-          let expense: {
-            amount: number
-            paymentType: PaymentType
-            createdAt: Date
-            branchId: string
-          } | null = null
-
           if (input.doctorId) {
             expense = await tx.doctorExpense.findUnique({
               where: { id: input.id },
@@ -220,10 +218,10 @@ export const expenseRouter = createTRPCRouter({
         }
       )
 
-      await fetch(
-        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
-      )
-      await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
+      if (expense) {
+        const { branchId, createdAt } = expense
+        scheduleCashReportSync(branchId, createdAt)
+      }
       return { success: true }
     }),
   softDeleteExpenseType: protectedProcedure

@@ -1,4 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
+import { scheduleCashReportSync } from "@/server/lib/cash-report-sync"
 import { TRPCError } from "@trpc/server"
 import { addDays, isAfter, startOfDay } from "date-fns"
 
@@ -321,10 +322,7 @@ export const paymentRouter = createTRPCRouter({
         const isPastPayment = !isAfter(startOfDay(new Date(paymentDate)), today)
 
         if (isPastPayment) {
-          await fetch(
-            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
-          )
-          await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
+          scheduleCashReportSync(ctx.session.user.branchId ?? "", paymentDate)
         }
       } else {
         await ctx.db.branchPayment.create({
@@ -344,16 +342,16 @@ export const paymentRouter = createTRPCRouter({
         const isPastPayment = !isAfter(startOfDay(new Date(paymentDate)), today)
 
         if (isPastPayment) {
-          await fetch(
-            `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
-          )
-          await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
+          scheduleCashReportSync(ctx.session.user.branchId ?? "", paymentDate)
         }
       }
     }),
   deletePayment: protectedProcedure
     .input(deletePaymentSchema)
     .mutation(async ({ ctx, input }) => {
+      let affectedBranchId: string | null = null
+      let affectedDate: Date | null = null
+
       if (input.whereToPay === "patient") {
         if (!input.patientId) {
           throw new TRPCError({
@@ -388,6 +386,9 @@ export const paymentRouter = createTRPCRouter({
             message: "Ödeme bulunamadı.",
           })
         }
+
+        affectedBranchId = payment.branchId
+        affectedDate = payment.createdAt
 
         await ctx.db.$transaction(async (tx) => {
           const paymentPlan = payment.patient?.paymentPlans[0]
@@ -565,19 +566,24 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
+        affectedBranchId = payment.branchId
+        affectedDate = payment.createdAt
+
         await ctx.db.branchPayment.delete({
           where: { id: input.id },
         })
       }
 
-      await fetch(
-        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
-      )
-      await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
+      if (affectedBranchId && affectedDate) {
+        scheduleCashReportSync(affectedBranchId, affectedDate)
+      }
     }),
   updatePayment: protectedProcedure
     .input(updatePaymentSchema)
     .mutation(async ({ ctx, input }) => {
+      let affectedBranchId: string | null = null
+      let affectedDate: Date | null = null
+
       if (input.whereToPay === "patient") {
         const existingPayment = await ctx.db.patientPayment.findUnique({
           where: { id: input.id },
@@ -596,6 +602,13 @@ export const paymentRouter = createTRPCRouter({
             message: "Ödeme bulunamadı.",
           })
         }
+
+        const newDate = input.editedAt || existingPayment.createdAt
+        affectedBranchId = existingPayment.branchId
+        affectedDate =
+          existingPayment.createdAt < newDate
+            ? existingPayment.createdAt
+            : newDate
 
         const amountDifference = input.amount - existingPayment.amount
 
@@ -840,6 +853,13 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
+        const newDate = input.editedAt || existingBranchPayment.createdAt
+        affectedBranchId = existingBranchPayment.branchId
+        affectedDate =
+          existingBranchPayment.createdAt < newDate
+            ? existingBranchPayment.createdAt
+            : newDate
+
         await ctx.db.$transaction(async (tx) => {
           await tx.branchPayment.update({
             where: { id: input.id },
@@ -854,10 +874,9 @@ export const paymentRouter = createTRPCRouter({
         })
       }
 
-      await fetch(
-        `${process.env.NEXTAUTH_URL}/api/generate-missing-cash-reports?branchId=${ctx.session.user.branchId}`
-      )
-      await fetch(`${process.env.NEXTAUTH_URL}/api/generate-doctor-incomes`)
+      if (affectedBranchId && affectedDate) {
+        scheduleCashReportSync(affectedBranchId, affectedDate)
+      }
       return { success: true }
     }),
 })

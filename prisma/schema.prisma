@@ -233,6 +233,7 @@ model PatientPayment {
     doctorIncomes DoctorIncome[]
 
     @@index([paymentDate])
+    @@index([branchId, createdAt])
 }
 
 model DoctorIncome {
@@ -282,6 +283,7 @@ model BranchPayment {
     branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
     @@index([paymentDate])
+    @@index([branchId, createdAt])
 }
 
 model Installment {
@@ -337,6 +339,7 @@ model BranchExpense {
     @@index([expenseTypeId])
     @@index([branchId])
     @@index([isDeleted])
+    @@index([branchId, createdAt])
 }
 
 model DoctorExpense {
@@ -358,6 +361,7 @@ model DoctorExpense {
 
     @@index([doctorId])
     @@index([isDeleted])
+    @@index([branchId, createdAt])
 }
 
 model CashReport {
@@ -385,4 +389,5 @@ model CashReport {
     createdAt DateTime @default(now())
 
     @@index([branchId])
+    @@index([branchId, createdAt])
 }
