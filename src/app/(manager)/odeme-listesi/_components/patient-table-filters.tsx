@@ -1,7 +1,7 @@
 "use client"
 
 import { type RouterOutputs } from "@/trpc/react"
-import { Check, PlusCircle, Search } from "lucide-react"
+import { Check, PlusCircle, Search, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -56,13 +56,24 @@ export default function PatientTableFilters({
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <div className="relative w-80">
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            prefix={<Search className="size-4" />}
-            placeholder="İsim Soyisim, telefon veya TC göre ara..."
+            prefix={<Search className="size-4 text-muted-foreground" />}
+            placeholder="Hasta adı, telefon veya TC ile ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            autoComplete="off"
+            className={cn(searchTerm && "pr-8")}
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Aramayı temizle"
+            >
+              <X className="size-4" />
+            </button>
+          )}
         </div>
         <Popover>
           {/*filtreleme kısmı buradan kaldırıldı sonradan ekleme ihtimali olabilir onun için kalan hiçbirşeye dokunmadım*/}

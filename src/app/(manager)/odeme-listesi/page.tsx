@@ -16,6 +16,22 @@ import { getLastPaidInstallment } from "./_components/patient-columns";
 import PatientTableFilters from "./_components/patient-table-filters"
 import { usePatientFilters } from "./_hooks/usePatientFilters"
 
+// Türkçe karakter ve büyük/küçük harf farkını yok sayarak karşılaştırma yapar
+// (ör. "ismail" -> "İSMAİL", "isik" -> "Işık" eşleşir)
+function normalizeSearchText(value: string) {
+  return value
+    .toLocaleLowerCase("tr")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
 
 export default function Page() {
   const { selectedFilters, apiFilters, toggleFilter } = usePatientFilters()
@@ -51,16 +67,20 @@ export default function Page() {
       (patient) => (patient.totalRemainingAmount ?? 0) > 0
     )
 
-    if (!searchTerm.trim()) return nonZeroPatients
+    const searchText = normalizeSearchText(searchTerm)
+    if (!searchText) return nonZeroPatients
 
-    const searchLower = searchTerm.toLowerCase().trim()
+    // Telefon ve TC için sadece rakamları karşılaştır (boşluk, tire vb. yok sayılır)
+    const searchDigits = searchTerm.replace(/\D/g, "")
 
-    return nonZeroPatients.filter(
-      (patient) =>
-        patient.name.toLowerCase().includes(searchLower) ||
-        (patient.phone?.toLowerCase().includes(searchLower) ?? false) ||
-        (patient.tcNo?.toLowerCase().includes(searchLower) ?? false)
-    )
+    return nonZeroPatients.filter((patient) => {
+      if (normalizeSearchText(patient.name ?? "").includes(searchText)) return true
+      if (!searchDigits) return false
+      return (
+        (patient.phone?.replace(/\D/g, "").includes(searchDigits) ?? false) ||
+        (patient.tcNo?.replace(/\D/g, "").includes(searchDigits) ?? false)
+      )
+    })
   }, [patients, searchTerm])
 
 
