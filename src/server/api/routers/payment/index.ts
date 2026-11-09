@@ -139,13 +139,16 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
+        // Ekranda seçilen tarih (createdAt) hakediş ve taksit tarihleri için de kullanılır
+        const effectivePaymentDate = input.createdAt ?? input.paymentDate
+
         await ctx.db.$transaction(
           async (tx) => {
             const payment = await tx.patientPayment.create({
               data: {
                 amount: input.amount,
                 paymentType: input.paymentType,
-                paymentDate: input.paymentDate,
+                paymentDate: effectivePaymentDate,
                 note: input.note,
                 patientId: input.patientId,
                 branchId: ctx.session.user.branchId ?? "",
@@ -248,7 +251,7 @@ export const paymentRouter = createTRPCRouter({
               data: {
                 amount: input.amount,
                 paymentType: input.paymentType,
-                paymentDate: input.paymentDate,
+                paymentDate: effectivePaymentDate,
                 doctorId: input.doctorId ?? "",
                 commission: doctor.commission,
                 paymentId: payment.id,
