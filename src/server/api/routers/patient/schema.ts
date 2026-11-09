@@ -59,6 +59,14 @@ export const savePaymentPlanSchema = z.object({
       amount: z.number(),
     })
   ),
+  draftDoctorShares: z
+    .array(
+      z.object({
+        doctorId: z.string(),
+        amount: z.number().min(0),
+      })
+    )
+    .optional(),
 })
 
 export const getFilteredPatientsSchema = z.object({

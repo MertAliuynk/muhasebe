@@ -198,6 +198,9 @@ model PatientPaymentPlan {
     isApproved       Boolean   @default(false)
     isCompleted      Boolean   @default(false)
     note             String?
+    // Onay öncesi (işleme almadan) belirlenen taslak hekim payları: [{ doctorId, amount }]
+    // Hakediş hesaplamalarına dahil edilmez; sadece onay ekranını önceden doldurmak için kullanılır.
+    draftDoctorShares Json?
     isDeleted        Boolean   @default(false)
     deletedAt        DateTime?
     createdAt        DateTime  @default(now())

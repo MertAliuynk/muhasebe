@@ -38,15 +38,19 @@ import { PrintPaymentPlan } from "./print-payment-plan"
 export default function CreatePaymentPlan({
   patientId,
   patientName,
+  doctors = [],
 }: {
   patientId: string
   patientName: string
+  doctors?: { id: string; name: string }[]
 }) {
   const router = useRouter()
   const { mutateAsync: savePaymentPlan, isPending } =
     api.patient.savePaymentPlan.useMutation()
 
   const [open, setOpen] = useState(false)
+  const [isShareEnabled, setIsShareEnabled] = useState(false)
+  const hasMultipleDoctors = doctors.length > 1
 
   const form = useForm<z.infer<typeof savePaymentPlanSchema>>({
     resolver: zodResolver(savePaymentPlanSchema),
@@ -59,8 +63,27 @@ export default function CreatePaymentPlan({
       startDate: new Date(),
       installments: [],
       note: "",
+      draftDoctorShares: [],
     },
   })
+
+  const draftDoctorShares = form.watch("draftDoctorShares") ?? []
+  const shareLeftAmount =
+    form.watch("totalAmount") -
+    draftDoctorShares.reduce((acc, share) => acc + share.amount, 0)
+
+  const toggleShare = () => {
+    if (isShareEnabled) {
+      form.setValue("draftDoctorShares", [])
+      setIsShareEnabled(false)
+    } else {
+      form.setValue(
+        "draftDoctorShares",
+        doctors.map((doctor) => ({ doctorId: doctor.id, amount: 0 }))
+      )
+      setIsShareEnabled(true)
+    }
+  }
 
   const totalAmount = form.watch("totalAmount")
   const originalAmount = form.watch("originalAmount")
@@ -133,9 +156,20 @@ export default function CreatePaymentPlan({
   }
 
   const onSubmit = (values: z.infer<typeof savePaymentPlanSchema>) => {
+    if (isShareEnabled && shareLeftAmount !== 0) {
+      toast.error("Paylaşımdan kalan tutar ₺0 olmalıdır.")
+      return
+    }
+
+    const payload = {
+      ...values,
+      draftDoctorShares: isShareEnabled ? values.draftDoctorShares : undefined,
+    }
+
     toast.promise(
-      savePaymentPlan(values).then(() => {
+      savePaymentPlan(payload).then(() => {
         form.reset()
+        setIsShareEnabled(false)
         router.refresh()
         setOpen(false)
       }),
@@ -194,6 +228,7 @@ export default function CreatePaymentPlan({
                     size="sm"
                     onClick={() => {
                       form.reset()
+                      setIsShareEnabled(false)
                     }}
                   >
                     <Eraser className="mr-2" size={16} />
@@ -370,6 +405,81 @@ export default function CreatePaymentPlan({
                       </div>
                     </ScrollArea>
                   </div>
+                </div>
+              )}
+
+              {hasMultipleDoctors && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium">Hekim Payları</h3>
+                      <p className="text-muted-foreground text-sm">
+                        İsteğe bağlı. Paylar işleme alınmadan (onaylanmadan)
+                        hakedişe yansımaz; onay ekranında otomatik dolu gelir.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant={isShareEnabled ? "outline" : "secondary"}
+                      size="sm"
+                      onClick={toggleShare}
+                    >
+                      {isShareEnabled ? "Pay Etmeyi Kaldır" : "Hekimlere Pay Et"}
+                    </Button>
+                  </div>
+
+                  {isShareEnabled && (
+                    <>
+                      <div className="flex justify-between">
+                        <p className="text-sm">
+                          Toplam Tutar:{" "}
+                          <span className="font-bold">
+                            {formatCurrencyWithSymbol(totalAmount)}
+                          </span>
+                        </p>
+                        <p className="text-sm">
+                          Paylaşımdan Kalan Tutar:{" "}
+                          <span className="font-bold">
+                            {formatCurrencyWithSymbol(shareLeftAmount)}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        {doctors.map((doctor, index) => (
+                          <FormField
+                            key={doctor.id}
+                            control={form.control}
+                            name={`draftDoctorShares.${index}.amount`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{doctor.name}</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    prefix="₺"
+                                    placeholder={`${doctor.name} hekimin alacağı tutar`}
+                                    {...field}
+                                    value={
+                                      !field.value
+                                        ? ""
+                                        : field.value.toLocaleString("tr-TR")
+                                    }
+                                    onChange={(e) => {
+                                      const value = e.target.value.replace(
+                                        /[^0-9]/g,
+                                        ""
+                                      )
+                                      field.onChange(Number(value))
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

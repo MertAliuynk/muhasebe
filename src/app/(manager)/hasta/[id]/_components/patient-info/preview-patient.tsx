@@ -68,6 +68,10 @@ export default function PreviewPatient({
           <CreatePaymentPlan
             patientId={patient?.id ?? ""}
             patientName={patient?.name ?? ""}
+            doctors={(patient?.doctors ?? []).map((doctor) => ({
+              id: doctor.id,
+              name: doctor.user.name,
+            }))}
           />
           <div className="flex items-center gap-2">
             <div className="flex items-center">

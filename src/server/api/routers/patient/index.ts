@@ -523,7 +523,22 @@ export const patientRouter = createTRPCRouter({
         startDate,
         installments,
         note,
+        draftDoctorShares,
       } = input
+
+      if (draftDoctorShares && draftDoctorShares.length > 0) {
+        const sharesTotal = draftDoctorShares.reduce(
+          (acc, share) => acc + share.amount,
+          0
+        )
+
+        if (sharesTotal !== totalAmount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Hekim paylarının toplamı plan tutarına eşit olmalıdır.",
+          })
+        }
+      }
 
       return await ctx.db.$transaction(async (tx) => {
         const paymentPlan = await tx.patientPaymentPlan.create({
@@ -534,6 +549,11 @@ export const patientRouter = createTRPCRouter({
             installmentCount,
             startDate: startDate,
             note,
+            // Sadece taslak olarak saklanır; DoctorPaymentShare onayda oluşturulur
+            draftDoctorShares:
+              draftDoctorShares && draftDoctorShares.length > 0
+                ? draftDoctorShares
+                : undefined,
             patientId,
             originalAmount,
             interestRate,

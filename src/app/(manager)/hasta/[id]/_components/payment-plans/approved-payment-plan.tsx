@@ -40,6 +40,15 @@ export default function ApprovedPaymentPlan({ children, data }: PageProps) {
 
   const hasMultipleDoctors = data.patient.doctors.length > 1
 
+  // Fiyat verirken belirlenen taslak paylar (varsa) onay ekranını önceden doldurur
+  const draftShares = Array.isArray(data.draftDoctorShares)
+    ? (data.draftDoctorShares as { doctorId?: unknown; amount?: unknown }[])
+    : []
+  const getDraftAmount = (doctorId: string) => {
+    const share = draftShares.find((s) => s?.doctorId === doctorId)
+    return typeof share?.amount === "number" ? share.amount : 0
+  }
+
   const { mutateAsync: approvePaymentPlan, isPending } =
     api.paymentPlan.approvePlan.useMutation()
 
@@ -49,7 +58,7 @@ export default function ApprovedPaymentPlan({ children, data }: PageProps) {
       id: data.id,
       doctors: data.patient.doctors.map((doctor) => ({
         id: doctor.id,
-        amount: hasMultipleDoctors ? 0 : data.totalAmount,
+        amount: hasMultipleDoctors ? getDraftAmount(doctor.id) : data.totalAmount,
       })),
     },
   })
