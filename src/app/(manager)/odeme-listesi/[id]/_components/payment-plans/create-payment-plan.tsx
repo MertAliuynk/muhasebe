@@ -194,7 +194,7 @@ export default function CreatePaymentPlan({
             Ödeme Planı Oluştur
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent className="max-w-5xl">
+        <AlertDialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <div className="flex justify-between">
               <div>
