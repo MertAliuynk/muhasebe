@@ -414,8 +414,11 @@ export default function CreatePaymentPlan({
                     <div>
                       <h3 className="text-lg font-medium">Hekim Payları</h3>
                       <p className="text-muted-foreground text-sm">
-                        İsteğe bağlı. Paylar işleme alınmadan (onaylanmadan)
-                        hakedişe yansımaz; onay ekranında otomatik dolu gelir.
+                        Toplam tutarın hangi kısmının hangi hekime ait olduğunu
+                        girin (örn. 125.000 → 75.000 + 50.000). Hekimin
+                        hakedişi tahsilat yapıldıkça komisyon oranına göre
+                        otomatik hesaplanır. Plan onaylanana kadar hakedişe
+                        yansımaz.
                       </p>
                     </div>
                     <Button
@@ -456,7 +459,7 @@ export default function CreatePaymentPlan({
                                 <FormControl>
                                   <Input
                                     prefix="₺"
-                                    placeholder={`${doctor.name} hekimin alacağı tutar`}
+                                    placeholder={`${doctor.name} hekime düşen tutar`}
                                     {...field}
                                     value={
                                       !field.value
@@ -483,7 +486,7 @@ export default function CreatePaymentPlan({
                 </div>
               )}
 
-              <div className="flex justify-between">
+              <div className="sticky bottom-0 z-10 flex justify-between border-t bg-background py-4">
                 <div>
                   <p>
                     <span className="text-muted-foreground text-sm">

@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
 
+import { parseDraftDoctorShares } from "@/lib/draft-doctor-shares"
 import { formatCurrencyWithSymbol } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,13 +42,9 @@ export default function ApprovedPaymentPlan({ children, data }: PageProps) {
   const hasMultipleDoctors = data.patient.doctors.length > 1
 
   // Fiyat verirken belirlenen taslak paylar (varsa) onay ekranını önceden doldurur
-  const draftShares = Array.isArray(data.draftDoctorShares)
-    ? (data.draftDoctorShares as { doctorId?: unknown; amount?: unknown }[])
-    : []
-  const getDraftAmount = (doctorId: string) => {
-    const share = draftShares.find((s) => s?.doctorId === doctorId)
-    return typeof share?.amount === "number" ? share.amount : 0
-  }
+  const draftShares = parseDraftDoctorShares(data.draftDoctorShares)
+  const getDraftAmount = (doctorId: string) =>
+    draftShares.find((s) => s.doctorId === doctorId)?.amount ?? 0
 
   const { mutateAsync: approvePaymentPlan, isPending } =
     api.paymentPlan.approvePlan.useMutation()
@@ -126,7 +123,7 @@ export default function ApprovedPaymentPlan({ children, data }: PageProps) {
                       <FormControl>
                         <Input
                           prefix="₺"
-                          placeholder={`${doctor.user.name} hekimin bu işlemden alacağı tutarı giriniz.`}
+                          placeholder={`${doctor.user.name} hekime düşen tutarı giriniz.`}
                           {...field}
                           value={
                             field.value === 0

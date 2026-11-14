@@ -6,6 +6,7 @@ import { format } from "date-fns"
 import { CalendarDays, MessageSquare, Phone } from "lucide-react"
 import { formatPhoneNumberIntl } from "react-phone-number-input"
 
+import { parseDraftDoctorShares } from "@/lib/draft-doctor-shares"
 import { calculateAge, formatCurrency, getImageUrl } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -23,6 +24,20 @@ export default function PreviewPatient({
   patient: RouterOutputs["patient"]["getPatientById"]
   paymentPlans: RouterOutputs["paymentPlan"]["getPatientPaymentPlanById"]
 }) {
+  // Onaylı plan yoksa, en son oluşturulan onaysız plandaki taslak hekim payları gösterilir
+  const latestDraftShares = parseDraftDoctorShares(
+    [...paymentPlans]
+      .filter((plan) => !plan.isApproved)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .find((plan) => parseDraftDoctorShares(plan.draftDoctorShares).length > 0)
+      ?.draftDoctorShares
+  )
+  const getDraftShareAmount = (doctorId: string) =>
+    latestDraftShares.find((share) => share.doctorId === doctorId)?.amount
+
   return (
     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/5 via-background to-primary/10 p-8">
       <div className="absolute inset-0 bg-grid-white/10" />
@@ -76,7 +91,8 @@ export default function PreviewPatient({
           <div className="flex items-center gap-2">
             <div className="flex items-center">
               {patient.doctorShares && patient.doctorShares.length > 0
-                ? patient.doctorShares.map(({ doctor, remainingAmount }) => (
+                ? patient.doctorShares.map(
+                    ({ doctor, remainingAmount, totalAmount }) => (
                     <Link
                       key={doctor.id}
                       href={`/hekim/${doctor.id}`}
@@ -96,6 +112,11 @@ export default function PreviewPatient({
                         <p className="text-xs text-muted-foreground">
                           {doctor.specialty}
                         </p>
+                        {totalAmount > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            Pay: {formatCurrency(totalAmount)}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           Kalan Tutar:{" "}
                           {remainingAmount
@@ -104,7 +125,8 @@ export default function PreviewPatient({
                         </p>
                       </div>
                     </Link>
-                  ))
+                    )
+                  )
                 : patient.doctors && patient.doctors.length > 0
                   ? patient.doctors.map((doctor) => (
                       <Link
@@ -129,7 +151,9 @@ export default function PreviewPatient({
                             {doctor.specialty}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Ödeme Planı Yok
+                            {getDraftShareAmount(doctor.id) !== undefined
+                              ? `Pay: ${formatCurrency(getDraftShareAmount(doctor.id) ?? 0)} (onay bekliyor)`
+                              : "Ödeme Planı Yok"}
                           </p>
                         </div>
                       </Link>
